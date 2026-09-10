@@ -2,197 +2,197 @@
 
 ## Phase 0 — Project Setup
 
-- [ ] Create Laravel 13 project with PHP 8.5
-- [ ] Configure MySQL database
-- [ ] Configure `.env`
-- [ ] Set timezone Asia/Jakarta
-- [ ] Configure `php` binary to `/usr/bin/php85`
-- [ ] Install Laravel Breeze for authentication
-- [ ] Install Tailwind CSS
-- [ ] Install Livewire
-- [ ] Install Laravel Pint
-- [ ] Configure storage and symlink
-- [ ] Install Laravel Boost
-- [ ] Install maatwebsite/excel
-- [ ] Install barryvdh/laravel-dompdf
-- [ ] Install phpoffice/phpword
-- [ ] Configure queue connection
-- [ ] Configure testing
-- [ ] Create project repository
+- [x] Create Laravel 13 project with PHP 8.5
+- [x] Configure MySQL database
+- [x] Configure `.env`
+- [x] Set timezone Asia/Jakarta
+- [x] Configure `php` binary to `/usr/bin/php85`
+- [x] Install Laravel Breeze for authentication
+- [x] Install Tailwind CSS
+- [x] Install Livewire
+- [x] Install Laravel Pint
+- [x] Configure storage and symlink
+- [x] Install Laravel Boost
+- [x] Install maatwebsite/excel
+- [x] Install barryvdh/laravel-dompdf
+- [x] Install phpoffice/phpword
+- [x] Configure queue connection
+- [x] Configure testing
+- [x] Create project repository
 
 ---
 
 # Phase 1 — Authentication
 
-- [ ] Install Laravel Breeze with Blade + Tailwind
-- [ ] Registration
-- [ ] Login
-- [ ] Logout
-- [ ] Forgot password
-- [ ] Reset password
-- [ ] Profile page
-- [ ] Change password
-- [ ] Email verification (optional)
-- [ ] Authentication tests
-- [ ] Authorization policies setup
+- [x] Install Laravel Breeze with Blade + Tailwind
+- [x] Registration
+- [x] Login
+- [x] Logout
+- [x] Forgot password
+- [x] Reset password
+- [x] Profile page
+- [x] Change password
+- [x] Email verification (optional)
+- [x] Authentication tests
+- [x] Authorization policies setup
 
 ---
 
 # Phase 2 — Dashboard
 
-- [ ] Dashboard migration
-- [ ] Dashboard controller
-- [ ] Dashboard view (Blade + Livewire)
-- [ ] Statistics cards component
-- [ ] Recent imports list component
-- [ ] Recent reports list component
-- [ ] Quick actions component
-- [ ] Dashboard tests
+- [x] Dashboard migration
+- [x] Dashboard controller
+- [x] Dashboard view (Blade + Livewire)
+- [x] Statistics cards component
+- [x] Recent imports list component
+- [x] Recent reports list component
+- [x] Quick actions component
+- [x] Dashboard tests
 
 ---
 
 # Phase 3 — Excel Import
 
-- [ ] Upload migration (file storage)
-- [ ] Import model
-- [ ] Import factory
-- [ ] Import seeder
-- [ ] Import controller
-- [ ] Upload form (Livewire)
-- [ ] File validation
-- [ ] Excel reader (Maatwebsite)
-- [ ] Sheet selection UI
-- [ ] Column mapping UI
-- [ ] Data preview component
-- [ ] Import processing job (ProcessExcelImport)
-- [ ] Import status tracking
-- [ ] Import history page
-- [ ] Import detail page
-- [ ] Import error log
-- [ ] Import tests
+- [x] Upload migration (file storage)
+- [x] Import model
+- [x] Import factory
+- [x] Import seeder
+- [x] Import controller
+- [x] Upload form (Livewire)
+- [x] File validation
+- [x] Excel reader (Maatwebsite)
+- [x] Sheet selection UI
+- [~] Column mapping UI — DILEWATKAN: pendekatan structured tabular, header Excel langsung jadi key JSON (normalisasi + deteksi duplikat) di ExcelImportService
+- [x] Data preview component
+- [x] Import processing job (ProcessExcelImport)
+- [x] Import status tracking
+- [x] Import history page
+- [x] Import detail page
+- [x] Import error log
+- [x] Import tests
 
 ---
 
 # Phase 4 — Data Management
 
-- [ ] ImportData model
-- [ ] Data table component (Livewire)
-- [ ] Data listing page
-- [ ] Data filtering
-- [ ] Data searching
-- [ ] Data sorting
-- [ ] Data pagination
-- [ ] Data detail view
-- [ ] Data delete functionality
-- [ ] Bulk delete functionality
-- [ ] Data export to Excel
-- [ ] Data tests
+- [x] ImportData model
+- [x] Data table component (Livewire)
+- [x] Data listing page
+- [x] Data filtering
+- [x] Data searching
+- [x] Data sorting
+- [x] Data pagination
+- [x] Data detail view
+- [x] Data delete functionality
+- [x] Bulk delete functionality
+- [x] Data export to Excel
+- [x] Data tests
 
 ---
 
 # Phase 5 — Report Generator
 
-- [ ] Report model
-- [ ] Report controller
-- [ ] Report builder UI (Livewire)
-- [ ] Data source selection
-- [ ] Field selection component
-- [ ] Filter builder component
-- [ ] Sorting configuration component
-- [ ] Output format selection
-- [ ] Report preview component
-- [ ] PDF generation service (PdfService)
-- [ ] Word generation service (WordService)
-- [ ] Excel export service (ExcelExportService)
-- [ ] Print preview with CSS (@media print)
-- [ ] Report generation job (GenerateReport)
-- [ ] Report storage
-- [ ] Report download
-- [ ] Report tests
+- [x] Report model
+- [x] Report controller
+- [x] Report builder UI (Livewire)
+- [x] Data source selection
+- [x] Field selection component
+- [x] Filter builder component
+- [x] Sorting configuration component
+- [x] Output format selection
+- [x] Report preview component
+- [x] PDF generation service (PdfService)
+- [x] Word generation service (WordService)
+- [x] Excel export service (ExcelExportService)
+- [x] Print preview with CSS (@media print)
+- [x] Report generation job (GenerateReport)
+- [x] Report storage
+- [x] Report download
+- [x] Report tests
 
 ---
 
 # Phase 6 — Report Templates
 
-- [ ] ReportTemplate model
-- [ ] Template management controller
-- [ ] Template creation form
-- [ ] Template editing
-- [ ] Template listing
-- [ ] Template deletion
-- [ ] Template default setting
-- [ ] Template usage (create report from template)
-- [ ] Template tests
+- [x] ReportTemplate model
+- [x] Template management controller
+- [x] Template creation form
+- [x] Template editing
+- [x] Template listing
+- [x] Template deletion
+- [x] Template default setting
+- [x] Template usage (create report from template)
+- [x] Template tests
 
 ---
 
 # Phase 7 — Print
 
-- [ ] Print CSS stylesheet (@media print)
-- [ ] Print layout component
-- [ ] Print preview page
-- [ ] Print header/footer configuration
-- [ ] Page number support
-- [ ] A4 page size configuration
+- [x] Print CSS stylesheet (@media print)
+- [x] Print layout component
+- [x] Print preview page
+- [x] Print header/footer configuration
+- [~] Page number support — DomPDF: footer page number via @page CSS print; belum header/footer variabel PDF khusus
+- [x] A4 page size configuration
 - [ ] Landscape/portrait support
-- [ ] Print tests
+- [x] Print tests
 
 ---
 
 # Phase 8 — Security & Audit
 
-- [ ] Authorization policy review
-- [ ] CSRF protection audit
-- [ ] File upload security audit
-- [ ] SQL injection audit
-- [ ] XSS protection audit
-- [ ] Input sanitization
-- [ ] Rate limiting configuration
-- [ ] User data isolation verification
-- [ ] Security tests
+- [x] Authorization policy review
+- [x] CSRF protection audit
+- [x] File upload security audit
+- [x] SQL injection audit
+- [x] XSS protection audit
+- [x] Input sanitization
+- [x] Rate limiting configuration
+- [x] User data isolation verification
+- [x] Security tests
 
 ---
 
 # Phase 9 — Performance
 
-- [ ] Database index review
-- [ ] N+1 query fix
-- [ ] Query caching implementation
-- [ ] Eager loading optimization
-- [ ] Chunk processing for large datasets
-- [ ] Queue worker configuration
-- [ ] Page load speed optimization
-- [ ] Frontend asset optimization
-- [ ] Performance tests
+- [x] Database index review
+- [x] N+1 query fix
+- [~] Query caching implementation — DILEWATKAN: daftar & statistik memakai index komposit + withCount, belum perlu cache (data kecil-per-user, risiko stale)
+- [x] Eager loading optimization
+- [x] Chunk processing for large datasets
+- [x] Queue worker configuration — worker dev jalan (artisan queue:work); supervisor utk produksi masuk Phase 12
+- [x] Page load speed optimization — Vite build minify, icons manifest cached, eager loading list
+- [x] Frontend asset optimization — npm run build (app css+js berversi)
+- [~] Performance tests — DILEWATKAN: belum ada assertion waktu-query; index sudah diverifikasi via SHOW INDEX MySQL
 
 ---
 
 # Phase 10 — UI Polish
 
-- [ ] Responsive design review
-- [ ] Mobile sidebar navigation
-- [ ] Empty state components
-- [ ] Loading state components
-- [ ] Error state components
-- [ ] Toast notifications
-- [ ] Modal components
-- [ ] Status badge components
-- [ ] Print button components
-- [ ] UI consistency review
-- [ ] Design system alignment
+- [x] Responsive design review
+- [x] Mobile sidebar navigation
+- [x] Empty state components
+- [x] Loading state components
+- [x] Error state components
+- [x] Toast notifications
+- [x] Modal components
+- [x] Status badge components
+- [x] Print button components
+- [x] UI consistency review
+- [x] Design system alignment
 
 ---
 
 # Phase 11 — Documentation & Testing
 
-- [ ] Update README.md
-- [ ] Update all documentation files
-- [ ] Unit tests completion
-- [ ] Feature tests completion
-- [ ] Test coverage 80%+
-- [ ] PHP linting (Pint)
-- [ ] Code review
-- [ ] Documentation review
+- [x] Update README.md
+- [x] Update all documentation files
+- [x] Unit tests completion
+- [x] Feature tests completion
+- [~] Test coverage 80%+ — BELUM TERUKUR: tidak ada extension xdebug/pcov di environment dev; 90 test unit+feature covering semua modul inti
+- [x] PHP linting (Pint)
+- [x] Code review
+- [x] Documentation review
 
 ---
 
@@ -254,21 +254,21 @@ Phase 11 → Phase 13
 
 Aplikasi siap deploy apabila:
 
-- [ ] Authentication berjalan dengan benar
-- [ ] Excel upload dan import berjalan
-- [ ] Data management berfungsi
-- [ ] PDF report generation berfungsi
-- [ ] Word report generation berfungsi
-- [ ] Excel export berfungsi
-- [ ] Print preview berfungsi
-- [ ] Template management berfungsi
-- [ ] Data user terisolasi
-- [ ] Tidak ada critical bugs
-- [ ] Test coverage >= 80%
-- [ ] Code passes linting
+- [x] Authentication berjalan dengan benar
+- [x] Excel upload dan import berjalan
+- [x] Data management berfungsi
+- [x] PDF report generation berfungsi
+- [x] Word report generation berfungsi
+- [x] Excel export berfungsi
+- [x] Print preview berfungsi
+- [x] Template management berfungsi
+- [x] Data user terisolasi
+- [x] Tidak ada critical bugs
+- [~] Test coverage >= 80% — lihat catatan Phase 11
+- [x] Code passes linting
 - [ ] Production deployment ready
-- [ ] Documentation complete
-- [ ] Security audit passed
+- [x] Documentation complete
+- [x] Security audit passed
 - [ ] Performance targets met
 
 ---
