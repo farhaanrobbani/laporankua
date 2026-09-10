@@ -38,6 +38,10 @@ class ReportGenerationService
         string $sortDirection = 'asc',
         ?int $limit = null
     ): array {
+        if ($sortColumn !== null && $sortColumn !== '' && $sortColumn !== 'row_number' && ! in_array($sortColumn, $fields, true)) {
+            $sortColumn = null;
+        }
+
         $query = ImportData::forImport($import->id)
             ->search($search)
             ->filterColumn($filterColumn, $filterValue)

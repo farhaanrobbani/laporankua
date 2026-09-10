@@ -13,9 +13,9 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])->name('dashboard');
+    ->middleware(['auth', 'verified', 'throttle:120,1'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
     Route::get('/imports/upload', [ImportController::class, 'create'])->name('imports.create');
     Route::get('/imports/{import}', [ImportController::class, 'show'])->name('imports.show');

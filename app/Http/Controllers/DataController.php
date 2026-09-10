@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\ImportDataExport;
 use App\Models\Import;
 use App\Models\ImportData;
+use App\Services\ReportGenerationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -56,17 +57,18 @@ class DataController extends Controller
 
         $headings = $import->availableColumns();
 
-        $rows = ImportData::forImport($import->id)
-            ->search($validated['search'] ?? null)
-            ->filterColumn($validated['filter_column'] ?? null, $validated['filter_value'] ?? null)
-            ->sortBy($validated['sort_column'] ?? null, $validated['sort_direction'] ?? 'asc')
-            ->orderBy('id')
-            ->cursor()
-            ->map(fn (ImportData $record) => $record->row_data ?? [])
-            ->all();
+        $dataset = app(ReportGenerationService::class)->buildDataset(
+            $import,
+            $headings,
+            $validated['search'] ?? null,
+            $validated['filter_column'] ?? null,
+            $validated['filter_value'] ?? null,
+            $validated['sort_column'] ?? null,
+            $validated['sort_direction'] ?? 'asc',
+        );
 
         $filename = 'data_import_'.$import->id.'_'.now()->format('Ymd_His').'.xlsx';
 
-        return Excel::download(new ImportDataExport($headings, $rows), $filename);
+        return Excel::download(new ImportDataExport($headings, $dataset['rows']), $filename);
     }
 }

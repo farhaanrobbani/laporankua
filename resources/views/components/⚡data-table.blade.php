@@ -59,6 +59,12 @@ new class extends Component
 
     public function sortBy(string $column): void
     {
+        $allowed = array_merge(['row_number'], $this->columns);
+
+        if (! in_array($column, $allowed, true)) {
+            return;
+        }
+
         if ($this->sortColumn === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
