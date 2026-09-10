@@ -40,6 +40,9 @@
                     @endif
 
                     <div class="mt-6 flex gap-3">
+                        @if ($import->status === 'success')
+                            <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">Lihat Data</a>
+                        @endif
                         <form method="POST" action="{{ route('imports.destroy', $import) }}" onsubmit="return confirm('Hapus data import ini beserta seluruh record-nya?');">
                             @csrf
                             @method('DELETE')

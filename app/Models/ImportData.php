@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,5 +29,59 @@ class ImportData extends Model
     public function import(): BelongsTo
     {
         return $this->belongsTo(Import::class);
+    }
+
+    public function scopeForImport(Builder $query, int $importId): Builder
+    {
+        return $query->where('import_id', $importId);
+    }
+
+    public function scopeSearch(Builder $query, ?string $keyword): Builder
+    {
+        $keyword = trim((string) $keyword);
+
+        if ($keyword === '') {
+            return $query;
+        }
+
+        return $query->whereRaw(
+            'LOWER(row_data) LIKE ?',
+            ['%'.mb_strtolower(addcslashes($keyword, '%_\\')).'%']
+        );
+    }
+
+    public function scopeFilterColumn(Builder $query, ?string $column, ?string $value): Builder
+    {
+        $column = trim((string) $column);
+        $value = trim((string) $value);
+
+        if ($column === '' || $value === '') {
+            return $query;
+        }
+
+        $extract = $query->getModel()->getConnection()->getDriverName() === 'mysql'
+            ? 'JSON_UNQUOTE(JSON_EXTRACT(row_data, ?))'
+            : 'json_extract(row_data, ?)';
+
+        return $query->whereRaw(
+            'LOWER('.$extract.') LIKE ?',
+            [self::jsonPath($column), '%'.mb_strtolower(addcslashes($value, '%_\\')).'%']
+        );
+    }
+
+    public function scopeSortBy(Builder $query, ?string $column, string $direction = 'asc'): Builder
+    {
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+
+        if ($column === null || $column === '' || $column === 'row_number') {
+            return $query->orderBy('row_number', $direction);
+        }
+
+        return $query->orderBy('row_data->'.$column, $direction);
+    }
+
+    public static function jsonPath(string $column): string
+    {
+        return '$."'.str_replace(['\\', '"'], ['\\\\', '\\"'], $column).'"';
     }
 }
