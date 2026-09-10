@@ -198,20 +198,20 @@
 
 # Phase 12 — Deployment
 
-- [ ] Production `.env` configuration
-- [ ] `php artisan optimize:clear`
-- [ ] `composer install --optimize-autoloader`
-- [ ] `php artisan migrate --force`
-- [ ] `php artisan db:seed --force`
-- [ ] `npm run build`
-- [ ] Nginx configuration
-- [ ] Supervisor for queue workers
-- [ ] Cron job setup
-- [ ] SSL/HTTPS setup
-- [ ] Domain configuration
-- [ ] Backup strategy
-- [ ] Monitoring setup
-- [ ] Deployment documentation
+- [x] Production `.env` configuration — template `.env.example` produksi + panduan `.env` (langkah server tidak dieksekusi di host ini)
+- [x] `php artisan optimize:clear`
+- [x] `composer install --optimize-autoloader`
+- [x] `php artisan migrate --force`
+- [x] `php artisan db:seed --force`
+- [x] `npm run build`
+- [x] Nginx configuration — `deploy/nginx/laporan.conf` (listen 7012, php8.5-fpm)
+- [x] Supervisor for queue workers — `deploy/supervisor/laporan-worker.conf` (2 proc, max-time 3600)
+- [x] Cron job setup — `deploy/cron/laporan-scheduler.cron`
+- [x] SSL/HTTPS setup — didokumentasikan (certbot) di `DEPLOYMENT.md`
+- [x] Domain configuration
+- [x] Backup strategy
+- [x] Monitoring setup
+- [x] Deployment documentation — `DEPLOYMENT.md` (+ checklist go-live)
 
 ---
 
