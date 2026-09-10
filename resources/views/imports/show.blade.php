@@ -20,13 +20,7 @@
                         <div>
                             <dt class="text-gray-500">Status</dt>
                             <dd class="font-medium">
-                                @if ($import->status === 'success')
-                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Success</span>
-                                @elseif ($import->status === 'processing' || $import->status === 'pending')
-                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ ucfirst($import->status) }}</span>
-                                @else
-                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
-                                @endif
+                                <x-status-badge :status="$import->status" />
                             </dd>
                         </div>
                         <div><dt class="text-gray-500">Total baris</dt><dd class="font-medium text-gray-900">{{ number_format($import->total_rows) }}</dd></div>
@@ -43,11 +37,20 @@
                         @if ($import->status === 'success')
                             <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">Lihat Data</a>
                         @endif
-                        <form method="POST" action="{{ route('imports.destroy', $import) }}" onsubmit="return confirm('Hapus data import ini beserta seluruh record-nya?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-md hover:bg-red-700">Hapus</button>
-                        </form>
+                        <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-delete-import')">Hapus</x-danger-button>
+
+                        <x-modal name="confirm-delete-import" :show="false" focusable>
+                            <form method="POST" action="{{ route('imports.destroy', $import) }}" class="p-6">
+                                @csrf
+                                @method('DELETE')
+                                <h2 class="text-lg font-medium text-gray-900">Hapus data import?</h2>
+                                <p class="mt-1 text-sm text-gray-600">File "{{ $import->file_name }}" beserta seluruh record-nya akan dihapus permanen.</p>
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <x-secondary-button x-on:click="$dispatch('close')">Batal</x-secondary-button>
+                                    <x-danger-button>Hapus</x-danger-button>
+                                </div>
+                            </form>
+                        </x-modal>
                     </div>
                 </div>
             </div>

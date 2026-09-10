@@ -48,13 +48,7 @@
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Import Terakhir</h3>
                     @if ($recentImports->isEmpty())
-                        <div class="text-center py-8">
-                            <p class="text-gray-500 font-medium">Belum ada data import</p>
-                            <p class="text-gray-400 text-sm mt-1">Upload file Excel untuk mulai mengolah data.</p>
-                            <a href="{{ route('imports.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
-                                Upload Excel
-                            </a>
-                        </div>
+                        <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 text-sm">
@@ -74,13 +68,7 @@
                                             <td class="px-4 py-2 text-gray-600">{{ $import->sheet_name ?? '-' }}</td>
                                             <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->import_data_count) }}</td>
                                             <td class="px-4 py-2">
-                                                @if ($import->status === 'success')
-                                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Success</span>
-                                                @elseif ($import->status === 'processing' || $import->status === 'pending')
-                                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ ucfirst($import->status) }}</span>
-                                                @else
-                                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
-                                                @endif
+                                                <x-status-badge :status="$import->status" />
                                             </td>
                                             <td class="px-4 py-2 text-gray-600">{{ $import->created_at->format('d M Y') }}</td>
                                         </tr>
@@ -98,13 +86,7 @@
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Laporan Terbaru</h3>
                         @if ($recentReports->isEmpty())
-                            <div class="text-center py-8">
-                                <p class="text-gray-500 font-medium">Belum ada laporan</p>
-                                <p class="text-gray-400 text-sm mt-1">Buat laporan pertama dari data Anda.</p>
-                                <a href="{{ route('reports.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
-                                    Buat Laporan
-                                </a>
-                            </div>
+                            <x-empty-state title="Belum ada laporan" message="Buat laporan pertama dari data Anda." :action-url="route('reports.create')" action-label="Buat Laporan" />
                         @else
                             <ul class="divide-y divide-gray-200">
                                 @foreach ($recentReports as $report)
@@ -113,7 +95,7 @@
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $report->title }}</p>
                                             <p class="text-xs text-gray-500">{{ strtoupper($report->output_format) }} &middot; {{ $report->created_at->format('d M Y') }}</p>
                                         </div>
-                                        <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 shrink-0">{{ ucfirst($report->status) }}</span>
+                                        <x-status-badge :status="$report->status" class="shrink-0" />
                                     </li>
                                 @endforeach
                             </ul>

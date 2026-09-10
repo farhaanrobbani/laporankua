@@ -10,13 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     @if ($imports->isEmpty())
-                        <div class="text-center py-8">
-                            <p class="text-gray-500 font-medium">Belum ada data import</p>
-                            <p class="text-gray-400 text-sm mt-1">Upload file Excel untuk mulai mengolah data.</p>
-                            <a href="{{ route('imports.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
-                                Upload Excel
-                            </a>
-                        </div>
+                        <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <form method="GET" action="{{ route('data.index') }}" class="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center">
                             <label class="text-sm text-gray-700">
@@ -35,9 +29,7 @@
                         @if ($selectedImport)
                             <livewire:data-table :import-id="$selectedImport->id" :key="'data-table-'.$selectedImport->id" />
                         @else
-                            <div class="text-center py-8">
-                                <p class="text-gray-500 font-medium">Pilih file import untuk melihat datanya</p>
-                            </div>
+                            <x-empty-state title="Pilih file import untuk melihat datanya" />
                         @endif
                     @endif
                 </div>

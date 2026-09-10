@@ -136,12 +136,6 @@ new class extends Component
 ?>
 
 <div>
-    @if (session('status'))
-        <div class="mb-4 bg-green-100 border border-green-200 text-green-800 text-sm rounded-md px-4 py-3">
-            {{ session('status') }}
-        </div>
-    @endif
-
     <div class="flex flex-col lg:flex-row gap-3 mb-4">
         <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari data..." class="border-gray-300 rounded-md text-sm lg:w-64" />
         <select wire:model.live="filterColumn" class="border-gray-300 rounded-md text-sm">
