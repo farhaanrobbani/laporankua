@@ -101,7 +101,7 @@
                             <div class="text-center py-8">
                                 <p class="text-gray-500 font-medium">Belum ada laporan</p>
                                 <p class="text-gray-400 text-sm mt-1">Buat laporan pertama dari data Anda.</p>
-                                <a href="#" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
+                                <a href="{{ route('reports.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
                                     Buat Laporan
                                 </a>
                             </div>
@@ -129,7 +129,7 @@
                                 <p class="font-semibold text-gray-900 text-sm">Upload Excel</p>
                                 <p class="text-xs text-gray-500 mt-1">Import file .xlsx / .xls</p>
                             </a>
-                            <a href="#" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                            <a href="{{ route('reports.create') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
                                 <p class="font-semibold text-gray-900 text-sm">Buat Laporan</p>
                                 <p class="text-xs text-gray-500 mt-1">PDF, Word, Excel, Print</p>
                             </a>
