@@ -17,6 +17,7 @@ class Report extends Model
         'title',
         'description',
         'output_format',
+        'config_json',
         'file_path',
         'file_size',
         'status',
@@ -26,6 +27,7 @@ class Report extends Model
     protected function casts(): array
     {
         return [
+            'config_json' => 'array',
             'generated_at' => 'datetime',
         ];
     }
