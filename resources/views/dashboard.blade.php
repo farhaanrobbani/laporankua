@@ -15,7 +15,7 @@
                         <h3 class="text-lg font-semibold">Olah Data Excel Menjadi Laporan</h3>
                         <p class="text-blue-100 text-sm">Upload file .xlsx atau .xls, data otomatis tersimpan sebagai database.</p>
                     </div>
-                    <a href="#" class="inline-flex items-center px-4 py-2 bg-white text-blue-700 font-semibold text-sm rounded-md hover:bg-blue-50">
+                    <a href="{{ route('imports.create') }}" class="inline-flex items-center px-4 py-2 bg-white text-blue-700 font-semibold text-sm rounded-md hover:bg-blue-50">
                         Upload Excel
                     </a>
                 </div>
@@ -51,7 +51,7 @@
                         <div class="text-center py-8">
                             <p class="text-gray-500 font-medium">Belum ada data import</p>
                             <p class="text-gray-400 text-sm mt-1">Upload file Excel untuk mulai mengolah data.</p>
-                            <a href="#" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
+                            <a href="{{ route('imports.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
                                 Upload Excel
                             </a>
                         </div>
@@ -125,7 +125,7 @@
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi Cepat</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <a href="#" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                            <a href="{{ route('imports.create') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
                                 <p class="font-semibold text-gray-900 text-sm">Upload Excel</p>
                                 <p class="text-xs text-gray-500 mt-1">Import file .xlsx / .xls</p>
                             </a>
