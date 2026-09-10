@@ -46,9 +46,15 @@ php85 artisan queue:work --tries=3 --sleep=3 --timeout=120
 ## Testing
 
 ```bash
-php85 artisan test        # 90 test: unit service, auth, dashboard, import, data, report, template, security, UI polish
+php85 artisan test        # 98 test: unit service, auth, dashboard, import, data, report, template, policy, security, performa, UI polish
 vendor/bin/pint --test    # code style
+
+# Coverage (membangun pcov otomatis bila belum ada, tanpa sudo)
+bash bin/coverage.sh
+bash bin/coverage.sh --min=80   # gagal bila coverage < 80%
 ```
+
+Coverage saat ini: **~90% statement** (file scaffolding auth Breeze adalah penyumbang utama yang belum tertutup).
 
 ## Struktur Modul
 

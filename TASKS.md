@@ -163,7 +163,7 @@
 - [x] Queue worker configuration — worker dev jalan (artisan queue:work); supervisor utk produksi masuk Phase 12
 - [x] Page load speed optimization — Vite build minify, icons manifest cached, eager loading list
 - [x] Frontend asset optimization — npm run build (app css+js berversi)
-- [~] Performance tests — DILEWATKAN: belum ada assertion waktu-query; index sudah diverifikasi via SHOW INDEX MySQL
+- [x] Performance tests — PerformanceTest: batas jumlah query (anti N+1) di dashboard/import/data + benchmark buildDataset 1000 baris
 
 ---
 
@@ -189,7 +189,7 @@
 - [x] Update all documentation files
 - [x] Unit tests completion
 - [x] Feature tests completion
-- [~] Test coverage 80%+ — BELUM TERUKUR: tidak ada extension xdebug/pcov di environment dev; 90 test unit+feature covering semua modul inti
+- [x] Test coverage 80%+ — 90.3% statement (pcov, `bin/coverage.sh`); 98 test unit+feature
 - [x] PHP linting (Pint)
 - [x] Code review
 - [x] Documentation review
@@ -264,12 +264,12 @@ Aplikasi siap deploy apabila:
 - [x] Template management berfungsi
 - [x] Data user terisolasi
 - [x] Tidak ada critical bugs
-- [~] Test coverage >= 80% — lihat catatan Phase 11
+- [x] Test coverage >= 80% — 90.3% statement
 - [x] Code passes linting
 - [ ] Production deployment ready
 - [x] Documentation complete
 - [x] Security audit passed
-- [ ] Performance targets met
+- [x] Performance targets met — N+1 dijaga test (<=12-16 query), buildDataset 1000 baris < 5s di test
 
 ---
 
