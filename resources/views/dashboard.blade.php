@@ -133,7 +133,7 @@
                                 <p class="font-semibold text-gray-900 text-sm">Buat Laporan</p>
                                 <p class="text-xs text-gray-500 mt-1">PDF, Word, Excel, Print</p>
                             </a>
-                            <a href="#" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                            <a href="{{ route('templates.index') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
                                 <p class="font-semibold text-gray-900 text-sm">Template</p>
                                 <p class="text-xs text-gray-500 mt-1">Kelola template laporan</p>
                             </a>

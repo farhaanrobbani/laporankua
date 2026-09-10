@@ -3,6 +3,7 @@
 use App\Jobs\GenerateReport;
 use App\Models\Import;
 use App\Models\Report;
+use App\Models\ReportTemplate;
 use App\Services\ReportGenerationService;
 use Livewire\Component;
 
@@ -38,6 +39,10 @@ new class extends Component
     /** @var array{headings: string[], rows: array, total: int}|null */
     public ?array $preview = null;
 
+    public bool $hasDefaultTemplate = false;
+
+    public string $templateName = '';
+
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
@@ -46,6 +51,84 @@ new class extends Component
             ->get(['id', 'file_name'])
             ->map(fn (Import $import) => ['id' => $import->id, 'file_name' => $import->file_name])
             ->all();
+
+        $this->hasDefaultTemplate = ReportTemplate::where('user_id', auth()->id())
+            ->where('is_default', true)
+            ->exists();
+    }
+
+    public function loadDefaultTemplate(): void
+    {
+        $template = ReportTemplate::where('user_id', auth()->id())
+            ->where('is_default', true)
+            ->first();
+
+        if (! $template) {
+            return;
+        }
+
+        $this->applyTemplateConfig($template);
+    }
+
+    public function saveAsTemplate(): void
+    {
+        $this->validate([
+            'templateName' => 'required|string|max:255',
+            'importId' => 'required|integer',
+        ]);
+
+        $import = $this->selectedImport();
+
+        if (! $import) {
+            $this->addError('importId', 'Sumber data tidak valid.');
+
+            return;
+        }
+
+        ReportTemplate::create([
+            'user_id' => auth()->id(),
+            'name' => $this->templateName,
+            'output_format' => $this->format,
+            'fields_json' => array_values(array_intersect($this->fields, $import->availableColumns())),
+            'filters_json' => [
+                'search' => $this->search ?: null,
+                'filter_column' => $this->filterColumn ?: null,
+                'filter_value' => $this->filterValue ?: null,
+            ],
+            'sorting_json' => [
+                'column' => $this->sortColumn ?: null,
+                'direction' => $this->sortDirection,
+            ],
+            'layout_json' => ['orientation' => $this->orientation],
+            'is_default' => false,
+        ]);
+
+        $this->templateName = '';
+
+        session()->flash('template_saved', 'Template berhasil disimpan.');
+    }
+
+    private function applyTemplateConfig(ReportTemplate $template): void
+    {
+        $this->format = $template->output_format;
+        $this->orientation = $template->layout_json['orientation'] ?? 'portrait';
+        $this->search = $template->filters_json['search'] ?? '';
+        $this->filterColumn = $template->filters_json['filter_column'] ?? '';
+        $this->filterValue = $template->filters_json['filter_value'] ?? '';
+        $this->sortColumn = $template->sorting_json['column'] ?? '';
+        $this->sortDirection = $template->sorting_json['direction'] ?? 'asc';
+
+        if ($this->importId) {
+            $import = $this->selectedImport();
+            if ($import) {
+                $this->columns = $import->availableColumns();
+                $this->fields = array_values(array_intersect($template->fields_json ?? [], $this->columns));
+                if ($this->fields === []) {
+                    $this->fields = $this->columns;
+                }
+                $this->loadPreview();
+            }
+        }
     }
 
     public function updatedImportId(): void
@@ -179,12 +262,17 @@ new class extends Component
         @if (empty($this->imports))
             <p class="text-sm text-gray-500">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 font-medium">Upload Excel dulu</a>.</p>
         @else
-            <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
-                <option value="">-- Pilih file import --</option>
-                @foreach ($this->imports as $import)
-                    <option value="{{ $import['id'] }}">{{ $import['file_name'] }}</option>
-                @endforeach
-            </select>
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                    <option value="">-- Pilih file import --</option>
+                    @foreach ($this->imports as $import)
+                        <option value="{{ $import['id'] }}">{{ $import['file_name'] }}</option>
+                    @endforeach
+                </select>
+                @if ($this->hasDefaultTemplate)
+                    <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
+                @endif
+            </div>
         @endif
         @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
@@ -307,6 +395,20 @@ new class extends Component
                     <span wire:loading wire:target="generate">Memproses...</span>
                 </button>
             </div>
+        </div>
+
+        {{-- 5. Simpan sebagai template --}}
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 class="font-semibold text-gray-900 mb-1">5. Simpan sebagai Template <span class="font-normal text-gray-500">(opsional)</span></h3>
+            <p class="text-sm text-gray-500 mb-3">Simpan konfigurasi di atas untuk dipakai berulang.</p>
+            @if (session('template_saved'))
+                <p class="mb-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-4 py-2">{{ session('template_saved') }}</p>
+            @endif
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" wire:model="templateName" placeholder="Nama template, misal: Laporan Bulanan" class="border-gray-300 rounded-md text-sm flex-1" />
+                <button type="button" wire:click="saveAsTemplate" class="px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded-md hover:bg-purple-700">Simpan Template</button>
+            </div>
+            @error('templateName') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
     @endif
 </div>
