@@ -22,12 +22,14 @@ class Import extends Model
         'failed_rows',
         'status',
         'imported_at',
+        'error_log',
     ];
 
     protected function casts(): array
     {
         return [
             'imported_at' => 'datetime',
+            'error_log' => 'array',
         ];
     }
 
