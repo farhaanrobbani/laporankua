@@ -134,7 +134,7 @@
 - [x] Print header/footer configuration
 - [~] Page number support — DomPDF: footer page number via @page CSS print; belum header/footer variabel PDF khusus
 - [x] A4 page size configuration
-- [ ] Landscape/portrait support
+- [x] Landscape/portrait support — orientasi PDF portrait/landscape (PdfService + report-builder)
 - [x] Print tests
 
 ---
