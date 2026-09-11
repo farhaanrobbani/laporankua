@@ -4,6 +4,7 @@ use App\Jobs\GenerateReport;
 use App\Models\Import;
 use App\Models\Report;
 use App\Models\ReportTemplate;
+use App\Services\MergeService;
 use App\Services\ReportGenerationService;
 use Livewire\Component;
 
@@ -43,6 +44,16 @@ new class extends Component
 
     public string $templateName = '';
 
+    public bool $isMergeMode = false;
+
+    /** @var int[] */
+    public array $mergeImportIds = [];
+
+    public string $joinColumn = '';
+
+    /** @var string[] */
+    public array $sharedColumns = [];
+
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
@@ -55,6 +66,25 @@ new class extends Component
         $this->hasDefaultTemplate = ReportTemplate::where('user_id', auth()->id())
             ->where('is_default', true)
             ->exists();
+    }
+
+    public function updatedMergeImportIds(): void
+    {
+        $this->sharedColumns = app(MergeService::class)->getSharedColumns($this->mergeImportIds);
+        $this->joinColumn = '';
+        $this->columns = [];
+        $this->fields = [];
+        $this->preview = null;
+
+        if (count($this->mergeImportIds) >= 2) {
+            $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
+            $this->fields = $this->columns;
+        }
+    }
+
+    public function updatedJoinColumn(): void
+    {
+        $this->preview = null;
     }
 
     public function loadDefaultTemplate(): void
@@ -74,22 +104,30 @@ new class extends Component
     {
         $this->validate([
             'templateName' => 'required|string|max:255',
-            'importId' => 'required|integer',
         ]);
 
-        $import = $this->selectedImport();
+        if ($this->isMergeMode) {
+            if (count($this->mergeImportIds) < 2 || $this->joinColumn === '') {
+                $this->addError('importId', 'Pilih minimal 2 file import dan kolom penggabung.');
 
-        if (! $import) {
-            $this->addError('importId', 'Sumber data tidak valid.');
+                return;
+            }
+        } else {
+            $this->validate(['importId' => 'required|integer']);
 
-            return;
+            $import = $this->selectedImport();
+            if (! $import) {
+                $this->addError('importId', 'Sumber data tidak valid.');
+
+                return;
+            }
         }
 
         ReportTemplate::create([
             'user_id' => auth()->id(),
             'name' => $this->templateName,
             'output_format' => $this->format,
-            'fields_json' => array_values(array_intersect($this->fields, $import->availableColumns())),
+            'fields_json' => $this->fields,
             'filters_json' => [
                 'search' => $this->search ?: null,
                 'filter_column' => $this->filterColumn ?: null,
@@ -104,7 +142,6 @@ new class extends Component
         ]);
 
         $this->templateName = '';
-
         session()->flash('template_saved', 'Template berhasil disimpan.');
     }
 
@@ -133,6 +170,10 @@ new class extends Component
 
     public function updatedImportId(): void
     {
+        if ($this->isMergeMode) {
+            return;
+        }
+
         $this->reset(['columns', 'fields', 'preview', 'filterColumn', 'filterValue', 'sortColumn', 'search']);
 
         $import = $this->selectedImport();
@@ -153,6 +194,12 @@ new class extends Component
 
     public function loadPreview(): void
     {
+        if ($this->isMergeMode) {
+            $this->loadMergePreview();
+
+            return;
+        }
+
         $import = $this->selectedImport();
 
         if (! $import || $this->fields === []) {
@@ -163,6 +210,33 @@ new class extends Component
 
         $dataset = app(ReportGenerationService::class)->buildDataset(
             $import,
+            $this->fields,
+            $this->search ?: null,
+            $this->filterColumn ?: null,
+            $this->filterValue ?: null,
+            $this->sortColumn ?: null,
+            $this->sortDirection,
+            10,
+        );
+
+        $this->preview = [
+            'headings' => $dataset['headings'],
+            'rows' => $dataset['rows'],
+            'total' => $dataset['total'],
+        ];
+    }
+
+    private function loadMergePreview(): void
+    {
+        if (count($this->mergeImportIds) < 2 || $this->joinColumn === '' || $this->fields === []) {
+            $this->preview = null;
+
+            return;
+        }
+
+        $dataset = app(MergeService::class)->buildMergedDataset(
+            $this->mergeImportIds,
+            $this->joinColumn,
             $this->fields,
             $this->search ?: null,
             $this->filterColumn ?: null,
@@ -190,6 +264,12 @@ new class extends Component
 
     public function generate(): void
     {
+        if ($this->isMergeMode) {
+            $this->generateMergeReport();
+
+            return;
+        }
+
         $this->validate([
             'importId' => 'required|integer',
             'title' => 'required|string|max:255',
@@ -239,7 +319,62 @@ new class extends Component
         }
 
         GenerateReport::dispatch($report);
+        $this->redirectRoute('reports.index');
+    }
 
+    private function generateMergeReport(): void
+    {
+        $this->validate([
+            'mergeImportIds' => 'required|array|min:2',
+            'joinColumn' => 'required|string',
+            'title' => 'required|string|max:255',
+            'format' => 'required|in:pdf,word,excel,print',
+            'orientation' => 'required|in:portrait,landscape',
+            'sortDirection' => 'required|in:asc,desc',
+        ]);
+
+        if ($this->fields === [] && $this->format !== 'print') {
+            $this->addError('fields', 'Pilih minimal satu kolom.');
+
+            return;
+        }
+
+        $firstImport = Import::where('id', $this->mergeImportIds[0])->first();
+
+        if (! $firstImport) {
+            $this->addError('importId', 'Sumber data tidak valid.');
+
+            return;
+        }
+
+        $report = Report::create([
+            'user_id' => auth()->id(),
+            'import_id' => $firstImport->id,
+            'title' => $this->title,
+            'output_format' => $this->format,
+            'config_json' => [
+                'fields' => $this->fields,
+                'search' => $this->search ?: null,
+                'filter_column' => $this->filterColumn ?: null,
+                'filter_value' => $this->filterValue ?: null,
+                'sort_column' => $this->sortColumn ?: null,
+                'sort_direction' => $this->sortDirection,
+                'orientation' => $this->orientation,
+                'is_merged' => true,
+                'merged_import_ids' => $this->mergeImportIds,
+                'join_column' => $this->joinColumn,
+            ],
+            'status' => $this->format === 'print' ? 'generated' : 'pending',
+            'generated_at' => $this->format === 'print' ? now() : null,
+        ]);
+
+        if ($this->format === 'print') {
+            $this->redirectRoute('reports.print', $report);
+
+            return;
+        }
+
+        GenerateReport::dispatch($report);
         $this->redirectRoute('reports.index');
     }
 
@@ -259,25 +394,69 @@ new class extends Component
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <h3 class="font-semibold text-gray-900 mb-1">1. Sumber Data</h3>
         <p class="text-sm text-gray-500 mb-3">Pilih file import yang akan dijadikan laporan.</p>
-        @if (empty($this->imports))
-            <p class="text-sm text-gray-500">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 font-medium">Upload Excel dulu</a>.</p>
-        @else
-            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
-                <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
-                    <option value="">-- Pilih file import --</option>
+
+        {{-- Mode Toggle --}}
+        <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-4">
+            <button type="button" wire:click="$set('isMergeMode', false)"
+                class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
+                Single Import
+            </button>
+            <button type="button" wire:click="$set('isMergeMode', true)"
+                class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
+                Gabung Data
+            </button>
+        </div>
+
+        @if ($this->isMergeMode)
+            {{-- Merge Mode --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih file import (minimal 2)</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     @foreach ($this->imports as $import)
-                        <option value="{{ $import['id'] }}">{{ $import['file_name'] }}</option>
+                        <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
+                            <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600" />
+                            {{ $import['file_name'] }}
+                        </label>
                     @endforeach
-                </select>
-                @if ($this->hasDefaultTemplate)
-                    <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
+                </div>
+
+                @if (count($this->mergeImportIds) >= 2)
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kolom penggabung (JOIN key)</label>
+                        <select wire:model.live="joinColumn" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                            <option value="">-- Pilih kolom --</option>
+                            @foreach ($this->sharedColumns as $col)
+                                <option value="{{ $col }}">{{ $col }}</option>
+                            @endforeach
+                        </select>
+                        @if (empty($this->sharedColumns))
+                            <p class="text-xs text-amber-600 mt-1">Tidak ada kolom yang sama antara file yang dipilih.</p>
+                        @endif
+                    </div>
                 @endif
             </div>
+        @else
+            {{-- Single Mode --}}
+            @if (empty($this->imports))
+                <p class="text-sm text-gray-500">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 font-medium">Upload Excel dulu</a>.</p>
+            @else
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                        <option value="">-- Pilih file import --</option>
+                        @foreach ($this->imports as $import)
+                            <option value="{{ $import['id'] }}">{{ $import['file_name'] }}</option>
+                        @endforeach
+                    </select>
+                    @if ($this->hasDefaultTemplate)
+                        <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
+                    @endif
+                </div>
+            @endif
         @endif
         @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
 
-    @if ($this->importId && ! empty($this->columns))
+    @if (($this->isMergeMode && count($this->mergeImportIds) >= 2 && $this->joinColumn !== '') || (! $this->isMergeMode && $this->importId && ! empty($this->columns)))
         {{-- 2. Kolom --}}
         <div class="bg-white border border-gray-200 rounded-lg p-6">
             <h3 class="font-semibold text-gray-900 mb-1">2. Kolom Laporan</h3>
@@ -287,6 +466,9 @@ new class extends Component
                     <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
                         <input type="checkbox" wire:click="toggleField('{{ $column }}')" @checked(in_array($column, $this->fields, true)) class="rounded text-blue-600" />
                         {{ $column }}
+                        @if ($this->isMergeMode && $column === $this->joinColumn)
+                            <span class="text-xs text-blue-600 font-medium">(JOIN)</span>
+                        @endif
                     </label>
                 @endforeach
             </div>

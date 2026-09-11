@@ -104,15 +104,28 @@ class ReportGenerationService
         }
 
         try {
-            $dataset = $this->buildDataset(
-                $import,
-                $fields,
-                $config['search'] ?? null,
-                $config['filter_column'] ?? null,
-                $config['filter_value'] ?? null,
-                $config['sort_column'] ?? null,
-                $config['sort_direction'] ?? 'asc',
-            );
+            if (! empty($config['is_merged']) && ! empty($config['merged_import_ids']) && ! empty($config['join_column'])) {
+                $dataset = app(MergeService::class)->buildMergedDataset(
+                    $config['merged_import_ids'],
+                    $config['join_column'],
+                    $fields,
+                    $config['search'] ?? null,
+                    $config['filter_column'] ?? null,
+                    $config['filter_value'] ?? null,
+                    $config['sort_column'] ?? null,
+                    $config['sort_direction'] ?? 'asc',
+                );
+            } else {
+                $dataset = $this->buildDataset(
+                    $import,
+                    $fields,
+                    $config['search'] ?? null,
+                    $config['filter_column'] ?? null,
+                    $config['filter_value'] ?? null,
+                    $config['sort_column'] ?? null,
+                    $config['sort_direction'] ?? 'asc',
+                );
+            }
             $dataset['title'] = $report->title;
 
             $extension = self::EXTENSIONS[$report->output_format] ?? null;
