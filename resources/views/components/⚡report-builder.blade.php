@@ -597,7 +597,7 @@ new class extends Component
                 {{-- Custom Layout Mode --}}
                 <div class="mt-4">
                     @if (! empty($this->importId) && ! empty($this->fields))
-                        <livewire:⚡layout-builder
+                        <livewire:layout-builder
                             :import-id="$this->importId"
                             :fields="$this->fields"
                             :key="'layout-builder-'.$this->importId"
