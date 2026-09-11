@@ -76,7 +76,7 @@
 
                                 @if (count($mergeImports) >= 2)
                                     @php
-                                        $sharedColumns = App\Services\MergeService::getSharedColumns($mergeImports);
+                                        $sharedColumns = app(App\Services\MergeService::class)->getSharedColumns($mergeImports);
                                     @endphp
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Kolom penggabung (JOIN key)</label>
