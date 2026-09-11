@@ -3,7 +3,6 @@
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Services\MergeService;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -94,7 +93,7 @@ new class extends Component
     public function toggleSelectAll(bool $checked): void
     {
         if ($this->isMergeMode) {
-            $this->selected = $checked ? range(1, $this->records->total()) : [];
+            $this->selected = $checked ? range(1, count($this->filteredMergeRows())) : [];
         } else {
             $this->selected = $checked ? $this->baseQuery()->pluck('id')->map(fn ($id) => (int) $id)->all() : [];
         }
@@ -144,7 +143,7 @@ new class extends Component
         ]);
     }
 
-    private function baseQuery(): \Illuminate\Database\Eloquent\Builder
+    public function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return ImportData::forImport($this->importId)
             ->search($this->search)
@@ -152,69 +151,62 @@ new class extends Component
             ->sortBy($this->sortColumn, $this->sortDirection);
     }
 
-    private function mergeQuery(): array
+    public function mergeQuery(): array
     {
         return app(MergeService::class)->mergeByColumn($this->importIds, $this->joinColumn);
     }
 
-    #[Computed]
-    public function records(): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function filteredMergeRows(): array
     {
-        if ($this->isMergeMode) {
-            $mergeResult = $this->mergeQuery();
-            $rows = $mergeResult['rows'];
+        $mergeResult = $this->mergeQuery();
+        $rows = $mergeResult['rows'];
 
-            if ($this->search !== '') {
-                $lowerSearch = mb_strtolower($this->search);
-                $rows = array_filter($rows, function ($row) use ($lowerSearch) {
-                    foreach ($row as $val) {
-                        if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
-                            return true;
-                        }
+        if ($this->search !== '') {
+            $lowerSearch = mb_strtolower($this->search);
+            $rows = array_filter($rows, function ($row) use ($lowerSearch) {
+                foreach ($row as $val) {
+                    if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
+                        return true;
                     }
+                }
 
-                    return false;
-                });
-            }
-
-            if ($this->filterColumn !== '' && $this->filterValue !== '') {
-                $lowerFilter = mb_strtolower($this->filterValue);
-                $filterCol = $this->filterColumn;
-                $rows = array_filter($rows, function ($row) use ($filterCol, $lowerFilter) {
-                    $val = $row[$filterCol] ?? null;
-
-                    return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
-                });
-            }
-
-            $rows = array_values($rows);
-
-            if ($this->sortColumn !== '' && $this->sortColumn !== 'row_number') {
-                $sortCol = $this->sortColumn;
-                $dir = $this->sortDirection;
-                usort($rows, function ($a, $b) use ($sortCol, $dir) {
-                    $valA = $a[$sortCol] ?? '';
-                    $valB = $b[$sortCol] ?? '';
-                    $cmp = strcasecmp((string) $valA, (string) $valB);
-
-                    return $dir === 'desc' ? -$cmp : $cmp;
-                });
-            }
-
-            $total = count($rows);
-            $offset = ($this->getPage() - 1) * $this->perPage;
-            $sliced = array_slice($rows, $offset, $this->perPage);
-
-            return new \Illuminate\Pagination\LengthAwarePaginator(
-                $sliced,
-                $total,
-                $this->perPage,
-                $this->getPage(),
-                ['path' => request()->url(), 'query' => request()->query()]
-            );
+                return false;
+            });
         }
 
-        return $this->baseQuery()->paginate($this->perPage);
+        if ($this->filterColumn !== '' && $this->filterValue !== '') {
+            $lowerFilter = mb_strtolower($this->filterValue);
+            $filterCol = $this->filterColumn;
+            $rows = array_filter($rows, function ($row) use ($filterCol, $lowerFilter) {
+                $val = $row[$filterCol] ?? null;
+
+                return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
+            });
+        }
+
+        $rows = array_values($rows);
+
+        if ($this->sortColumn !== '' && $this->sortColumn !== 'row_number') {
+            $sortCol = $this->sortColumn;
+            $dir = $this->sortDirection;
+            usort($rows, function ($a, $b) use ($sortCol, $dir) {
+                $valA = $a[$sortCol] ?? '';
+                $valB = $b[$sortCol] ?? '';
+                $cmp = strcasecmp((string) $valA, (string) $valB);
+
+                return $dir === 'desc' ? -$cmp : $cmp;
+            });
+        }
+
+        return $rows;
+    }
+
+    public function mergePaginatedRows(): array
+    {
+        $rows = $this->filteredMergeRows();
+        $offset = max(0, ($this->getPage() - 1) * $this->perPage);
+
+        return array_slice($rows, $offset, $this->perPage);
     }
 };
 ?>
@@ -259,68 +251,136 @@ new class extends Component
         </div>
     @endif
 
-    @php($records = $this->records)
-    @if ($records->isEmpty())
-        <div class="text-center py-8">
-            <p class="text-gray-500 font-medium">Tidak ada data ditemukan</p>
-            <p class="text-gray-400 text-sm mt-1">Ubah kata kunci pencarian atau filter.</p>
-        </div>
+    @if ($this->isMergeMode)
+        @php
+            $allMergeRows = $this->filteredMergeRows();
+            $mergeTotal = count($allMergeRows);
+            $mergeLastPage = (int) ceil($mergeTotal / $this->perPage);
+            $mergePage = max(1, $this->getPage());
+            $mergeOffset = ($mergePage - 1) * $this->perPage;
+            $mergeRows = array_slice($allMergeRows, $mergeOffset, $this->perPage);
+        @endphp
+        @if (empty($mergeRows))
+            <div class="text-center py-8">
+                <p class="text-gray-500 font-medium">Tidak ada data ditemukan</p>
+                <p class="text-gray-400 text-sm mt-1">Ubah kata kunci pencarian atau filter.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto border border-gray-200 rounded-md">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            @foreach ($this->columns as $column)
+                                <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
+                                    <button type="button" wire:click="sortBy('{{ $column }}')" class="hover:text-gray-800">
+                                        {{ $column }}
+                                        @if ($column === $this->joinColumn)
+                                            <span class="text-blue-600 text-xs">(JOIN)</span>
+                                        @endif
+                                        @if ($this->sortColumn === $column) {{ $this->sortDirection === 'asc' ? '↑' : '↓' }} @endif
+                                    </button>
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($mergeRows as $record)
+                            <tr>
+                                @foreach ($this->columns as $column)
+                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record[$column] ?? '' }}">
+                                        {{ $record[$column] ?? '' }}
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if ($mergeLastPage > 1)
+                <div class="mt-4 flex items-center justify-between">
+                    <p class="text-sm text-gray-700">
+                        Menampilkan <span class="font-medium">{{ $mergeOffset + 1 }}</span> - <span class="font-medium">{{ min($mergeOffset + $this->perPage, $mergeTotal) }}</span> dari <span class="font-medium">{{ $mergeTotal }}</span> data
+                    </p>
+                    <div class="flex items-center gap-1">
+                        <button type="button" wire:click="gotoPage(1, 'page')" @disabled($mergePage <= 1)
+                            class="px-3 py-1 text-sm border rounded {{ $mergePage <= 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
+                            &laquo;
+                        </button>
+                        <button type="button" wire:click="previousPage('page')" @disabled($mergePage <= 1)
+                            class="px-3 py-1 text-sm border rounded {{ $mergePage <= 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
+                            &lsaquo;
+                        </button>
+                        @php
+                            $startPage = max(1, $mergePage - 2);
+                            $endPage = min($mergeLastPage, $mergePage + 2);
+                        @endphp
+                        @for ($i = $startPage; $i <= $endPage; $i++)
+                            <button type="button" wire:click="gotoPage({{ $i }}, 'page')"
+                                class="px-3 py-1 text-sm border rounded {{ $i === $mergePage ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
+                                {{ $i }}
+                            </button>
+                        @endfor
+                        <button type="button" wire:click="nextPage('page')" @disabled($mergePage >= $mergeLastPage)
+                            class="px-3 py-1 text-sm border rounded {{ $mergePage >= $mergeLastPage ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
+                            &rsaquo;
+                        </button>
+                        <button type="button" wire:click="gotoPage({{ $mergeLastPage }}, 'page')" @disabled($mergePage >= $mergeLastPage)
+                            class="px-3 py-1 text-sm border rounded {{ $mergePage >= $mergeLastPage ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
+                            &raquo;
+                        </button>
+                    </div>
+                </div>
+            @endif
+        @endif
     @else
-        <div class="overflow-x-auto border border-gray-200 rounded-md">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        @if (! $this->isMergeMode)
+        @php($records = $this->baseQuery()->paginate($this->perPage))
+        @if ($records->isEmpty())
+            <div class="text-center py-8">
+                <p class="text-gray-500 font-medium">Tidak ada data ditemukan</p>
+                <p class="text-gray-400 text-sm mt-1">Ubah kata kunci pencarian atau filter.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto border border-gray-200 rounded-md">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
                             <th class="px-3 py-2">
                                 <input type="checkbox" @checked(count($this->selected) > 0) wire:change="toggleSelectAll($event.target.checked)" class="rounded" />
                             </th>
-                        @endif
-                        @if (! $this->isMergeMode)
                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
                                 <button type="button" wire:click="sortBy('row_number')" class="hover:text-gray-800"># @if ($this->sortColumn === 'row_number') {{ $this->sortDirection === 'asc' ? '↑' : '↓' }} @endif</button>
                             </th>
-                        @endif
-                        @foreach ($this->columns as $column)
-                            <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
-                                <button type="button" wire:click="sortBy('{{ $column }}')" class="hover:text-gray-800">
-                                    {{ $column }}
-                                    @if ($this->isMergeMode && $column === $this->joinColumn)
-                                        <span class="text-blue-600 text-xs">(JOIN)</span>
-                                    @endif
-                                    @if ($this->sortColumn === $column) {{ $this->sortDirection === 'asc' ? '↑' : '↓' }} @endif
-                                </button>
-                            </th>
-                        @endforeach
-                        @if (! $this->isMergeMode)
-                            <th class="px-3 py-2 text-right font-medium text-gray-500">Aksi</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach ($records as $index => $record)
-                        <tr>
-                            @if (! $this->isMergeMode)
-                                <td class="px-3 py-2"><input type="checkbox" wire:model.live="selected" value="{{ $record->id }}" class="rounded" /></td>
-                            @endif
-                            @if (! $this->isMergeMode)
-                                <td class="px-3 py-2 text-gray-500">{{ $record->row_number }}</td>
-                            @endif
                             @foreach ($this->columns as $column)
-                                <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $this->isMergeMode ? ($record[$column] ?? '') : ($record->row_data[$column] ?? '') }}">
-                                    {{ $this->isMergeMode ? ($record[$column] ?? '') : ($record->row_data[$column] ?? '') }}
-                                </td>
+                                <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
+                                    <button type="button" wire:click="sortBy('{{ $column }}')" class="hover:text-gray-800">
+                                        {{ $column }}
+                                        @if ($this->sortColumn === $column) {{ $this->sortDirection === 'asc' ? '↑' : '↓' }} @endif
+                                    </button>
+                                </th>
                             @endforeach
-                            @if (! $this->isMergeMode)
+                            <th class="px-3 py-2 text-right font-medium text-gray-500">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($records as $record)
+                            <tr>
+                                <td class="px-3 py-2"><input type="checkbox" wire:model.live="selected" value="{{ $record->id }}" class="rounded" /></td>
+                                <td class="px-3 py-2 text-gray-500">{{ $record->row_number }}</td>
+                                @foreach ($this->columns as $column)
+                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record->row_data[$column] ?? '' }}">
+                                        {{ $record->row_data[$column] ?? '' }}
+                                    </td>
+                                @endforeach
                                 <td class="px-3 py-2 text-right whitespace-nowrap">
                                     <a href="{{ route('data.show', $record) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Detail</a>
                                     <button type="button" wire:click="deleteRecord({{ $record->id }})" wire:confirm="Hapus record ini?" class="ml-2 text-red-600 hover:text-red-800 text-sm font-medium">Hapus</button>
                                 </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="mt-4">{{ $records->links() }}</div>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">{{ $records->links() }}</div>
+        @endif
     @endif
 </div>
