@@ -18,6 +18,8 @@ new class extends Component
 
     public ?int $selectedRecordId = null;
 
+    public ?int $selectedField = null;
+
     /** @var array<string, mixed> */
     public array $previewRecord = [];
 
@@ -26,8 +28,6 @@ new class extends Component
     public ?int $reportId = null;
 
     public string $templateName = 'Cetak NB';
-
-    public bool $showRecordPicker = false;
 
     public function mount(?int $importId = null, array $fields = [], ?int $reportId = null): void
     {
@@ -60,11 +60,51 @@ new class extends Component
         foreach ($this->fields as $index => $field) {
             $this->layoutFields[] = [
                 'column' => $field,
-                'x' => $index === 0 ? 20.0 : ($index === 1 ? 20.0 : 110.0),
-                'y' => $index === 0 ? $y : ($index === 1 ? $y + 20 : $y + 20),
+                'x' => $index === 0 ? 20.0 : ($index === 1 ? 110.0 : 20.0),
+                'y' => $index === 0 ? $y : ($index === 1 ? $y + 20 : $y + 40),
                 'font_size' => 12,
                 'bold' => false,
             ];
+        }
+    }
+
+    public function selectField(?int $index): void
+    {
+        $this->selectedField = $index;
+    }
+
+    public function removeField(int $index): void
+    {
+        unset($this->layoutFields[$index]);
+        $this->layoutFields = array_values($this->layoutFields);
+        $this->selectedField = null;
+    }
+
+    public function updateFieldX(int $index, float $value): void
+    {
+        if (isset($this->layoutFields[$index])) {
+            $this->layoutFields[$index]['x'] = round($value, 1);
+        }
+    }
+
+    public function updateFieldY(int $index, float $value): void
+    {
+        if (isset($this->layoutFields[$index])) {
+            $this->layoutFields[$index]['y'] = round($value, 1);
+        }
+    }
+
+    public function updateFieldFontSize(int $index, int $value): void
+    {
+        if (isset($this->layoutFields[$index])) {
+            $this->layoutFields[$index]['font_size'] = max(8, min(72, $value));
+        }
+    }
+
+    public function updateFieldBold(int $index, bool $value): void
+    {
+        if (isset($this->layoutFields[$index])) {
+            $this->layoutFields[$index]['bold'] = $value;
         }
     }
 
@@ -210,7 +250,7 @@ new class extends Component
 };
 ?>
 
-<div class="space-y-4" x-data="layoutBuilder()" x-init="init()">
+<div class="space-y-4">
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
             <div>
@@ -236,8 +276,8 @@ new class extends Component
                 <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Field</h4>
                 <div class="space-y-1">
                     @foreach ($this->layoutFields as $index => $field)
-                        <div class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400 {{ ($selectedField ?? null) === $index ? 'border-blue-500 bg-blue-50' : '' }}"
-                             wire:click="$set('selectedField', {{ $index }})">
+                        <div wire:click="selectField({{ $index }})"
+                             class="flex items-center gap-2 text-sm text-gray-700 border rounded-md px-3 py-2 cursor-pointer hover:border-blue-400 {{ $this->selectedField === $index ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
                             <span class="truncate flex-1">{{ $field['column'] }}</span>
                             <span class="text-xs text-gray-400">({{ $field['x'] }}, {{ $field['y'] }})</span>
                         </div>
@@ -264,12 +304,11 @@ new class extends Component
 
                 <div class="relative bg-white border border-gray-300 shadow-sm" style="width: 794px; height: 1123px; transform: scale(0.7); transform-origin: top left;" id="canvas">
                     @foreach ($this->layoutFields as $index => $field)
-                        <div class="absolute cursor-move border border-dashed border-blue-400 bg-blue-50 bg-opacity-50 px-2 py-1 rounded text-sm select-none hover:bg-blue-100"
+                        <div wire:click="selectField({{ $index }})"
+                             class="absolute cursor-move border border-dashed rounded px-2 py-1 text-sm select-none {{ $this->selectedField === $index ? 'border-blue-600 bg-blue-100' : 'border-blue-400 bg-blue-50 hover:bg-blue-100' }}"
                              style="left: {{ $field['x'] * 3.7795 }}px; top: {{ $field['y'] * 3.7795 }}px; font-size: {{ $field['font_size'] }}px; {{ $field['bold'] ? 'font-weight:bold;' : '' }}"
-                             draggable="true"
                              data-index="{{ $index }}"
-                             onmousedown="startDrag(event, {{ $index }})"
-                             x-bind:class="{ 'border-blue-600 bg-blue-100': selectedField === {{ $index }} }">
+                             onmousedown="startDrag(event, this, {{ $index }})">
                             @if (! empty($previewRecord[$field['column']]))
                                 {{ $previewRecord[$field['column']] }}
                             @else
@@ -283,36 +322,37 @@ new class extends Component
             </div>
 
             {{-- Properties Panel --}}
-            @if (isset($selectedField) && $selectedField !== null && isset($layoutFields[$selectedField]))
+            @if ($this->selectedField !== null && isset($this->layoutFields[$this->selectedField]))
+                @php $sf = $this->layoutFields[$this->selectedField]; @endphp
                 <div class="w-56 shrink-0">
                     <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Properti</h4>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Kolom</label>
-                            <p class="text-sm font-medium text-gray-900">{{ $layoutFields[$selectedField]['column'] }}</p>
+                            <p class="text-sm font-medium text-gray-900">{{ $sf['column'] }}</p>
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Posisi X (mm)</label>
-                            <input type="number" step="0.5" wire:model.live="layoutFields.{{ $selectedField }}.x"
+                            <input type="number" step="0.5" wire:model.live="layoutFields.{{ $this->selectedField }}.x"
                                    class="w-full border-gray-300 rounded-md text-sm" min="0" max="210" />
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Posisi Y (mm)</label>
-                            <input type="number" step="0.5" wire:model.live="layoutFields.{{ $selectedField }}.y"
+                            <input type="number" step="0.5" wire:model.live="layoutFields.{{ $this->selectedField }}.y"
                                    class="w-full border-gray-300 rounded-md text-sm" min="0" max="297" />
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Ukuran Font (px)</label>
-                            <input type="number" wire:model.live="layoutFields.{{ $selectedField }}.font_size"
+                            <input type="number" wire:model.live="layoutFields.{{ $this->selectedField }}.font_size"
                                    class="w-full border-gray-300 rounded-md text-sm" min="8" max="72" />
                         </div>
                         <div>
                             <label class="flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" wire:model.live="layoutFields.{{ $selectedField }}.bold" class="rounded text-blue-600" />
+                                <input type="checkbox" wire:model.live="layoutFields.{{ $this->selectedField }}.bold" class="rounded text-blue-600" />
                                 Bold
                             </label>
                         </div>
-                        <button type="button" wire:click="removeField({{ $selectedField }})"
+                        <button type="button" wire:click="removeField({{ $this->selectedField }})"
                                 class="w-full px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-md hover:bg-red-100">
                             Hapus Field
                         </button>
@@ -328,23 +368,10 @@ new class extends Component
 </div>
 
 <script>
-function layoutBuilder() {
-    return {
-        selectedField: null,
-
-        init() {
-            this.$wire.on('layout-saved', (data) => {
-                this.reportId = data.reportId;
-            });
-        }
-    };
-}
-
 let dragState = null;
 
-function startDrag(e, index) {
+function startDrag(e, el, index) {
     e.preventDefault();
-    const el = e.currentTarget;
     const canvas = document.getElementById('canvas');
     const canvasRect = canvas.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
@@ -355,7 +382,8 @@ function startDrag(e, index) {
         offsetY: e.clientY - elRect.top,
         canvas: canvas,
         canvasRect: canvasRect,
-        el: el
+        el: el,
+        wireId: el.closest('[wire\\:id]').getAttribute('wire:id')
     };
 
     document.addEventListener('mousemove', onDrag);
@@ -378,10 +406,11 @@ function onDrag(e) {
     dragState.el.style.left = (x * 3.7795) + 'px';
     dragState.el.style.top = (y * 3.7795) + 'px';
 
-    Livewire.find(dragState.el.closest('[wire\\:id]').getAttribute('wire:id'))
-        .set('layoutFields.' + dragState.index + '.x', x);
-    Livewire.find(dragState.el.closest('[wire\\:id]').getAttribute('wire:id'))
-        .set('layoutFields.' + dragState.index + '.y', y);
+    const component = Livewire.find(dragState.wireId);
+    if (component) {
+        component.set('layoutFields.' + dragState.index + '.x', x);
+        component.set('layoutFields.' + dragState.index + '.y', y);
+    }
 }
 
 function stopDrag() {
