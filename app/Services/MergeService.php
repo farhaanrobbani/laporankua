@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Import;
 use App\Models\ImportData;
+use App\Models\MergeGroup;
+use Illuminate\Database\Eloquent\Collection;
 
 class MergeService
 {
@@ -229,5 +231,112 @@ class MergeService
         }
 
         return $allColumns;
+    }
+
+    // ── Merge Group CRUD ──────────────────────────────────────────────
+
+    /**
+     * Buat merge group baru beserta pivot imports.
+     *
+     * @param  int[]  $importIds
+     */
+    public function createGroup(int $userId, string $name, string $joinColumn, array $importIds): MergeGroup
+    {
+        $group = MergeGroup::create([
+            'user_id' => $userId,
+            'name' => $name,
+            'join_column' => $joinColumn,
+        ]);
+
+        $group->imports()->sync($importIds);
+
+        return $group->fresh('imports');
+    }
+
+    /**
+     * Ambil semua merge group milik user tertentu.
+     *
+     * @return Collection<int, MergeGroup>
+     */
+    public function getUserGroups(int $userId)
+    {
+        return MergeGroup::where('user_id', $userId)
+            ->withCount('imports')
+            ->with('imports:id,file_name')
+            ->latest()
+            ->get();
+    }
+
+    /**
+     * Tambahkan import ke merge group.
+     */
+    public function addToGroup(MergeGroup $group, int $importId): bool
+    {
+        $import = Import::where('id', $importId)->where('status', 'success')->first();
+
+        if (! $import) {
+            return false;
+        }
+
+        if ($group->imports()->where('import_id', $importId)->exists()) {
+            return true;
+        }
+
+        $columns = $import->availableColumns();
+
+        if (! in_array($group->join_column, $columns, true)) {
+            return false;
+        }
+
+        $group->imports()->attach($importId);
+
+        return true;
+    }
+
+    /**
+     * Hapus import dari merge group.
+     */
+    public function removeFromGroup(MergeGroup $group, int $importId): void
+    {
+        $group->imports()->detach($importId);
+    }
+
+    /**
+     * Hapus merge group.
+     */
+    public function deleteGroup(MergeGroup $group): void
+    {
+        $group->delete();
+    }
+
+    /**
+     * Otomatis tambahkan import baru ke semua merge group yang cocok.
+     *
+     * Dipanggil setelah import selesai. Import akan ditambahkan ke grup
+     * jika join_column grup ada di kolom import.
+     *
+     * @return string[] Nama-nama grup yang berhasil ditambahkan.
+     */
+    public function autoAddImportToGroups(Import $import): array
+    {
+        $columns = $import->availableColumns();
+        $addedGroupNames = [];
+
+        $groups = MergeGroup::where('user_id', $import->user_id)->get();
+
+        foreach ($groups as $group) {
+            if (! in_array($group->join_column, $columns, true)) {
+                continue;
+            }
+
+            if ($group->imports()->where('import_id', $import->id)->exists()) {
+                continue;
+            }
+
+            $group->imports()->attach($import->id);
+            $addedGroupNames[] = $group->name;
+        }
+
+        return $addedGroupNames;
     }
 }

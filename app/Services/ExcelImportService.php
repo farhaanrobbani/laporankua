@@ -140,6 +140,15 @@ class ExcelImportService
                 'error_log' => $errors === [] ? null : $errors,
             ]);
         });
+
+        $addedGroups = app(MergeService::class)->autoAddImportToGroups($import);
+
+        if ($addedGroups !== []) {
+            logger()->info('Import auto-added to merge groups', [
+                'import_id' => $import->id,
+                'groups' => $addedGroups,
+            ]);
+        }
     }
 
     private function markFailed(Import $import, int $total, int $imported, array $errors): void
