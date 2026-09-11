@@ -34,6 +34,8 @@ new class extends Component
 
     public int $perPage = 10;
 
+    public int $mergePage = 1;
+
     /** @var int[] */
     public array $selected = [];
 
@@ -54,21 +56,25 @@ new class extends Component
 
     public function updatingSearch(): void
     {
+        $this->mergePage = 1;
         $this->resetPage();
     }
 
     public function updatingFilterColumn(): void
     {
+        $this->mergePage = 1;
         $this->resetPage();
     }
 
     public function updatingFilterValue(): void
     {
+        $this->mergePage = 1;
         $this->resetPage();
     }
 
     public function updatingPerPage(): void
     {
+        $this->mergePage = 1;
         $this->resetPage();
     }
 
@@ -87,6 +93,7 @@ new class extends Component
             $this->sortDirection = 'asc';
         }
 
+        $this->mergePage = 1;
         $this->resetPage();
     }
 
@@ -204,9 +211,26 @@ new class extends Component
     public function mergePaginatedRows(): array
     {
         $rows = $this->filteredMergeRows();
-        $offset = max(0, ($this->getPage() - 1) * $this->perPage);
+        $offset = max(0, ($this->mergePage - 1) * $this->perPage);
 
         return array_slice($rows, $offset, $this->perPage);
+    }
+
+    public function gotoMergePage(int $page): void
+    {
+        $this->mergePage = max(1, $page);
+    }
+
+    public function nextMergePage(): void
+    {
+        $total = count($this->filteredMergeRows());
+        $lastPage = max(1, (int) ceil($total / $this->perPage));
+        $this->mergePage = min($this->mergePage + 1, $lastPage);
+    }
+
+    public function prevMergePage(): void
+    {
+        $this->mergePage = max(1, $this->mergePage - 1);
     }
 };
 ?>
@@ -255,8 +279,8 @@ new class extends Component
         @php
             $allMergeRows = $this->filteredMergeRows();
             $mergeTotal = count($allMergeRows);
-            $mergeLastPage = (int) ceil($mergeTotal / $this->perPage);
-            $mergePage = max(1, $this->getPage());
+            $mergeLastPage = max(1, (int) ceil($mergeTotal / $this->perPage));
+            $mergePage = max(1, $this->mergePage);
             $mergeOffset = ($mergePage - 1) * $this->perPage;
             $mergeRows = array_slice($allMergeRows, $mergeOffset, $this->perPage);
         @endphp
@@ -302,11 +326,11 @@ new class extends Component
                         Menampilkan <span class="font-medium">{{ $mergeOffset + 1 }}</span> - <span class="font-medium">{{ min($mergeOffset + $this->perPage, $mergeTotal) }}</span> dari <span class="font-medium">{{ $mergeTotal }}</span> data
                     </p>
                     <div class="flex items-center gap-1">
-                        <button type="button" wire:click="gotoPage(1, 'page')" @disabled($mergePage <= 1)
+                        <button type="button" wire:click="gotoMergePage(1)" @disabled($mergePage <= 1)
                             class="px-3 py-1 text-sm border rounded {{ $mergePage <= 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
                             &laquo;
                         </button>
-                        <button type="button" wire:click="previousPage('page')" @disabled($mergePage <= 1)
+                        <button type="button" wire:click="prevMergePage()" @disabled($mergePage <= 1)
                             class="px-3 py-1 text-sm border rounded {{ $mergePage <= 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
                             &lsaquo;
                         </button>
@@ -315,16 +339,16 @@ new class extends Component
                             $endPage = min($mergeLastPage, $mergePage + 2);
                         @endphp
                         @for ($i = $startPage; $i <= $endPage; $i++)
-                            <button type="button" wire:click="gotoPage({{ $i }}, 'page')"
+                            <button type="button" wire:click="gotoMergePage({{ $i }})"
                                 class="px-3 py-1 text-sm border rounded {{ $i === $mergePage ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
                                 {{ $i }}
                             </button>
                         @endfor
-                        <button type="button" wire:click="nextPage('page')" @disabled($mergePage >= $mergeLastPage)
+                        <button type="button" wire:click="nextMergePage()" @disabled($mergePage >= $mergeLastPage)
                             class="px-3 py-1 text-sm border rounded {{ $mergePage >= $mergeLastPage ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
                             &rsaquo;
                         </button>
-                        <button type="button" wire:click="gotoPage({{ $mergeLastPage }}, 'page')" @disabled($mergePage >= $mergeLastPage)
+                        <button type="button" wire:click="gotoMergePage({{ $mergeLastPage }})" @disabled($mergePage >= $mergeLastPage)
                             class="px-3 py-1 text-sm border rounded {{ $mergePage >= $mergeLastPage ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-50' }}">
                             &raquo;
                         </button>
