@@ -3,6 +3,7 @@
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Services\MergeService;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -93,7 +94,7 @@ new class extends Component
     public function toggleSelectAll(bool $checked): void
     {
         if ($this->isMergeMode) {
-            $this->selected = $checked ? range(1, $this->records()->total()) : [];
+            $this->selected = $checked ? range(1, $this->records->total()) : [];
         } else {
             $this->selected = $checked ? $this->baseQuery()->pluck('id')->map(fn ($id) => (int) $id)->all() : [];
         }
@@ -156,7 +157,8 @@ new class extends Component
         return app(MergeService::class)->mergeByColumn($this->importIds, $this->joinColumn);
     }
 
-    private function records(): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    #[Computed]
+    public function records(): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         if ($this->isMergeMode) {
             $mergeResult = $this->mergeQuery();
@@ -257,7 +259,7 @@ new class extends Component
         </div>
     @endif
 
-    @php($records = $this->records())
+    @php($records = $this->records)
     @if ($records->isEmpty())
         <div class="text-center py-8">
             <p class="text-gray-500 font-medium">Tidak ada data ditemukan</p>
