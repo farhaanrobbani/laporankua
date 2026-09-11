@@ -30,6 +30,7 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/reports/{report}', [ReportsController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/download', [ReportsController::class, 'download'])->name('reports.download');
     Route::get('/reports/{report}/print', [ReportsController::class, 'print'])->name('reports.print');
+    Route::get('/reports/{report}/custom-print/{record}', [ReportsController::class, 'customPrint'])->name('reports.custom-print');
     Route::delete('/reports/{report}', [ReportsController::class, 'destroy'])->name('reports.destroy');
 
     Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
