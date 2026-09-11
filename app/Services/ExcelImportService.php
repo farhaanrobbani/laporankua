@@ -94,11 +94,24 @@ class ExcelImportService
 
         $imported = 0;
         $failed = 0;
+        $skipped = 0;
+        $overwritten = 0;
         $errors = [];
         $batch = [];
         $now = now()->toDateTimeString();
 
-        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, &$imported, &$failed, &$errors, &$batch) {
+        $dedupColumn = $import->dedup_column;
+        $dedupImportIds = [];
+
+        if ($dedupColumn !== null && $dedupColumn !== '') {
+            $dedupImportIds = Import::where('user_id', $import->user_id)
+                ->where('dedup_column', $dedupColumn)
+                ->where('id', '!=', $import->id)
+                ->pluck('id')
+                ->toArray();
+        }
+
+        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
             foreach ($rawRows as $index => $row) {
                 $excelRow = $index + 2; // +1 header, +1 base-1
 
@@ -113,10 +126,39 @@ class ExcelImportService
                     continue;
                 }
 
+                $dedupKeyValue = null;
+
+                if ($dedupColumn !== null && $dedupColumn !== '' && isset($record[$dedupColumn])) {
+                    $dedupKeyValue = (string) $record[$dedupColumn];
+
+                    if (trim($dedupKeyValue) === '') {
+                        $dedupKeyValue = null;
+                    }
+                }
+
+                if ($dedupKeyValue !== null && $dedupImportIds !== []) {
+                    $existing = ImportData::where('dedup_key_value', $dedupKeyValue)
+                        ->whereIn('import_id', $dedupImportIds)
+                        ->first();
+
+                    if ($existing !== null) {
+                        $existing->update([
+                            'row_data' => json_encode($record, JSON_UNESCAPED_UNICODE),
+                            'import_id' => $import->id,
+                            'dedup_key_value' => $dedupKeyValue,
+                            'updated_at' => $now,
+                        ]);
+                        $overwritten++;
+
+                        continue;
+                    }
+                }
+
                 $batch[] = [
                     'import_id' => $import->id,
                     'row_data' => json_encode($record, JSON_UNESCAPED_UNICODE),
                     'row_number' => $excelRow,
+                    'dedup_key_value' => $dedupKeyValue,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];

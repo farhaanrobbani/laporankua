@@ -32,6 +32,8 @@ new class extends Component
 
     public int $total = 0;
 
+    public ?string $dedupColumn = '';
+
     public function updatedFile(ExcelImportService $service): void
     {
         $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total']);
@@ -93,6 +95,7 @@ new class extends Component
             'file_path' => $permanentPath,
             'file_size' => $this->fileSize,
             'sheet_name' => $this->sheet,
+            'dedup_column' => $this->dedupColumn !== '' ? $this->dedupColumn : null,
             'status' => 'pending',
         ]);
 
@@ -141,6 +144,25 @@ new class extends Component
                     </select>
                 </label>
             </div>
+
+            @if (! empty($headers))
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <label class="text-sm text-gray-700">
+                        Deduplikasi kolom:
+                        <select wire:model.live="dedupColumn" class="ml-2 border-gray-300 rounded-md text-sm">
+                            <option value="">Tidak ada</option>
+                            @foreach ($headers as $header)
+                                <option value="{{ $header }}">{{ $header }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    @if ($dedupColumn !== '')
+                        <p class="text-xs text-amber-600">
+                            Baris dengan {{ $dedupColumn }} yang sama di import lain akan otomatis ter-update.
+                        </p>
+                    @endif
+                </div>
+            @endif
 
             <p class="text-sm text-gray-500">Pratinjau {{ count($rows) }} dari {{ number_format($total) }} baris data.</p>
 

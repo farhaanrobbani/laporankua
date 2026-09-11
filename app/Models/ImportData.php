@@ -17,6 +17,7 @@ class ImportData extends Model
         'import_id',
         'row_data',
         'row_number',
+        'dedup_key_value',
     ];
 
     protected function casts(): array

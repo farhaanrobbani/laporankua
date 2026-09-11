@@ -17,6 +17,7 @@ class Import extends Model
         'file_path',
         'file_size',
         'sheet_name',
+        'dedup_column',
         'total_rows',
         'imported_rows',
         'failed_rows',
