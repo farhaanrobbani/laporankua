@@ -57,10 +57,19 @@ class TemplateController extends Controller
             'sort_column' => 'nullable|string|max:255',
             'sort_direction' => 'nullable|in:asc,desc',
             'orientation' => 'nullable|in:portrait,landscape',
+            'table_layout' => 'nullable|string',
             'is_default' => 'nullable|boolean',
         ]);
 
-        $template = DB::transaction(function () use ($validated) {
+        $tableLayout = null;
+        if (! empty($validated['table_layout'])) {
+            $decoded = json_decode($validated['table_layout'], true);
+            if (is_array($decoded)) {
+                $tableLayout = $decoded;
+            }
+        }
+
+        $template = DB::transaction(function () use ($validated, $tableLayout) {
             if (! empty($validated['is_default'])) {
                 $this->clearDefaults();
             }
@@ -80,9 +89,9 @@ class TemplateController extends Controller
                     'column' => $validated['sort_column'] ?? null,
                     'direction' => $validated['sort_direction'] ?? 'asc',
                 ],
-                'layout_json' => [
+                'layout_json' => array_merge([
                     'orientation' => $validated['orientation'] ?? 'portrait',
-                ],
+                ], $tableLayout ? ['table_layout' => $tableLayout] : []),
                 'is_default' => ! empty($validated['is_default']),
             ]);
         });
@@ -121,10 +130,19 @@ class TemplateController extends Controller
             'sort_column' => 'nullable|string|max:255',
             'sort_direction' => 'nullable|in:asc,desc',
             'orientation' => 'nullable|in:portrait,landscape',
+            'table_layout' => 'nullable|string',
             'is_default' => 'nullable|boolean',
         ]);
 
-        DB::transaction(function () use ($template, $validated) {
+        $tableLayout = null;
+        if (! empty($validated['table_layout'])) {
+            $decoded = json_decode($validated['table_layout'], true);
+            if (is_array($decoded)) {
+                $tableLayout = $decoded;
+            }
+        }
+
+        DB::transaction(function () use ($template, $validated, $tableLayout) {
             if (! empty($validated['is_default'])) {
                 $this->clearDefaults($template->id);
             }
@@ -143,9 +161,9 @@ class TemplateController extends Controller
                     'column' => $validated['sort_column'] ?? null,
                     'direction' => $validated['sort_direction'] ?? 'asc',
                 ],
-                'layout_json' => [
+                'layout_json' => array_merge([
                     'orientation' => $validated['orientation'] ?? 'portrait',
-                ],
+                ], $tableLayout ? ['table_layout' => $tableLayout] : []),
                 'is_default' => ! empty($validated['is_default']),
             ]);
         });
@@ -221,7 +239,7 @@ class TemplateController extends Controller
             'import_id' => $import->id,
             'title' => $validated['title'],
             'output_format' => $template->output_format,
-            'config_json' => [
+            'config_json' => array_merge([
                 'fields' => $fields,
                 'search' => $filters['search'] ?? null,
                 'filter_column' => $filters['filter_column'] ?? null,
@@ -229,7 +247,7 @@ class TemplateController extends Controller
                 'sort_column' => $sorting['column'] ?? null,
                 'sort_direction' => $sorting['direction'] ?? 'asc',
                 'orientation' => $layout['orientation'] ?? 'portrait',
-            ],
+            ], ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
             'status' => $template->output_format === 'print' ? 'generated' : 'pending',
             'generated_at' => $template->output_format === 'print' ? now() : null,
         ]);

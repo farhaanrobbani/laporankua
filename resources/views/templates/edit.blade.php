@@ -42,6 +42,12 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Layout Tabel Khusus (JSON, opsional)</label>
+                        <textarea name="table_layout" rows="6" class="mt-1 border-gray-300 rounded-md text-sm w-full font-mono text-xs" placeholder='{"columns":[{"type":"row_number","label":"No","rowspan":2}]}'>{{ old('table_layout', !empty($template->layout_json['table_layout']) ? json_encode($template->layout_json['table_layout'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '') }}</textarea>
+                        <p class="mt-1 text-xs text-gray-400">Kosongkan untuk tabel default. Format: JSON dengan key "columns".</p>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">Contoh kolom dari file (opsional, untuk memilih kolom)</label>
                         <select onchange="window.location.href='{{ route('templates.edit', $template) }}?source_import_id='+this.value" class="mt-1 border-gray-300 rounded-md text-sm w-full sm:w-auto">
                             <option value="">-- Pilih file --</option>

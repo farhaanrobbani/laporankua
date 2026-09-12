@@ -83,6 +83,7 @@ class ReportsController extends Controller
             $config['sort_direction'] ?? 'asc',
         );
         $dataset['title'] = $report->title;
+        $dataset['table_layout'] = $config['table_layout'] ?? null;
 
         return view('reports.print', compact('dataset'));
     }
