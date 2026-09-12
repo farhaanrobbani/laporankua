@@ -107,7 +107,7 @@
                                     <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="max-height: 80px; max-width: 80px;" />
                                 @endif
                             </td>
-                            <td>
+                            <td class="text-center">
                                 <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
                                 @if (! empty($dataset['nama_kantor_kota']))
                                     <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor_kota'] }}</p>
