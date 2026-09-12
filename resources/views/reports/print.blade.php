@@ -164,7 +164,7 @@
                 @endif
 
                 <h1 class="text-lg font-bold text-center">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
-                <div class="mt-2 mb-3 text-sm">
+                <div class="mt-2 mb-3" style="font-size: 10px;">
                     <p>Bulan : {{ $bulanName }}</p>
                     <p>Tahun : {{ $tahunName }}</p>
                 </div>
@@ -226,7 +226,7 @@
                 </tbody>
             </table>
 
-            <div class="mt-4 text-sm leading-relaxed">
+            <div class="mt-4 leading-relaxed" style="font-size: 10px;">
                 <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
                 <p class="mt-2 ml-4">Jumlah Nikah Kantor : <strong>{{ $countK }}</strong> N</p>
                 <p class="ml-4">Jumlah Nikah Luar Kantor : <strong>{{ $countLK }}</strong> N</p>
