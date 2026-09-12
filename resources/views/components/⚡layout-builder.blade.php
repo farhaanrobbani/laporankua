@@ -43,7 +43,13 @@ new class extends Component
         if ($reportId) {
             $report = Report::find($reportId);
             if ($report && ! empty($report->config_json['custom_layout']['fields'])) {
-                $this->layoutFields = $report->config_json['custom_layout']['fields'];
+                $this->layoutFields = array_map(fn ($f) => [
+                    'column' => $f['column'] ?? '',
+                    'x' => (float) ($f['x'] ?? 0),
+                    'y' => (float) ($f['y'] ?? 0),
+                    'font_size' => (int) ($f['font_size'] ?? 12),
+                    'bold' => (bool) ($f['bold'] ?? false),
+                ], $report->config_json['custom_layout']['fields']);
             }
         }
     }
@@ -60,8 +66,8 @@ new class extends Component
         foreach ($this->fields as $index => $field) {
             $this->layoutFields[] = [
                 'column' => $field,
-                'x' => $index === 0 ? 20.0 : ($index === 1 ? 110.0 : 20.0),
-                'y' => $index === 0 ? $y : ($index === 1 ? $y + 20 : $y + 40),
+                'x' => (float) ($index === 0 ? 20.0 : ($index === 1 ? 110.0 : 20.0)),
+                'y' => (float) ($index === 0 ? $y : ($index === 1 ? $y + 20 : $y + 40)),
                 'font_size' => 12,
                 'bold' => false,
             ];
@@ -231,7 +237,13 @@ new class extends Component
         $layout = $template->layout_json['custom_layout']['fields'] ?? [];
 
         if ($layout !== []) {
-            $this->layoutFields = $layout;
+            $this->layoutFields = array_map(fn ($f) => [
+                'column' => $f['column'] ?? '',
+                'x' => (float) ($f['x'] ?? 0),
+                'y' => (float) ($f['y'] ?? 0),
+                'font_size' => (int) ($f['font_size'] ?? 12),
+                'bold' => (bool) ($f['bold'] ?? false),
+            ], $layout);
         }
     }
 
@@ -306,7 +318,7 @@ new class extends Component
                     @foreach ($this->layoutFields as $index => $field)
                         <div wire:click="selectField({{ $index }})"
                              class="absolute cursor-move border border-dashed rounded px-2 py-1 text-sm select-none {{ $this->selectedField === $index ? 'border-blue-600 bg-blue-100' : 'border-blue-400 bg-blue-50 hover:bg-blue-100' }}"
-                             style="left: {{ $field['x'] * 3.7795 }}px; top: {{ $field['y'] * 3.7795 }}px; font-size: {{ $field['font_size'] }}px; {{ $field['bold'] ? 'font-weight:bold;' : '' }}"
+                             style="left: {{ (float) $field['x'] * 3.7795 }}px; top: {{ (float) $field['y'] * 3.7795 }}px; font-size: {{ (int) $field['font_size'] }}px; {{ $field['bold'] ? 'font-weight:bold;' : '' }}"
                              data-index="{{ $index }}"
                              onmousedown="startDrag(event, this, {{ $index }})">
                             @if (! empty($previewRecord[$field['column']]))
