@@ -53,6 +53,14 @@ class CetakNbController extends Controller
             abort(404, 'Tidak ada record yang dipilih.');
         }
 
+        $allIds = ImportData::where('import_id', $import->id)
+            ->orderBy('row_number')
+            ->pluck('id')
+            ->all();
+
+        $totalAllRecords = count($allIds);
+        $isPrintAll = count($recordIds) === $totalAllRecords;
+
         $importDataRecords = ImportData::where('import_id', $import->id)
             ->whereIn('id', $recordIds)
             ->orderBy('row_number')
@@ -63,27 +71,33 @@ class CetakNbController extends Controller
         }
 
         $records = $importDataRecords->map(fn ($item) => $item->row_data ?? [])->values()->all();
+        $count = count($records);
 
-        $allIds = ImportData::where('import_id', $import->id)
-            ->orderBy('row_number')
-            ->pluck('id')
-            ->all();
+        $showNav = $isPrintAll || $count > 1;
 
-        $singleMode = count($records) === 1;
-        $currentId = $recordIds[0];
-        $currentIndex = array_search($currentId, $allIds, true);
+        if ($showNav && $isPrintAll) {
+            $currentId = $recordIds[0];
+            $currentIndex = array_search($currentId, $allIds, true);
+        } elseif ($showNav && $count > 1) {
+            $currentId = $recordIds[0];
+            $currentIndex = array_search($currentId, $allIds, true);
+        } else {
+            $currentId = $recordIds[0];
+            $currentIndex = array_search($currentId, $allIds, true);
+        }
 
         return view('reports.cetak-nb', [
             'report' => null,
             'importId' => $import->id,
             'records' => $records,
             'recordData' => $records[0],
-            'prevId' => $singleMode && $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
-            'nextId' => $singleMode && $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
-            'currentPosition' => $singleMode ? ($currentIndex + 1) : null,
-            'totalRecords' => $singleMode ? count($allIds) : count($records),
-            'entryMode' => 'data',
-            'multiMode' => ! $singleMode,
+            'prevId' => $showNav && $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
+            'nextId' => $showNav && $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
+            'currentPosition' => $showNav ? ($currentIndex + 1) : null,
+            'totalRecords' => $showNav ? count($allIds) : $count,
+            'entryMode' => 'cetak-nb',
+            'multiMode' => $count > 1,
+            'showNav' => $showNav,
         ]);
     }
 }

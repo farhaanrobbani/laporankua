@@ -104,9 +104,20 @@ new class extends Component
             ]);
         }
 
+        if (! empty($this->selected)) {
+            return route('cetak-nb.print', [
+                'import_id' => $this->importId,
+                'records' => implode(',', $this->selected),
+            ]);
+        }
+
+        $allIds = \App\Models\ImportData::where('import_id', $this->importId)
+            ->pluck('id')
+            ->implode(',');
+
         return route('cetak-nb.print', [
             'import_id' => $this->importId,
-            'records' => implode(',', $this->selected),
+            'records' => $allIds,
         ]);
     }
 };
@@ -142,9 +153,9 @@ new class extends Component
         </div>
     @else
         <div class="flex items-center justify-end">
-            <span class="inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-gray-500 text-sm font-semibold rounded-md">
-                Cetak
-            </span>
+            <a href="{{ $this->getCetakNbPrintUrl() }}" target="_blank" style="background-color: #4338ca;" class="inline-flex items-center justify-center px-4 py-2 text-white text-sm font-semibold rounded-md hover:opacity-90">
+                Cetak Semua
+            </a>
         </div>
     @endif
 

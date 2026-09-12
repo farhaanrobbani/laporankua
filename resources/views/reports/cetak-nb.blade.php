@@ -52,14 +52,13 @@
 <body>
     @php
         $multiMode = $multiMode ?? false;
+        $showNav = $showNav ?? false;
         $records = $records ?? ($recordData ? [$recordData] : []);
     @endphp
 
     <div class="no-print">
         <div class="flex gap-2">
-            @if ($multiMode)
-                <span class="record-info">{{ count($records) }} record dipilih</span>
-            @else
+            @if ($showNav)
                 @if ($prevId !== null)
                     @if (($entryMode ?? 'report') === 'cetak-nb')
                         <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
@@ -85,6 +84,8 @@
                 @else
                     <button class="nav-btn" disabled>Berikutnya &rarr;</button>
                 @endif
+            @else
+                <span class="record-info">{{ count($records) }} record</span>
             @endif
         </div>
         <div class="flex gap-2">
