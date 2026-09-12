@@ -119,9 +119,6 @@ new class extends Component
             <table class="min-w-full divide-y divide-gray-200 text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
-                            <button type="button" wire:click="sortBy('row_number')" class="hover:text-gray-800"># @if ($this->sortColumn === 'row_number') {{ $this->sortDirection === 'asc' ? '↑' : '↓' }} @endif</button>
-                        </th>
                         @foreach ($this->columns as $column)
                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
                                 <button type="button" wire:click="sortBy('{{ $column }}')" class="hover:text-gray-800">
@@ -136,7 +133,6 @@ new class extends Component
                 <tbody class="divide-y divide-gray-200">
                     @foreach ($records as $record)
                         <tr>
-                            <td class="px-3 py-2 text-gray-500">{{ $record->row_number }}</td>
                             @foreach ($this->columns as $column)
                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record->row_data[$column] ?? '' }}">
                                     {{ $record->row_data[$column] ?? '' }}
