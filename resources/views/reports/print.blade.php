@@ -166,8 +166,11 @@
 
                 <div class="mt-6 flex justify-end">
                     <div class="text-center">
-                        <div class="h-20 border-b border-gray-400 w-40"></div>
-                        <p class="mt-1 text-xs text-gray-500">Tanda Tangan</p>
+                        <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ $tanggalFormatted }}</p>
+                        <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                        <div class="h-16"></div>
+                        <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                        <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
                     </div>
                 </div>
             </div>

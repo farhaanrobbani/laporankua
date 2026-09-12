@@ -26,6 +26,9 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'kecamatan' => ['nullable', 'string', 'max:255'],
+            'nama_kepala_kua' => ['nullable', 'string', 'max:255'],
+            'nip_kepala' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

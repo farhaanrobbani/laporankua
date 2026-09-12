@@ -232,6 +232,7 @@ class TemplateController extends Controller
         $filters = $template->filters_json ?? [];
         $sorting = $template->sorting_json ?? [];
         $layout = $template->layout_json ?? [];
+        $user = $request->user();
 
         $report = Report::create([
             'user_id' => auth()->id(),
@@ -247,6 +248,9 @@ class TemplateController extends Controller
                 'sort_column' => $sorting['column'] ?? null,
                 'sort_direction' => $sorting['direction'] ?? 'asc',
                 'orientation' => $layout['orientation'] ?? 'portrait',
+                'kecamatan' => $user->kecamatan ?? null,
+                'nama_kepala_kua' => $user->nama_kepala_kua ?? null,
+                'nip_kepala' => $user->nip_kepala ?? null,
             ], ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
             'status' => $template->output_format === 'print' ? 'generated' : 'pending',
             'generated_at' => $template->output_format === 'print' ? now() : null,

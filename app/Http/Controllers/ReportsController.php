@@ -84,6 +84,9 @@ class ReportsController extends Controller
         );
         $dataset['title'] = $report->title;
         $dataset['table_layout'] = $config['table_layout'] ?? null;
+        $dataset['kecamatan'] = $config['kecamatan'] ?? null;
+        $dataset['nama_kepala_kua'] = $config['nama_kepala_kua'] ?? null;
+        $dataset['nip_kepala'] = $config['nip_kepala'] ?? null;
 
         return view('reports.print', compact('dataset'));
     }

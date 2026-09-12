@@ -47,6 +47,24 @@
             @endif
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <x-input-label for="kecamatan" :value="__('Kecamatan')" />
+                <x-text-input id="kecamatan" name="kecamatan" type="text" class="mt-1 block w-full" :value="old('kecamatan', $user->kecamatan)" />
+                <x-input-error class="mt-2" :messages="$errors->get('kecamatan')" />
+            </div>
+            <div>
+                <x-input-label for="nama_kepala_kua" :value="__('Nama Kepala KUA')" />
+                <x-text-input id="nama_kepala_kua" name="nama_kepala_kua" type="text" class="mt-1 block w-full" :value="old('nama_kepala_kua', $user->nama_kepala_kua)" />
+                <x-input-error class="mt-2" :messages="$errors->get('nama_kepala_kua')" />
+            </div>
+            <div>
+                <x-input-label for="nip_kepala" :value="__('NIP Kepala KUA')" />
+                <x-text-input id="nip_kepala" name="nip_kepala" type="text" class="mt-1 block w-full" :value="old('nip_kepala', $user->nip_kepala)" />
+                <x-input-error class="mt-2" :messages="$errors->get('nip_kepala')" />
+            </div>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
