@@ -136,7 +136,7 @@ new class extends Component
                 <span class="text-indigo-800 font-medium">{{ count($this->selected) }} dipilih</span>
                 <button type="button" wire:click="$set('selected', [])" class="text-xs text-gray-600 underline">Batal</button>
             </div>
-            <a href="{{ $this->getCetakNbPrintUrl() }}" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700">
+            <a href="{{ $this->getCetakNbPrintUrl() }}" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-700 text-white text-sm font-semibold rounded-md hover:bg-indigo-800">
                 Cetak ({{ count($this->selected) }})
             </a>
         </div>
