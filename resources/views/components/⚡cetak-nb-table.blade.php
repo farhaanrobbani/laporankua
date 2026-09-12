@@ -128,15 +128,12 @@ new class extends Component
             <option value="50">50 / halaman</option>
             <option value="100">100 / halaman</option>
         </select>
-        @if (! empty($this->selected))
-            <a href="{{ $this->getCetakNbPrintUrl() }}" target="_blank" class="ml-auto inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700">
-                Cetak ({{ count($this->selected) }})
-            </a>
-        @else
-            <span class="ml-auto inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-gray-500 text-sm font-semibold rounded-md cursor-not-allowed">
-                Cetak
-            </span>
-        @endif
+        <a href="{{ ! empty($this->selected) ? $this->getCetakNbPrintUrl() : '#' }}"
+           @if (empty($this->selected)) @click.prevent @endif
+           @if (! empty($this->selected)) target="_blank" @endif
+           class="ml-auto inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-md {{ ! empty($this->selected) ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-gray-400 text-gray-500 pointer-events-none' }}">
+            Cetak{{ ! empty($this->selected) ? ' ('.count($this->selected).')' : '' }}
+        </a>
     </div>
 
     @if (! empty($this->selected))
