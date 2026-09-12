@@ -163,7 +163,7 @@
                     <hr class="border-t border-gray-900 mb-1">
                 @endif
 
-                <h1 class="text-lg font-bold text-center">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
+                <h1 class="font-bold text-center" style="font-size: 11px;">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
                 <div class="mt-2 mb-3" style="font-size: 10px;">
                     <p>Bulan : {{ $bulanName }}</p>
                     <p>Tahun : {{ $tahunName }}</p>
