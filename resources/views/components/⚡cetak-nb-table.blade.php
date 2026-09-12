@@ -119,6 +119,7 @@ new class extends Component
             <table class="min-w-full divide-y divide-gray-200 text-sm">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">Aksi</th>
                         @foreach ($this->columns as $column)
                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
                                 <button type="button" wire:click="sortBy('{{ $column }}')" class="hover:text-gray-800">
@@ -127,20 +128,19 @@ new class extends Component
                                 </button>
                             </th>
                         @endforeach
-                        <th class="px-3 py-2 text-right font-medium text-gray-500">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @foreach ($records as $record)
                         <tr>
+                            <td class="px-3 py-2 text-right whitespace-nowrap">
+                                <a href="{{ route('cetak-nb.print', ['import_id' => $this->importId, 'record' => $record->id]) }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Cetak NB</a>
+                            </td>
                             @foreach ($this->columns as $column)
                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record->row_data[$column] ?? '' }}">
                                     {{ $record->row_data[$column] ?? '' }}
                                 </td>
                             @endforeach
-                            <td class="px-3 py-2 text-right whitespace-nowrap">
-                                <a href="{{ route('cetak-nb.print', ['import_id' => $this->importId, 'record' => $record->id]) }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Cetak NB</a>
-                            </td>
                         </tr>
                     @endforeach
                 </tbody>
