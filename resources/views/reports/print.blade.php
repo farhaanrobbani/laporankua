@@ -57,11 +57,11 @@
                     <tr class="bg-gray-100">
                         @foreach ($columns as $col)
                             @if ($col['type'] === 'row_number')
-                                <th rowspan="{{ $col['rowspan'] ?? 1 }}" class="border border-gray-700 px-2 py-1 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
+                                <th rowspan="{{ $col['rowspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
                             @elseif ($col['type'] === 'group')
-                                <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-2 py-1 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
+                                <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
                             @elseif ($col['type'] === 'field')
-                                <th rowspan="{{ $col['rowspan'] ?? 1 }}" class="border border-gray-700 px-2 py-1 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
+                                <th rowspan="{{ $col['rowspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
                             @endif
                         @endforeach
                     </tr>
@@ -69,7 +69,7 @@
                         @foreach ($columns as $col)
                             @if ($col['type'] === 'group')
                                 @foreach ($col['children'] ?? [] as $child)
-                                    <th class="border border-gray-700 px-2 py-1 text-center font-semibold">{{ $child['label'] ?? $child['field'] ?? '' }}</th>
+                                    <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $child['label'] ?? $child['field'] ?? '' }}</th>
                                 @endforeach
                             @endif
                         @endforeach
@@ -80,7 +80,7 @@
                         <tr>
                             @foreach ($columns as $col)
                                 @if ($col['type'] === 'row_number')
-                                    <td class="border border-gray-700 px-2 py-1 text-center">{{ $rowIndex + 1 }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $rowIndex + 1 }}</td>
                                 @elseif ($col['type'] === 'group')
                                     @foreach ($col['children'] ?? [] as $child)
                                         @php
@@ -90,7 +90,7 @@
                                                 $value = $applyTransform($value, $cellData[1]);
                                             }
                                         @endphp
-                                        <td class="border border-gray-700 px-2 py-1">{{ $value }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5">{{ $value }}</td>
                                     @endforeach
                                 @elseif ($col['type'] === 'field')
                                     @php
@@ -100,7 +100,7 @@
                                             $value = $applyTransform($value, $cellData[1]);
                                         }
                                     @endphp
-                                    <td class="border border-gray-700 px-2 py-1 text-center">{{ $value }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                 @endif
                             @endforeach
                         </tr>
@@ -112,7 +112,7 @@
                 <thead>
                     <tr class="bg-gray-100">
                         @foreach ($dataset['headings'] as $heading)
-                            <th class="border border-gray-700 px-2 py-1 text-left font-semibold">{{ $heading }}</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-left font-semibold">{{ $heading }}</th>
                         @endforeach
                     </tr>
                 </thead>
@@ -120,7 +120,7 @@
                     @foreach ($dataset['rows'] as $row)
                         <tr>
                             @foreach ($dataset['headings'] as $heading)
-                                <td class="border border-gray-700 px-2 py-1">{{ $row[$heading] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $row[$heading] ?? '' }}</td>
                             @endforeach
                         </tr>
                     @endforeach
