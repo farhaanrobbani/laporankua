@@ -354,25 +354,25 @@ new class extends Component
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Posisi X (mm)</label>
                             <input type="number" step="0.5" value="{{ $sf['x'] }}"
-                                   wire:change="updateFieldX({{ $this->selectedField }}, $event.target.value)"
+                                   wire:blur="updateFieldX({{ $this->selectedField }}, $event.target.value)"
                                    class="w-full border-gray-300 rounded-md text-sm" min="0" max="210" />
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Posisi Y (mm)</label>
                             <input type="number" step="0.5" value="{{ $sf['y'] }}"
-                                   wire:change="updateFieldY({{ $this->selectedField }}, $event.target.value)"
+                                   wire:blur="updateFieldY({{ $this->selectedField }}, $event.target.value)"
                                    class="w-full border-gray-300 rounded-md text-sm" min="0" max="297" />
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Ukuran Font (px)</label>
                             <input type="number" value="{{ $sf['font_size'] }}"
-                                   wire:change="updateFieldFontSize({{ $this->selectedField }}, $event.target.value)"
+                                   wire:blur="updateFieldFontSize({{ $this->selectedField }}, $event.target.value)"
                                    class="w-full border-gray-300 rounded-md text-sm" min="8" max="72" />
                         </div>
                         <div>
                             <label class="flex items-center gap-2 text-sm text-gray-700">
                                 <input type="checkbox" {{ $sf['bold'] ? 'checked' : '' }}
-                                       wire:change="updateFieldBold({{ $this->selectedField }}, $event.target.checked)" class="rounded text-blue-600" />
+                                       wire:blur="updateFieldBold({{ $this->selectedField }}, $event.target.checked)" class="rounded text-blue-600" />
                                 Bold
                             </label>
                         </div>
