@@ -75,17 +75,17 @@
     <div class="page">
         <div class="field" style="top: 30mm; left: 0;">
             <span class="field-label">Nomor Akta:</span>
-            <span class="field-value">{{ $recordData['Nomor Akta'] ?? '-' }}</span>
+            <span class="field-value">{{ $recordData['Nomor Akta Nikah'] ?? '-' }}</span>
         </div>
 
         <div class="field" style="top: 120mm; left: 0; right: 0; display: flex; justify-content: space-between;">
             <div>
                 <span class="field-label">Nomor Porforasi Suami:</span>
-                <span class="field-value">{{ $recordData['Nomor Porforasi Suami'] ?? '-' }}</span>
+                <span class="field-value">{{ $recordData['No Porforasi Suami'] ?? '-' }}</span>
             </div>
             <div>
                 <span class="field-label">Nomor Porforasi Istri:</span>
-                <span class="field-value">{{ $recordData['Nomor Porforasi Istri'] ?? '-' }}</span>
+                <span class="field-value">{{ $recordData['No Porforasi Istri'] ?? '-' }}</span>
             </div>
         </div>
     </div>

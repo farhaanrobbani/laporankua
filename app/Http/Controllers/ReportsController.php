@@ -37,7 +37,11 @@ class ReportsController extends Controller
 
         $report->load(['import', 'reportTemplate']);
 
-        return view('reports.show', compact('report'));
+        $firstRecord = ImportData::where('import_id', $report->import_id)
+            ->orderBy('row_number')
+            ->first();
+
+        return view('reports.show', compact('report', 'firstRecord'));
     }
 
     public function download(Report $report): StreamedResponse|SymfonyRedirectResponse
