@@ -1,5 +1,12 @@
 @php
-    $siteLogo = \App\Models\Setting::get('site_logo', '');
+    try {
+        $siteLogo = \App\Models\Setting::get('site_logo', '');
+    } catch (\Throwable $e) {
+        $siteLogo = '';
+    }
+    $faviconUrl = ($siteLogo && file_exists(storage_path('app/public/' . $siteLogo)))
+        ? Storage::url($siteLogo)
+        : '/favicon.ico';
 @endphp
 
 @if ($siteLogo && file_exists(storage_path('app/public/' . $siteLogo)))
