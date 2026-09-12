@@ -258,6 +258,7 @@ class TemplateController extends Controller
                 'telepon_kantor' => $user->telepon_kantor ?? null,
                 'email_kantor' => $user->email_kantor ?? null,
                 'logo_kantor' => $user->logo_kantor ?? null,
+                'font_size_kop' => $user->font_size_kop ?? null,
             ], ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
             'status' => $template->output_format === 'print' ? 'generated' : 'pending',
             'generated_at' => $template->output_format === 'print' ? now() : null,

@@ -119,6 +119,15 @@
             <x-input-error class="mt-2" :messages="$errors->get('logo_kantor')" />
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <x-input-label for="font_size_kop" :value="__('Ukuran Font Kop')" />
+                <x-text-input id="font_size_kop" name="font_size_kop" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop', $user->font_size_kop ?? '12')" placeholder="12" />
+                <p class="text-xs text-gray-500 mt-1">Ukuran font untuk kop surat (default: 12px)</p>
+                <x-input-error class="mt-2" :messages="$errors->get('font_size_kop')" />
+            </div>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

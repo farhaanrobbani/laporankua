@@ -94,6 +94,7 @@ class ReportsController extends Controller
         $dataset['telepon_kantor'] = $config['telepon_kantor'] ?? null;
         $dataset['email_kantor'] = $config['email_kantor'] ?? null;
         $dataset['logo_kantor'] = $config['logo_kantor'] ?? null;
+        $dataset['font_size_kop'] = $config['font_size_kop'] ?? null;
 
         return view('reports.print', compact('dataset'));
     }
