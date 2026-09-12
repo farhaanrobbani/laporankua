@@ -45,6 +45,7 @@ class CetakNbController extends Controller
         if (! empty($validated['records'])) {
             $recordIds = array_map('intval', explode(',', $validated['records']));
             $recordIds = array_filter($recordIds, fn ($id) => $id > 0);
+            $recordIds = array_values($recordIds);
         } elseif (! empty($validated['record'])) {
             $recordIds = [(int) $validated['record']];
         }
@@ -59,7 +60,42 @@ class CetakNbController extends Controller
             ->all();
 
         $totalAllRecords = count($allIds);
-        $isPrintAll = count($recordIds) === $totalAllRecords;
+        $isPrintAll = count($recordIds) === $totalAllRecords && $totalAllRecords > 1;
+
+        if ($isPrintAll) {
+            $currentId = $validated['record'] ?? $allIds[0];
+            $currentIndex = array_search($currentId, $allIds, true);
+
+            if ($currentIndex === false) {
+                $currentIndex = 0;
+                $currentId = $allIds[0];
+            }
+
+            $importData = ImportData::where('id', $currentId)
+                ->where('import_id', $import->id)
+                ->first();
+
+            if (! $importData) {
+                abort(404, 'Record tidak ditemukan.');
+            }
+
+            $records = [$importData->row_data ?? []];
+
+            return view('reports.cetak-nb', [
+                'report' => null,
+                'importId' => $import->id,
+                'records' => $records,
+                'recordData' => $records[0],
+                'prevId' => $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
+                'nextId' => $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
+                'currentPosition' => $currentIndex + 1,
+                'totalRecords' => $totalAllRecords,
+                'entryMode' => 'cetak-nb',
+                'multiMode' => false,
+                'showNav' => true,
+                'allRecordIds' => implode(',', $allIds),
+            ]);
+        }
 
         $importDataRecords = ImportData::where('import_id', $import->id)
             ->whereIn('id', $recordIds)
@@ -72,13 +108,9 @@ class CetakNbController extends Controller
 
         $records = $importDataRecords->map(fn ($item) => $item->row_data ?? [])->values()->all();
         $count = count($records);
+        $showNav = $count > 1;
 
-        $showNav = $isPrintAll || $count > 1;
-
-        if ($showNav && $isPrintAll) {
-            $currentId = $recordIds[0];
-            $currentIndex = array_search($currentId, $allIds, true);
-        } elseif ($showNav && $count > 1) {
+        if ($showNav) {
             $currentId = $recordIds[0];
             $currentIndex = array_search($currentId, $allIds, true);
         } else {
@@ -98,6 +130,7 @@ class CetakNbController extends Controller
             'entryMode' => 'cetak-nb',
             'multiMode' => $count > 1,
             'showNav' => $showNav,
+            'allRecordIds' => null,
         ]);
     }
 }
