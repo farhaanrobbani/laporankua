@@ -22,13 +22,25 @@
         <div class="flex gap-6">
             <aside class="w-48 shrink-0">
                 <nav class="space-y-1">
-                    <a href="{{ route('admin.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.index') ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                    @php
+                        $isActiveDashboard = request()->routeIs('admin.index');
+                        $isActiveUsers = request()->routeIs('admin.users.*');
+                        $isActiveSettings = request()->routeIs('admin.settings.*');
+                    @endphp
+
+                    <a href="{{ route('admin.index') }}"
+                       class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveDashboard ? '' : 'text-gray-700 hover:bg-gray-100' }}"
+                       @if($isActiveDashboard) style="background-color: #111827; color: #fff;" @endif>
                         Dashboard
                     </a>
-                    <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.users.*') ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <a href="{{ route('admin.users.index') }}"
+                       class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveUsers ? '' : 'text-gray-700 hover:bg-gray-100' }}"
+                       @if($isActiveUsers) style="background-color: #111827; color: #fff;" @endif>
                         User Management
                     </a>
-                    <a href="{{ route('admin.settings.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.settings.*') ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <a href="{{ route('admin.settings.index') }}"
+                       class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveSettings ? '' : 'text-gray-700 hover:bg-gray-100' }}"
+                       @if($isActiveSettings) style="background-color: #111827; color: #fff;" @endif>
                         Pengaturan
                     </a>
                 </nav>
