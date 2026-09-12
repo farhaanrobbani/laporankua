@@ -1,4 +1,4 @@
-<x-admin::layout>
+<x-admin.layout>
     <x-slot name="header">User Management</x-slot>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -64,4 +64,4 @@
             {{ $users->links() }}
         </div>
     </div>
-</x-admin::layout>
+</x-admin.layout>

@@ -1,4 +1,4 @@
-<x-admin::layout>
+<x-admin.layout>
     <x-slot name="header">Pengaturan Website</x-slot>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 max-w-xl">
@@ -33,4 +33,4 @@
             </div>
         </form>
     </div>
-</x-admin::layout>
+</x-admin.layout>
