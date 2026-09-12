@@ -128,18 +128,23 @@ new class extends Component
             <option value="50">50 / halaman</option>
             <option value="100">100 / halaman</option>
         </select>
-        <a href="{{ ! empty($this->selected) ? $this->getCetakNbPrintUrl() : '#' }}"
-           @if (empty($this->selected)) @click.prevent @endif
-           @if (! empty($this->selected)) target="_blank" @endif
-           class="ml-auto inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-md {{ ! empty($this->selected) ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-gray-400 text-gray-500 pointer-events-none' }}">
-            Cetak{{ ! empty($this->selected) ? ' ('.count($this->selected).')' : '' }}
-        </a>
     </div>
 
     @if (! empty($this->selected))
-        <div class="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-md px-4 py-2 text-sm">
-            <span class="text-indigo-800 font-medium">{{ count($this->selected) }} dipilih</span>
-            <button type="button" wire:click="$set('selected', [])" class="text-xs text-gray-600 underline">Batal</button>
+        <div class="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-md px-4 py-2 text-sm">
+            <div class="flex items-center gap-3">
+                <span class="text-indigo-800 font-medium">{{ count($this->selected) }} dipilih</span>
+                <button type="button" wire:click="$set('selected', [])" class="text-xs text-gray-600 underline">Batal</button>
+            </div>
+            <a href="{{ $this->getCetakNbPrintUrl() }}" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700">
+                Cetak ({{ count($this->selected) }})
+            </a>
+        </div>
+    @else
+        <div class="flex items-center justify-end">
+            <span class="inline-flex items-center justify-center px-4 py-2 border border-gray-400 text-gray-500 text-sm font-semibold rounded-md">
+                Cetak
+            </span>
         </div>
     @endif
 
