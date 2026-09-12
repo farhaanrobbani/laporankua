@@ -23,17 +23,75 @@
                         <textarea name="description" rows="2" class="mt-1 border-gray-300 rounded-md text-sm w-full">{{ old('description', $template->description) }}</textarea>
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Format output</label>
+                            <select name="output_format" class="mt-1 border-gray-300 rounded-md text-sm w-full">
+                                @foreach (['pdf' => 'PDF', 'word' => 'Word', 'excel' => 'Excel', 'print' => 'Print'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('output_format', $template->output_format) === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Orientasi (PDF)</label>
+                            <select name="orientation" class="mt-1 border-gray-300 rounded-md text-sm w-full">
+                                <option value="portrait" @selected(old('orientation', $template->layout_json['orientation'] ?? 'portrait') === 'portrait')>Portrait</option>
+                                <option value="landscape" @selected(old('orientation', $template->layout_json['orientation'] ?? 'portrait') === 'landscape')>Landscape</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Format output</label>
-                        <select name="output_format" class="mt-1 border-gray-300 rounded-md text-sm w-full sm:w-auto">
-                            @foreach (['pdf' => 'PDF', 'word' => 'Word', 'excel' => 'Excel', 'print' => 'Print'] as $value => $label)
-                                <option value="{{ $value }}" @selected(old('output_format', $template->output_format) === $value)>{{ $label }}</option>
+                        <label class="block text-sm font-medium text-gray-700">Contoh kolom dari file (opsional, untuk memilih kolom)</label>
+                        <select onchange="window.location.href='{{ route('templates.edit', $template) }}?source_import_id='+this.value" class="mt-1 border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                            <option value="">-- Pilih file --</option>
+                            @foreach ($imports as $import)
+                                <option value="{{ $import->id }}" @selected(request('source_import_id') == $import->id)>{{ $import->file_name }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <div class="text-sm text-gray-500">
-                        Konfigurasi kolom &amp; filter: {{ count($template->fields_json ?? []) }} kolom tersimpan.
+                    @if (! empty($columns))
+                        <div>
+                            <span class="block text-sm font-medium text-gray-700 mb-2">Kolom</span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                @foreach ($columns as $column)
+                                    <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
+                                        <input type="checkbox" name="fields[]" value="{{ $column }}" @checked(in_array($column, old('fields', $template->fields_json ?? []))) class="rounded text-blue-600" />
+                                        {{ $column }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Cari (default)</label>
+                            <input type="text" name="search" value="{{ old('search', $template->filters_json['search'] ?? '') }}" class="mt-1 border-gray-300 rounded-md text-sm w-full" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Filter kolom (default)</label>
+                            <input type="text" name="filter_column" value="{{ old('filter_column', $template->filters_json['filter_column'] ?? '') }}" class="mt-1 border-gray-300 rounded-md text-sm w-full" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nilai filter (default)</label>
+                            <input type="text" name="filter_value" value="{{ old('filter_value', $template->filters_json['filter_value'] ?? '') }}" class="mt-1 border-gray-300 rounded-md text-sm w-full" />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Urut kolom (default)</label>
+                            <input type="text" name="sort_column" value="{{ old('sort_column', $template->sorting_json['column'] ?? '') }}" class="mt-1 border-gray-300 rounded-md text-sm w-full" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Arah urutan</label>
+                            <select name="sort_direction" class="mt-1 border-gray-300 rounded-md text-sm w-full">
+                                <option value="asc" @selected(old('sort_direction', $template->sorting_json['direction'] ?? 'asc') === 'asc')>A → Z</option>
+                                <option value="desc" @selected(old('sort_direction', $template->sorting_json['direction'] ?? 'asc') === 'desc')>Z → A</option>
+                            </select>
+                        </div>
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-gray-700">

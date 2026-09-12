@@ -95,7 +95,14 @@ class TemplateController extends Controller
     {
         $this->authorize('update', $template);
 
-        return view('templates.edit', compact('template'));
+        $imports = Import::where('user_id', auth()->id())
+            ->where('status', 'success')
+            ->latest()
+            ->get(['id', 'file_name']);
+
+        $columns = $template->fields_json ?? [];
+
+        return view('templates.edit', compact('template', 'imports', 'columns'));
     }
 
     public function update(Request $request, ReportTemplate $template): RedirectResponse
@@ -106,6 +113,14 @@ class TemplateController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'output_format' => 'required|in:pdf,word,excel,print',
+            'fields' => 'nullable|array',
+            'fields.*' => 'string|max:255',
+            'search' => 'nullable|string|max:255',
+            'filter_column' => 'nullable|string|max:255',
+            'filter_value' => 'nullable|string|max:255',
+            'sort_column' => 'nullable|string|max:255',
+            'sort_direction' => 'nullable|in:asc,desc',
+            'orientation' => 'nullable|in:portrait,landscape',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -118,6 +133,19 @@ class TemplateController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'output_format' => $validated['output_format'],
+                'fields_json' => array_values($validated['fields'] ?? []),
+                'filters_json' => [
+                    'search' => $validated['search'] ?? null,
+                    'filter_column' => $validated['filter_column'] ?? null,
+                    'filter_value' => $validated['filter_value'] ?? null,
+                ],
+                'sorting_json' => [
+                    'column' => $validated['sort_column'] ?? null,
+                    'direction' => $validated['sort_direction'] ?? 'asc',
+                ],
+                'layout_json' => [
+                    'orientation' => $validated['orientation'] ?? 'portrait',
+                ],
                 'is_default' => ! empty($validated['is_default']),
             ]);
         });
