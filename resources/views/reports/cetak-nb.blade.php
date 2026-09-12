@@ -78,7 +78,7 @@
             <span class="field-value">{{ $recordData['Nomor Akta Nikah'] ?? '-' }}</span>
         </div>
 
-        <div class="field" style="top: 120mm; right: 0;">
+        <div class="field" style="top: 60mm; right: 0;">
             <span class="field-value">{{ $recordData['No Porforasi Suami'] ?? '-' }} & {{ $recordData['No Porforasi Istri'] ?? '-' }}</span>
         </div>
     </div>
