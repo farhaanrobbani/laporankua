@@ -234,7 +234,7 @@
 
                 <div class="mt-6 flex justify-end">
                     <div class="text-center">
-                        <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ $tanggalFormatted }}</p>
+                        <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
                         <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                         <div class="h-16"></div>
                         <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>

@@ -230,4 +230,122 @@ class MergeService
 
         return $allColumns;
     }
+
+    /**
+     * Concat data dari multiple imports (append, tanpa JOIN).
+     *
+     * @param  int[]  $importIds
+     * @return array{headings: string[], rows: array<int, array<string, mixed>>, total: int}
+     */
+    public function concatImports(array $importIds): array
+    {
+        $allColumns = $this->getAllColumns($importIds);
+        $allRows = [];
+
+        foreach ($importIds as $importId) {
+            $import = Import::where('id', $importId)->first();
+
+            if (! $import) {
+                continue;
+            }
+
+            $rows = ImportData::where('import_id', $importId)
+                ->orderBy('row_number')
+                ->cursor()
+                ->map(fn (ImportData $record) => $record->row_data ?? [])
+                ->all();
+
+            foreach ($rows as $row) {
+                $normalizedRow = [];
+                foreach ($allColumns as $col) {
+                    $normalizedRow[$col] = $row[$col] ?? null;
+                }
+                $allRows[] = $normalizedRow;
+            }
+        }
+
+        return [
+            'headings' => $allColumns,
+            'rows' => $allRows,
+            'total' => count($allRows),
+        ];
+    }
+
+    /**
+     * Build dataset untuk laporan dari concat results (tanpa JOIN).
+     *
+     * @param  int[]  $importIds
+     * @param  string[]  $fields
+     * @return array{title: string, headings: string[], rows: array<int, array<string, mixed>>, total: int, generated_at: string}
+     */
+    public function buildConcatDataset(
+        array $importIds,
+        array $fields,
+        ?string $search = null,
+        ?string $filterColumn = null,
+        ?string $filterValue = null,
+        ?string $sortColumn = null,
+        string $sortDirection = 'asc',
+        ?int $limit = null,
+    ): array {
+        $concatResult = $this->concatImports($importIds);
+        $rows = $concatResult['rows'];
+
+        if ($search !== null && $search !== '') {
+            $lowerSearch = mb_strtolower($search);
+            $rows = array_filter($rows, function ($row) use ($lowerSearch) {
+                foreach ($row as $val) {
+                    if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        if ($filterColumn !== null && $filterColumn !== '' && $filterValue !== null && $filterValue !== '') {
+            $lowerFilter = mb_strtolower($filterValue);
+            $rows = array_filter($rows, function ($row) use ($filterColumn, $lowerFilter) {
+                $val = $row[$filterColumn] ?? null;
+
+                return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
+            });
+        }
+
+        $rows = array_values($rows);
+
+        if ($sortColumn !== null && $sortColumn !== '' && isset($rows[0][$sortColumn])) {
+            $dir = strtolower($sortDirection) === 'desc' ? 'desc' : 'asc';
+            usort($rows, function ($a, $b) use ($sortColumn, $dir) {
+                $valA = $a[$sortColumn] ?? '';
+                $valB = $b[$sortColumn] ?? '';
+
+                $cmp = strcasecmp((string) $valA, (string) $valB);
+
+                return $dir === 'desc' ? -$cmp : $cmp;
+            });
+        }
+
+        if ($limit !== null) {
+            $rows = array_slice($rows, 0, $limit);
+        }
+
+        $filteredRows = [];
+        foreach ($rows as $row) {
+            $filteredRow = [];
+            foreach ($fields as $field) {
+                $filteredRow[$field] = $row[$field] ?? null;
+            }
+            $filteredRows[] = $filteredRow;
+        }
+
+        return [
+            'title' => 'Gabungan '.count($importIds).' file import',
+            'headings' => array_values($fields),
+            'rows' => $filteredRows,
+            'total' => count($filteredRows),
+            'generated_at' => now()->format('d M Y H:i'),
+        ];
+    }
 }

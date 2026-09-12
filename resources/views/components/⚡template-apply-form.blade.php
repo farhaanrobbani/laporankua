@@ -112,7 +112,6 @@ new class extends Component
     {
         $this->validate([
             'mergeImportIds' => 'required|array|min:2',
-            'joinColumn' => 'required|string',
             'title' => 'required|string|max:255',
         ]);
 
@@ -152,7 +151,6 @@ new class extends Component
                 'orientation' => $layout['orientation'] ?? 'portrait',
                 'is_merged' => true,
                 'merged_import_ids' => $this->mergeImportIds,
-                'join_column' => $this->joinColumn,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
             ], $user, ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
@@ -244,19 +242,6 @@ new class extends Component
             </div>
             @error('mergeImportIds') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
-
-        @if (count($mergeImportIds) >= 2)
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Kolom penggabung (JOIN key)</label>
-                <select wire:model.live="joinColumn" class="mt-1 border-gray-300 rounded-md text-sm w-full">
-                    <option value="">-- Pilih kolom --</option>
-                    @foreach ($sharedColumns as $col)
-                        <option value="{{ $col }}">{{ $col }}</option>
-                    @endforeach
-                </select>
-                @error('joinColumn') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-        @endif
     @endif
 
     {{-- Filter Bulan/Tahun (print only) --}}
