@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ImportData;
 use App\Models\Report;
+use App\Services\MergeService;
 use App\Services\ReportGenerationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -73,15 +74,30 @@ class ReportsController extends Controller
         $config = $report->config_json ?? [];
         $fields = array_values(array_filter($config['fields'] ?? []));
 
-        $dataset = $service->buildDataset(
-            $report->import,
-            $fields === [] ? $report->import->availableColumns() : $fields,
-            $config['search'] ?? null,
-            $config['filter_column'] ?? null,
-            $config['filter_value'] ?? null,
-            $config['sort_column'] ?? null,
-            $config['sort_direction'] ?? 'asc',
-        );
+        if (! empty($config['is_merged']) && ! empty($config['merged_import_ids']) && ! empty($config['join_column'])) {
+            $mergeService = app(MergeService::class);
+            $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
+            $dataset = $mergeService->buildMergedDataset(
+                $config['merged_import_ids'],
+                $config['join_column'],
+                $fields === [] ? $allColumns : $fields,
+                $config['search'] ?? null,
+                $config['filter_column'] ?? null,
+                $config['filter_value'] ?? null,
+                $config['sort_column'] ?? null,
+                $config['sort_direction'] ?? 'asc',
+            );
+        } else {
+            $dataset = $service->buildDataset(
+                $report->import,
+                $fields === [] ? $report->import->availableColumns() : $fields,
+                $config['search'] ?? null,
+                $config['filter_column'] ?? null,
+                $config['filter_value'] ?? null,
+                $config['sort_column'] ?? null,
+                $config['sort_direction'] ?? 'asc',
+            );
+        }
         $dataset['title'] = $report->title;
         $dataset['table_layout'] = $config['table_layout'] ?? null;
         $dataset['kecamatan'] = $config['kecamatan'] ?? null;
