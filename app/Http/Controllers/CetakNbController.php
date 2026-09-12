@@ -110,27 +110,22 @@ class CetakNbController extends Controller
         $count = count($records);
         $showNav = $count > 1;
 
-        if ($showNav) {
-            $currentId = $recordIds[0];
-            $currentIndex = array_search($currentId, $allIds, true);
-        } else {
-            $currentId = $recordIds[0];
-            $currentIndex = array_search($currentId, $allIds, true);
-        }
+        $currentId = $recordIds[0];
+        $selectedIndex = array_search($currentId, $recordIds, true);
 
         return view('reports.cetak-nb', [
             'report' => null,
             'importId' => $import->id,
             'records' => $records,
             'recordData' => $records[0],
-            'prevId' => $showNav && $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
-            'nextId' => $showNav && $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
-            'currentPosition' => $showNav ? ($currentIndex + 1) : null,
-            'totalRecords' => $showNav ? count($allIds) : $count,
+            'prevId' => $showNav && $selectedIndex > 0 ? $recordIds[$selectedIndex - 1] : null,
+            'nextId' => $showNav && $selectedIndex < count($recordIds) - 1 ? $recordIds[$selectedIndex + 1] : null,
+            'currentPosition' => $showNav ? ($selectedIndex + 1) : null,
+            'totalRecords' => $showNav ? count($recordIds) : $count,
             'entryMode' => 'cetak-nb',
             'multiMode' => $count > 1,
             'showNav' => $showNav,
-            'allRecordIds' => null,
+            'allRecordIds' => $showNav ? implode(',', $recordIds) : null,
         ]);
     }
 }
