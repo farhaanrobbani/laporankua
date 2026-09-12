@@ -65,31 +65,55 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_60px] gap-4 items-end">
             <div>
                 <x-input-label for="nama_kementerian" :value="__('Nama Kementerian')" />
                 <x-text-input id="nama_kementerian" name="nama_kementerian" type="text" class="mt-1 block w-full" :value="old('nama_kementerian', $user->nama_kementerian ?? 'Kementerian Agama')" />
                 <x-input-error class="mt-2" :messages="$errors->get('nama_kementerian')" />
             </div>
             <div>
+                <x-input-label for="font_size_kop_kementerian" :value="__('px')" />
+                <x-text-input id="font_size_kop_kementerian" name="font_size_kop_kementerian" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop_kementerian', $user->font_size_kop_kementerian ?? '12')" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_60px] gap-4 items-end">
+            <div>
                 <x-input-label for="nama_kantor_kota" :value="__('Nama Kantor Kemenag Kota')" />
                 <x-text-input id="nama_kantor_kota" name="nama_kantor_kota" type="text" class="mt-1 block w-full" :value="old('nama_kantor_kota', $user->nama_kantor_kota)" placeholder="Contoh: Kantor Kementerian Agama Kota X" />
                 <x-input-error class="mt-2" :messages="$errors->get('nama_kantor_kota')" />
             </div>
             <div>
+                <x-input-label for="font_size_kop_kantor_kota" :value="__('px')" />
+                <x-text-input id="font_size_kop_kantor_kota" name="font_size_kop_kantor_kota" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop_kantor_kota', $user->font_size_kop_kantor_kota ?? '12')" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_60px] gap-4 items-end">
+            <div>
                 <x-input-label for="nama_kantor" :value="__('Nama Kantor (KUA)')" />
                 <x-text-input id="nama_kantor" name="nama_kantor" type="text" class="mt-1 block w-full" :value="old('nama_kantor', $user->nama_kantor)" placeholder="Contoh: Kantor Urusan Agama Kecamatan X" />
                 <x-input-error class="mt-2" :messages="$errors->get('nama_kantor')" />
             </div>
+            <div>
+                <x-input-label for="font_size_kop_kantor" :value="__('px')" />
+                <x-text-input id="font_size_kop_kantor" name="font_size_kop_kantor" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop_kantor', $user->font_size_kop_kantor ?? '12')" />
+            </div>
         </div>
 
-        <div>
-            <x-input-label for="alamat_kantor" :value="__('Alamat Kantor')" />
-            <x-text-input id="alamat_kantor" name="alamat_kantor" type="text" class="mt-1 block w-full" :value="old('alamat_kantor', $user->alamat_kantor)" placeholder="Jl. ..." />
-            <x-input-error class="mt-2" :messages="$errors->get('alamat_kantor')" />
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_60px] gap-4 items-end">
+            <div>
+                <x-input-label for="alamat_kantor" :value="__('Alamat Kantor')" />
+                <x-text-input id="alamat_kantor" name="alamat_kantor" type="text" class="mt-1 block w-full" :value="old('alamat_kantor', $user->alamat_kantor)" placeholder="Jl. ..." />
+                <x-input-error class="mt-2" :messages="$errors->get('alamat_kantor')" />
+            </div>
+            <div>
+                <x-input-label for="font_size_kop_alamat" :value="__('px')" />
+                <x-text-input id="font_size_kop_alamat" name="font_size_kop_alamat" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop_alamat', $user->font_size_kop_alamat ?? '10')" />
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_60px] gap-4 items-end">
             <div>
                 <x-input-label for="telepon_kantor" :value="__('Telepon Kantor')" />
                 <x-text-input id="telepon_kantor" name="telepon_kantor" type="text" class="mt-1 block w-full" :value="old('telepon_kantor', $user->telepon_kantor)" />
@@ -99,6 +123,10 @@
                 <x-input-label for="email_kantor" :value="__('Email Kantor')" />
                 <x-text-input id="email_kantor" name="email_kantor" type="email" class="mt-1 block w-full" :value="old('email_kantor', $user->email_kantor)" />
                 <x-input-error class="mt-2" :messages="$errors->get('email_kantor')" />
+            </div>
+            <div>
+                <x-input-label for="font_size_kop_kontak" :value="__('px')" />
+                <x-text-input id="font_size_kop_kontak" name="font_size_kop_kontak" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop_kontak', $user->font_size_kop_kontak ?? '10')" />
             </div>
         </div>
 
@@ -117,15 +145,6 @@
                 </div>
             </div>
             <x-input-error class="mt-2" :messages="$errors->get('logo_kantor')" />
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-                <x-input-label for="font_size_kop" :value="__('Ukuran Font Kop')" />
-                <x-text-input id="font_size_kop" name="font_size_kop" type="number" min="8" max="20" class="mt-1 block w-full" :value="old('font_size_kop', $user->font_size_kop ?? '12')" placeholder="12" />
-                <p class="text-xs text-gray-500 mt-1">Ukuran font untuk kop surat (default: 12px)</p>
-                <x-input-error class="mt-2" :messages="$errors->get('font_size_kop')" />
-            </div>
         </div>
 
         <div class="flex items-center gap-4">

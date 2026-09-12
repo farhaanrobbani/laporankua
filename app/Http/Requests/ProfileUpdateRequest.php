@@ -36,7 +36,11 @@ class ProfileUpdateRequest extends FormRequest
             'telepon_kantor' => ['nullable', 'string', 'max:255'],
             'email_kantor' => ['nullable', 'string', 'max:255'],
             'logo_kantor' => ['nullable', 'image', 'max:2048'],
-            'font_size_kop' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kementerian' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kantor_kota' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kantor' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_alamat' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kontak' => ['nullable', 'numeric', 'min:8', 'max:20'],
         ];
     }
 }

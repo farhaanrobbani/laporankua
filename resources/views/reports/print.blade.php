@@ -98,8 +98,6 @@
                 $tahunName = $lastDate ? $lastDate->year : '-';
             @endphp
 
-            @php $kopFontSize = ($dataset['font_size_kop'] ?? '12') . 'px'; @endphp
-
             <div class="mb-0">
                 @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
                     @if (! empty($dataset['logo_kantor']))
@@ -109,18 +107,18 @@
                                     <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="margin-left: 64px; max-height: 80px; max-width: 80px;" />
                                 </td>
                                 <td class="text-center">
-                                    <p class="font-bold uppercase" style="font-size: {{ $kopFontSize }};">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                                    <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
                                     @if (! empty($dataset['nama_kantor_kota']))
-                                        <p class="font-bold uppercase" style="font-size: {{ $kopFontSize }};">{{ $dataset['nama_kantor_kota'] }}</p>
+                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
                                     @endif
                                     @if (! empty($dataset['nama_kantor']))
-                                        <p class="font-bold uppercase" style="font-size: {{ $kopFontSize }};">{{ $dataset['nama_kantor'] }}</p>
+                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
                                     @endif
                                     @if (! empty($dataset['alamat_kantor']))
-                                        <p style="font-size: {{ $kopFontSize }};">{{ $dataset['alamat_kantor'] }}</p>
+                                        <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
                                     @endif
                                     @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                        <p style="font-size: {{ $kopFontSize }};">
+                                        <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
                                             @if (! empty($dataset['telepon_kantor']))
                                                 Telp: {{ $dataset['telepon_kantor'] }}
                                             @endif
@@ -137,18 +135,18 @@
                         </table>
                     @else
                         <div class="text-center mb-1">
-                            <p class="font-bold uppercase" style="font-size: {{ $kopFontSize }};">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                            <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
                             @if (! empty($dataset['nama_kantor_kota']))
-                                <p class="font-bold uppercase" style="font-size: {{ $kopFontSize }};">{{ $dataset['nama_kantor_kota'] }}</p>
+                                <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
                             @endif
                             @if (! empty($dataset['nama_kantor']))
-                                <p class="font-bold uppercase" style="font-size: {{ $kopFontSize }};">{{ $dataset['nama_kantor'] }}</p>
+                                <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
                             @endif
                             @if (! empty($dataset['alamat_kantor']))
-                                <p style="font-size: {{ $kopFontSize }};">{{ $dataset['alamat_kantor'] }}</p>
+                                <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
                             @endif
                             @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                <p style="font-size: {{ $kopFontSize }}">
+                                <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
                                     @if (! empty($dataset['telepon_kantor']))
                                         Telp: {{ $dataset['telepon_kantor'] }}
                                     @endif
