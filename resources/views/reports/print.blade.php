@@ -98,43 +98,69 @@
                 $tahunName = $lastDate ? $lastDate->year : '-';
             @endphp
 
-            <div class="mb-4">
+            <div class="mb-0">
                 @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
-                    <table class="w-full mb-3">
-                        <tr>
-                            <td class="align-top pr-3" style="width: 80px;">
-                                @if (! empty($dataset['logo_kantor']))
+                    @if (! empty($dataset['logo_kantor']))
+                        <table class="w-full mb-1">
+                            <tr>
+                                <td class="align-top pr-3" style="width: 80px;">
                                     <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="max-height: 80px; max-width: 80px;" />
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
-                                @if (! empty($dataset['nama_kantor_kota']))
-                                    <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor_kota'] }}</p>
-                                @endif
-                                @if (! empty($dataset['nama_kantor']))
-                                    <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor'] }}</p>
-                                @endif
-                                @if (! empty($dataset['alamat_kantor']))
-                                    <p class="text-xs">{{ $dataset['alamat_kantor'] }}</p>
-                                @endif
-                                @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                    <p class="text-xs">
-                                        @if (! empty($dataset['telepon_kantor']))
-                                            Telp: {{ $dataset['telepon_kantor'] }}
-                                        @endif
-                                        @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
-                                            |
-                                        @endif
-                                        @if (! empty($dataset['email_kantor']))
-                                            Email: {{ $dataset['email_kantor'] }}
-                                        @endif
-                                    </p>
-                                @endif
-                            </td>
-                        </tr>
-                    </table>
-                    <hr class="border-t border-gray-900 mb-3">
+                                </td>
+                                <td class="text-center">
+                                    <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                                    @if (! empty($dataset['nama_kantor_kota']))
+                                        <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor_kota'] }}</p>
+                                    @endif
+                                    @if (! empty($dataset['nama_kantor']))
+                                        <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor'] }}</p>
+                                    @endif
+                                    @if (! empty($dataset['alamat_kantor']))
+                                        <p class="text-xs">{{ $dataset['alamat_kantor'] }}</p>
+                                    @endif
+                                    @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                                        <p class="text-xs">
+                                            @if (! empty($dataset['telepon_kantor']))
+                                                Telp: {{ $dataset['telepon_kantor'] }}
+                                            @endif
+                                            @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                                |
+                                            @endif
+                                            @if (! empty($dataset['email_kantor']))
+                                                Email: {{ $dataset['email_kantor'] }}
+                                            @endif
+                                        </p>
+                                    @endif
+                                </td>
+                            </tr>
+                        </table>
+                    @else
+                        <div class="text-center mb-1">
+                            <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                            @if (! empty($dataset['nama_kantor_kota']))
+                                <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor_kota'] }}</p>
+                            @endif
+                            @if (! empty($dataset['nama_kantor']))
+                                <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor'] }}</p>
+                            @endif
+                            @if (! empty($dataset['alamat_kantor']))
+                                <p class="text-xs">{{ $dataset['alamat_kantor'] }}</p>
+                            @endif
+                            @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                                <p class="text-xs">
+                                    @if (! empty($dataset['telepon_kantor']))
+                                        Telp: {{ $dataset['telepon_kantor'] }}
+                                    @endif
+                                    @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                        |
+                                    @endif
+                                    @if (! empty($dataset['email_kantor']))
+                                        Email: {{ $dataset['email_kantor'] }}
+                                    @endif
+                                </p>
+                            @endif
+                        </div>
+                    @endif
+                    <hr class="border-t border-gray-900 mb-1">
                 @endif
 
                 <h1 class="text-lg font-bold text-center">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
