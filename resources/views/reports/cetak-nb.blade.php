@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cetak NB — {{ $report->title }}</title>
+    <title>Cetak NB{{ isset($report->title) ? ' — '.$report->title : '' }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -53,7 +53,11 @@
     <div class="no-print">
         <div class="flex gap-2">
             @if ($prevId !== null)
-                <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
+                @if (($entryMode ?? 'report') === 'data')
+                    <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
+                @else
+                    <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
+                @endif
             @else
                 <button class="nav-btn" disabled>&larr; Sebelumnya</button>
             @endif
@@ -61,7 +65,11 @@
             <span class="record-info">Record {{ $currentPosition }} dari {{ $totalRecords }}</span>
 
             @if ($nextId !== null)
-                <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                @if (($entryMode ?? 'report') === 'data')
+                    <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                @else
+                    <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                @endif
             @else
                 <button class="nav-btn" disabled>Berikutnya &rarr;</button>
             @endif

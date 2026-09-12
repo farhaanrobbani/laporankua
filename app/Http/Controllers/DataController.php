@@ -71,4 +71,48 @@ class DataController extends Controller
 
         return Excel::download(new ImportDataExport($headings, $dataset['rows']), $filename);
     }
+
+    public function cetakNb(Request $request): View
+    {
+        $validated = $request->validate([
+            'import_id' => 'required|integer',
+            'record' => 'nullable|integer',
+        ]);
+
+        $import = Import::where('user_id', auth()->id())->findOrFail($validated['import_id']);
+        $this->authorize('view', $import);
+
+        $allIds = ImportData::where('import_id', $import->id)
+            ->orderBy('row_number')
+            ->pluck('id')
+            ->all();
+
+        if ($allIds === []) {
+            abort(404, 'Tidak ada data untuk import ini.');
+        }
+
+        $recordId = $validated['record'] ?? $allIds[0];
+
+        $importData = ImportData::where('id', $recordId)
+            ->where('import_id', $import->id)
+            ->first();
+
+        if (! $importData) {
+            abort(404, 'Record tidak ditemukan.');
+        }
+
+        $recordData = $importData->row_data ?? [];
+        $currentIndex = array_search($recordId, $allIds, true);
+
+        return view('reports.cetak-nb', [
+            'report' => null,
+            'importId' => $import->id,
+            'recordData' => $recordData,
+            'prevId' => $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
+            'nextId' => $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
+            'currentPosition' => $currentIndex + 1,
+            'totalRecords' => count($allIds),
+            'entryMode' => 'data',
+        ]);
+    }
 }

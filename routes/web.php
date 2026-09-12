@@ -23,6 +23,7 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
 
     Route::get('/data', [DataController::class, 'index'])->name('data.index');
     Route::get('/data/export', [DataController::class, 'export'])->name('data.export');
+    Route::get('/data/cetak-nb', [DataController::class, 'cetakNb'])->name('data.cetak-nb');
     Route::get('/data/{record}', [DataController::class, 'show'])->name('data.show');
 
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');

@@ -110,11 +110,13 @@ class ReportsController extends Controller
 
         return view('reports.cetak-nb', [
             'report' => $report,
+            'importId' => $report->import_id,
             'recordData' => $recordData,
             'prevId' => $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
             'nextId' => $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
             'currentPosition' => $currentIndex + 1,
             'totalRecords' => count($allIds),
+            'entryMode' => 'report',
         ]);
     }
 
