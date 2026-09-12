@@ -163,6 +163,13 @@
                 <p class="mt-2 ml-4">Jumlah Nikah Kantor : <strong>{{ $countK }}</strong> N</p>
                 <p class="ml-4">Jumlah Nikah Luar Kantor : <strong>{{ $countLK }}</strong> N</p>
                 <p class="ml-4">Jumlah Keseluruhan : <strong>{{ $countAll }}</strong> N</p>
+
+                <div class="mt-6 flex justify-end">
+                    <div class="text-center">
+                        <div class="h-20 border-b border-gray-400 w-40"></div>
+                        <p class="mt-1 text-xs text-gray-500">Tanda Tangan</p>
+                    </div>
+                </div>
             </div>
 
         @else
@@ -186,7 +193,6 @@
             </table>
         @endif
 
-        <p class="mt-4 text-xs text-gray-500">Halaman dicetak dari aplikasi Laporan pada {{ $dataset['generated_at'] }}.</p>
     </div>
 </body>
 </html>
