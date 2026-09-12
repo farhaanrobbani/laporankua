@@ -4,17 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Laporan') }} — Kelola Laporan dengan Mudah</title>
-    @php
-        try {
-            $siteLogo = \App\Models\Setting::get('site_logo', '');
-        } catch (\Throwable $e) {
-            $siteLogo = '';
-        }
-        $faviconUrl = ($siteLogo && file_exists(storage_path('app/public/' . $siteLogo)))
-            ? Storage::url($siteLogo)
-            : '/favicon.ico';
-    @endphp
-    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css'])
