@@ -21,7 +21,7 @@
 <body class="bg-gray-100 text-gray-900">
     <div class="no-print max-w-3xl mx-auto mt-4 flex gap-3 justify-end">
         <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">Print / Simpan PDF</button>
-        <button onclick="window.close()" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-300">Tutup</button>
+        <button onclick="window.history.back()" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-300">Tutup</button>
     </div>
 
     <div class="print-sheet">
