@@ -25,11 +25,6 @@
     </div>
 
     <div class="print-sheet">
-        <div class="border-b-2 border-gray-900 pb-3 mb-4">
-            <h1 class="text-2xl font-bold">{{ $dataset['title'] }}</h1>
-            <p class="text-sm text-gray-500">Total {{ number_format($dataset['total']) }} baris &middot; Dibuat {{ $dataset['generated_at'] }}</p>
-        </div>
-
         @if (! empty($dataset['table_layout']))
             @php
                 $layout = $dataset['table_layout'];
@@ -51,7 +46,66 @@
                     }
                     return [null, null];
                 };
+
+                $tanggalNikahField = null;
+                $tempatNikahField = null;
+                foreach ($columns as $col) {
+                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
+                        $tanggalNikahField = $col['field'];
+                    }
+                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tempat Nikah') {
+                        $tempatNikahField = $col['field'];
+                    }
+                    if ($col['type'] === 'group') {
+                        foreach ($col['children'] ?? [] as $child) {
+                            if (($child['field'] ?? '') === 'Tanggal Nikah') {
+                                $tanggalNikahField = $child['field'];
+                            }
+                            if (($child['field'] ?? '') === 'Tempat Nikah') {
+                                $tempatNikahField = $child['field'];
+                            }
+                        }
+                    }
+                }
+
+                $lastDate = null;
+                $countK = 0;
+                $countLK = 0;
+                $monthDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+                foreach ($dataset['rows'] as $row) {
+                    if ($tempatNikahField !== null) {
+                        $tempat = mb_strtolower((string) ($row[$tempatNikahField] ?? ''));
+                        if (str_contains($tempat, 'balai nikah')) {
+                            $countK++;
+                        } else {
+                            $countLK++;
+                        }
+                    }
+                    if ($tanggalNikahField !== null && ! empty($row[$tanggalNikahField])) {
+                        $date = \Carbon\Carbon::parse($row[$tanggalNikahField]);
+                        if ($lastDate === null || $date->gt($lastDate)) {
+                            $lastDate = $date;
+                        }
+                    }
+                }
+
+                $countAll = $countK + $countLK;
+                $hariName = $lastDate ? $monthDays[$lastDate->dayOfWeek] : '-';
+                $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
+                $bulanName = $lastDate ? $monthNames[$lastDate->month] : '-';
+                $tahunName = $lastDate ? $lastDate->year : '-';
             @endphp
+
+            <div class="mb-4">
+                <h1 class="text-lg font-bold text-center">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
+                <div class="mt-2 text-sm">
+                    <p>Bulan : {{ $bulanName }}</p>
+                    <p>Tahun : {{ $tahunName }}</p>
+                </div>
+            </div>
+
             <table class="w-full text-sm border-collapse border border-gray-700">
                 <thead>
                     <tr class="bg-gray-100">
@@ -108,56 +162,6 @@
                 </tbody>
             </table>
 
-            @php
-                $tanggalNikahField = null;
-                $tempatNikahField = null;
-                foreach ($columns as $col) {
-                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
-                        $tanggalNikahField = $col['field'];
-                    }
-                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tempat Nikah') {
-                        $tempatNikahField = $col['field'];
-                    }
-                    if ($col['type'] === 'group') {
-                        foreach ($col['children'] ?? [] as $child) {
-                            if (($child['field'] ?? '') === 'Tanggal Nikah') {
-                                $tanggalNikahField = $child['field'];
-                            }
-                            if (($child['field'] ?? '') === 'Tempat Nikah') {
-                                $tempatNikahField = $child['field'];
-                            }
-                        }
-                    }
-                }
-
-                $lastDate = null;
-                $countK = 0;
-                $countLK = 0;
-                $monthDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-                foreach ($dataset['rows'] as $row) {
-                    if ($tempatNikahField !== null) {
-                        $tempat = mb_strtolower((string) ($row[$tempatNikahField] ?? ''));
-                        if (str_contains($tempat, 'balai nikah')) {
-                            $countK++;
-                        } else {
-                            $countLK++;
-                        }
-                    }
-                    if ($tanggalNikahField !== null && ! empty($row[$tanggalNikahField])) {
-                        $date = \Carbon\Carbon::parse($row[$tanggalNikahField]);
-                        if ($lastDate === null || $date->gt($lastDate)) {
-                            $lastDate = $date;
-                        }
-                    }
-                }
-
-                $countAll = $countK + $countLK;
-                $hariName = $lastDate ? $monthDays[$lastDate->dayOfWeek] : '-';
-                $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
-            @endphp
-
             <div class="mt-4 text-sm leading-relaxed">
                 <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
                 <p class="mt-2 ml-4">Jumlah Nikah Kantor : <strong>{{ $countK }}</strong> N</p>
@@ -176,6 +180,10 @@
             </div>
 
         @else
+            <div class="border-b-2 border-gray-900 pb-3 mb-4">
+                <h1 class="text-2xl font-bold">{{ $dataset['title'] }}</h1>
+                <p class="text-sm text-gray-500">Total {{ number_format($dataset['total']) }} baris &middot; Dibuat {{ $dataset['generated_at'] }}</p>
+            </div>
             <table class="w-full text-sm border-collapse border border-gray-700">
                 <thead>
                     <tr class="bg-gray-100">
