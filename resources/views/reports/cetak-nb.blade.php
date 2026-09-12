@@ -12,8 +12,6 @@
         @media print {
             .no-print { display: none !important; }
             body { margin: 0; }
-            .page { page-break-after: always; }
-            .page:last-child { page-break-after: auto; }
         }
 
         @media screen {
@@ -51,9 +49,7 @@
 </head>
 <body>
     @php
-        $multiMode = $multiMode ?? false;
         $showNav = $showNav ?? false;
-        $allRecordIds = $allRecordIds ?? null;
         $records = $records ?? ($recordData ? [$recordData] : []);
     @endphp
 
@@ -62,11 +58,7 @@
             @if ($showNav)
                 @if ($prevId !== null)
                     @if (($entryMode ?? 'report') === 'cetak-nb')
-                        @if ($allRecordIds)
-                            <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'records' => $allRecordIds, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
-                        @else
-                            <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
-                        @endif
+                        <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
                     @elseif (($entryMode ?? 'report') === 'data')
                         <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
                     @else
@@ -80,11 +72,7 @@
 
                 @if ($nextId !== null)
                     @if (($entryMode ?? 'report') === 'cetak-nb')
-                        @if ($allRecordIds)
-                            <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'records' => $allRecordIds, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
-                        @else
-                            <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
-                        @endif
+                        <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
                     @elseif (($entryMode ?? 'report') === 'data')
                         <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
                     @else
@@ -93,8 +81,6 @@
                 @else
                     <button class="nav-btn" disabled>Berikutnya &rarr;</button>
                 @endif
-            @else
-                <span class="record-info">{{ count($records) }} record</span>
             @endif
         </div>
         <div class="flex gap-2">
