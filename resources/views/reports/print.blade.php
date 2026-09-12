@@ -170,7 +170,7 @@
                 </div>
             </div>
 
-            <table class="w-full text-sm border-collapse border border-gray-700">
+            <table class="w-full border-collapse border border-gray-700" style="font-size: 10px;">
                 <thead>
                     <tr class="bg-gray-100">
                         @foreach ($columns as $col)
