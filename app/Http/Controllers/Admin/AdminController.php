@@ -15,13 +15,14 @@ class AdminController extends Controller
     {
         $stats = [
             'users' => User::count(),
+            'activeUsers' => User::where('status', 'active')->count(),
             'imports' => Import::count(),
             'reports' => Report::count(),
             'records' => ImportData::count(),
         ];
 
-        $recentImports = Import::latest()->limit(10)->get();
-        $recentReports = Report::latest()->limit(10)->get();
+        $recentImports = Import::latest()->limit(5)->get();
+        $recentReports = Report::latest()->limit(5)->get();
 
         return view('admin.index', compact('stats', 'recentImports', 'recentReports'));
     }

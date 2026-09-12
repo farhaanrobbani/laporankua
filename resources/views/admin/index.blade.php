@@ -1,61 +1,129 @@
 <x-admin.layout>
     <x-slot name="header">Dashboard</x-slot>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <p class="text-sm font-medium text-gray-500">Total Users</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $stats['users'] }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <p class="text-sm font-medium text-gray-500">Total Import</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $stats['imports'] }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <p class="text-sm font-medium text-gray-500">Total Laporan</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $stats['reports'] }}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <p class="text-sm font-medium text-gray-500">Total Records</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ number_format($stats['records']) }}</p>
-        </div>
-    </div>
+    <div class="space-y-6">
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Import Terbaru</h3>
-            </div>
-            <div class="divide-y divide-gray-100">
-                @forelse ($recentImports as $import)
-                    <div class="px-6 py-3 flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">{{ $import->filename }}</p>
-                            <p class="text-xs text-gray-500">{{ $import->created_at->diffForHumans() }}</p>
-                        </div>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full {{ $import->status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                            {{ $import->status }}
-                        </span>
-                    </div>
-                @empty
-                    <p class="px-6 py-4 text-sm text-gray-500 text-center">Belum ada import</p>
-                @endforelse
-            </div>
+        {{-- Welcome --}}
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Selamat Datang, {{ Auth::user()->name }}</h1>
+            <p class="text-sm text-gray-500 mt-1">Kelola akun dan pantau aktivitas website dari sini.</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Laporan Terbaru</h3>
-            </div>
-            <div class="divide-y divide-gray-100">
-                @forelse ($recentReports as $report)
-                    <div class="px-6 py-3">
-                        <p class="text-sm font-medium text-gray-900">{{ $report->title }}</p>
-                        <p class="text-xs text-gray-500">{{ $report->created_at->diffForHumans() }}</p>
+        {{-- Stats --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-5">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                        <x-heroicon-o-users class="w-5 h-5 text-indigo-600" />
                     </div>
-                @empty
-                    <p class="px-6 py-4 text-sm text-gray-500 text-center">Belum ada laporan</p>
-                @endforelse
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">{{ $stats['users'] }}</p>
+                        <p class="text-xs text-gray-500">Users</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-5">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <x-heroicon-o-arrow-up-tray class="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">{{ $stats['imports'] }}</p>
+                        <p class="text-xs text-gray-500">Imports</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-5">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                        <x-heroicon-o-document-text class="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">{{ $stats['reports'] }}</p>
+                        <p class="text-xs text-gray-500">Laporan</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-5">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <x-heroicon-o-table-cells class="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">{{ number_format($stats['records']) }}</p>
+                        <p class="text-xs text-gray-500">Records</p>
+                    </div>
+                </div>
             </div>
         </div>
+
+        {{-- Recent Activity --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {{-- Recent Imports --}}
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-5 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-gray-900">Import Terbaru</h2>
+                        <a href="{{ route('imports.index') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Lihat semua</a>
+                    </div>
+                </div>
+                @if ($recentImports->isEmpty())
+                    <div class="p-8 text-center">
+                        <x-heroicon-o-arrow-up-tray class="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                        <p class="text-sm text-gray-400">Belum ada import</p>
+                    </div>
+                @else
+                    <div class="divide-y divide-gray-50">
+                        @foreach ($recentImports as $import)
+                            <div class="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $import->file_name }}</p>
+                                    <p class="text-xs text-gray-400">{{ $import->sheet_name ?? '-' }} &middot; {{ $import->created_at->diffForHumans() }}</p>
+                                </div>
+                                <span class="shrink-0 px-2 py-0.5 text-xs font-medium rounded-full {{ $import->status === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700' }}">
+                                    {{ $import->status }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- Recent Reports --}}
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-5 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-gray-900">Laporan Terbaru</h2>
+                        <a href="{{ route('reports.index') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Lihat semua</a>
+                    </div>
+                </div>
+                @if ($recentReports->isEmpty())
+                    <div class="p-8 text-center">
+                        <x-heroicon-o-document-text class="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                        <p class="text-sm text-gray-400">Belum ada laporan</p>
+                    </div>
+                @else
+                    <div class="divide-y divide-gray-50">
+                        @foreach ($recentReports as $report)
+                            <div class="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $report->title }}</p>
+                                    <p class="text-xs text-gray-400">{{ strtoupper($report->output_format) }} &middot; {{ $report->created_at->diffForHumans() }}</p>
+                                </div>
+                                <span class="shrink-0 px-2 py-0.5 text-xs font-medium rounded-full {{ $report->status === 'completed' ? 'bg-green-50 text-green-700' : ($report->status === 'failed' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600') }}">
+                                    {{ $report->status }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+        </div>
+
     </div>
 </x-admin.layout>
