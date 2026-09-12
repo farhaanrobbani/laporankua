@@ -7,7 +7,7 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari user..." class="border-gray-300 rounded-md text-sm" />
                 <button type="submit" class="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">Cari</button>
             </form>
-            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-md hover:bg-gray-800">
+            <a href="{{ route('admin.users.create') }}" style="background-color: #111827; color: #fff;" class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-md hover:opacity-90">
                 + Tambah User
             </a>
         </div>

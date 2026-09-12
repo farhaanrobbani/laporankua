@@ -34,7 +34,7 @@
                 </select>
             </div>
             <div class="flex items-center gap-3 pt-2">
-                <button type="submit" class="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-md hover:bg-gray-800">Simpan</button>
+                <button type="submit" style="background-color: #111827; color: #fff;" class="px-4 py-2 text-sm font-semibold rounded-md hover:opacity-90">Simpan</button>
                 <a href="{{ route('admin.users.index') }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Batal</a>
             </div>
         </form>

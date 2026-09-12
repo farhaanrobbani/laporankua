@@ -39,12 +39,12 @@
                         </label>
                     </div>
                 @endif
-                <input type="file" id="site_logo" name="site_logo" accept="image/jpeg,image/png,image/svg+xml,image/webp" class="w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
+                <input type="file" id="site_logo" name="site_logo" accept="image/jpeg,image/png,image/svg+xml,image/webp" class="w-full text-sm text-gray-700" style="::file-selector-button { margin-right: 0.75rem; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 0; font-size: 0.875rem; font-weight: 600; background-color: #f3f4f6; color: #374151; cursor: pointer; } ::file-selector-button:hover { background-color: #e5e7eb; }" />
                 <p class="text-xs text-gray-400 mt-1">JPEG, PNG, SVG, atau WebP. Maks 2MB.</p>
                 @error('site_logo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div class="pt-2">
-                <button type="submit" class="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-md hover:bg-gray-800">Simpan Pengaturan</button>
+                <button type="submit" style="background-color: #111827; color: #fff;" class="px-4 py-2 text-sm font-semibold rounded-md hover:opacity-90">Simpan Pengaturan</button>
             </div>
         </form>
     </div>
