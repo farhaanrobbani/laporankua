@@ -13,14 +13,12 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // Jangan pernah membuat user default di produksi.
         if (app()->environment('production')) {
             $this->command?->warn('DatabaseSeeder dilewati di environment production.');
 
             return;
         }
 
-        // Akun admin/karyawan contoh dari env (opsional) — aman untuk staging.
         $email = env('SEED_ADMIN_EMAIL');
 
         if ($email) {
@@ -29,6 +27,8 @@ class DatabaseSeeder extends Seeder
                 [
                     'name' => env('SEED_ADMIN_NAME', 'Admin'),
                     'password' => Hash::make(env('SEED_ADMIN_PASSWORD', 'password')),
+                    'role' => 'admin',
+                    'status' => 'active',
                     'email_verified_at' => now(),
                 ]
             );
@@ -38,7 +38,6 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        // Hanya di local/testing: user uji cepat.
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
