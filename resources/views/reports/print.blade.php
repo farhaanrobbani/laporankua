@@ -164,7 +164,7 @@
                 @endif
 
                 <h1 class="text-lg font-bold text-center">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
-                <div class="mt-2 text-sm">
+                <div class="mt-2 mb-3 text-sm">
                     <p>Bulan : {{ $bulanName }}</p>
                     <p>Tahun : {{ $tahunName }}</p>
                 </div>
