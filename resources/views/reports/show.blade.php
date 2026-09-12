@@ -38,6 +38,12 @@
                         @if ($report->output_format === 'print')
                             <a href="{{ route('reports.print', $report) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-semibold rounded-md hover:bg-gray-700">Buka Print</a>
                         @endif
+                        @php
+                            $firstRecord = \App\Models\ImportData::where('import_id', $report->import_id)->orderBy('row_number')->first();
+                        @endphp
+                        @if ($firstRecord)
+                            <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $firstRecord->id]) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700">Cetak NB</a>
+                        @endif
                         <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-delete-report')">Hapus</x-danger-button>
 
                         <x-modal name="confirm-delete-report" :show="false" focusable>

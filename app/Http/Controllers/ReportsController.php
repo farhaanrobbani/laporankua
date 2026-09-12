@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ImportData;
 use App\Models\Report;
 use App\Services\ReportGenerationService;
 use Illuminate\Contracts\View\View;
@@ -80,6 +81,37 @@ class ReportsController extends Controller
         $dataset['title'] = $report->title;
 
         return view('reports.print', compact('dataset'));
+    }
+
+    public function cetakNb(Report $report, int $record): View
+    {
+        $this->authorize('view', $report);
+
+        $importData = ImportData::where('id', $record)
+            ->where('import_id', $report->import_id)
+            ->first();
+
+        if (! $importData) {
+            abort(404, 'Record tidak ditemukan.');
+        }
+
+        $recordData = $importData->row_data ?? [];
+
+        $allIds = ImportData::where('import_id', $report->import_id)
+            ->orderBy('row_number')
+            ->pluck('id')
+            ->all();
+
+        $currentIndex = array_search($record, $allIds, true);
+
+        return view('reports.cetak-nb', [
+            'report' => $report,
+            'recordData' => $recordData,
+            'prevId' => $currentIndex > 0 ? $allIds[$currentIndex - 1] : null,
+            'nextId' => $currentIndex < count($allIds) - 1 ? $allIds[$currentIndex + 1] : null,
+            'currentPosition' => $currentIndex + 1,
+            'totalRecords' => count($allIds),
+        ]);
     }
 
     public function destroy(Report $report): RedirectResponse
