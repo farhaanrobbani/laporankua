@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ImportData;
 use App\Models\Report;
 use App\Services\ReportGenerationService;
 use Illuminate\Contracts\View\View;
@@ -81,30 +80,6 @@ class ReportsController extends Controller
         $dataset['title'] = $report->title;
 
         return view('reports.print', compact('dataset'));
-    }
-
-    public function customPrint(Report $report, int $record): View
-    {
-        $this->authorize('view', $report);
-
-        $config = $report->config_json ?? [];
-        $layoutFields = $config['custom_layout']['fields'] ?? [];
-
-        if ($layoutFields === []) {
-            abort(404, 'Layout custom belum dikonfigurasi.');
-        }
-
-        $importData = ImportData::where('id', $record)
-            ->where('import_id', $report->import_id)
-            ->first();
-
-        if (! $importData) {
-            abort(404, 'Record tidak ditemukan.');
-        }
-
-        $recordData = $importData->row_data ?? [];
-
-        return view('reports.custom-print', compact('report', 'layoutFields', 'recordData'));
     }
 
     public function destroy(Report $report): RedirectResponse

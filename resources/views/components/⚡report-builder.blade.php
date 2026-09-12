@@ -35,8 +35,6 @@ new class extends Component
 
     public string $format = 'pdf';
 
-    public string $outputMode = 'standard';
-
     public string $orientation = 'portrait';
 
     /** @var array{headings: string[], rows: array, total: int}|null */
@@ -534,79 +532,51 @@ new class extends Component
             </div>
         @endif
 
-        {{-- 4. Output Mode --}}
+        {{-- 4. Format & Generate --}}
         <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">4. Output</h3>
-            <p class="text-sm text-gray-500 mb-3">Pilih mode output laporan.</p>
+            <h3 class="font-semibold text-gray-900 mb-1">4. Judul &amp; Format Output</h3>
+            <input type="text" wire:model="title" placeholder="Judul laporan" class="mt-3 border-gray-300 rounded-md text-sm w-full" />
+            @error('title') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-4">
-                <button type="button" wire:click="$set('outputMode', 'standard')"
-                    class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->outputMode === 'standard' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
-                    Format Output
-                </button>
-                <button type="button" wire:click="$set('outputMode', 'custom')"
-                    class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->outputMode === 'custom' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
-                    Custom Layout (Cetak NB)
-                </button>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'pdf' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-400' }}">
+                    <input type="radio" wire:model.live="format" value="pdf" class="sr-only" />
+                    <p class="font-bold text-red-600">PDF</p>
+                    <p class="text-xs text-gray-500 mt-1">Dokumen siap cetak</p>
+                </label>
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'word' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-400' }}">
+                    <input type="radio" wire:model.live="format" value="word" class="sr-only" />
+                    <p class="font-bold text-blue-600">Word</p>
+                    <p class="text-xs text-gray-500 mt-1">Bisa diedit (.docx)</p>
+                </label>
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'excel' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-400' }}">
+                    <input type="radio" wire:model.live="format" value="excel" class="sr-only" />
+                    <p class="font-bold text-green-600">Excel</p>
+                    <p class="text-xs text-gray-500 mt-1">Olah lanjut (.xlsx)</p>
+                </label>
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'print' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 hover:border-gray-400' }}">
+                    <input type="radio" wire:model.live="format" value="print" class="sr-only" />
+                    <p class="font-bold text-gray-600">Print</p>
+                    <p class="text-xs text-gray-500 mt-1">Pratinjau cetak</p>
+                </label>
             </div>
 
-            @if ($this->outputMode === 'standard')
-                <input type="text" wire:model="title" placeholder="Judul laporan" class="border-gray-300 rounded-md text-sm w-full" />
-                @error('title') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                    <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'pdf' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-400' }}">
-                        <input type="radio" wire:model.live="format" value="pdf" class="sr-only" />
-                        <p class="font-bold text-red-600">PDF</p>
-                        <p class="text-xs text-gray-500 mt-1">Dokumen siap cetak</p>
-                    </label>
-                    <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'word' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-400' }}">
-                        <input type="radio" wire:model.live="format" value="word" class="sr-only" />
-                        <p class="font-bold text-blue-600">Word</p>
-                        <p class="text-xs text-gray-500 mt-1">Bisa diedit (.docx)</p>
-                    </label>
-                    <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'excel' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-400' }}">
-                        <input type="radio" wire:model.live="format" value="excel" class="sr-only" />
-                        <p class="font-bold text-green-600">Excel</p>
-                        <p class="text-xs text-gray-500 mt-1">Olah lanjut (.xlsx)</p>
-                    </label>
-                    <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'print' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 hover:border-gray-400' }}">
-                        <input type="radio" wire:model.live="format" value="print" class="sr-only" />
-                        <p class="font-bold text-gray-600">Print</p>
-                        <p class="text-xs text-gray-500 mt-1">Pratinjau cetak</p>
-                    </label>
-                </div>
-
-                @if ($this->format === 'pdf')
-                    <label class="block mt-4 text-sm text-gray-700">
-                        Orientasi PDF:
-                        <select wire:model.live="orientation" class="ml-2 border-gray-300 rounded-md text-sm">
-                            <option value="portrait">Portrait</option>
-                            <option value="landscape">Landscape</option>
-                        </select>
-                    </label>
-                @endif
-
-                <div class="flex justify-end mt-6">
-                    <button type="button" wire:click="generate" wire:loading.attr="disabled" class="inline-flex items-center px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50">
-                        <span wire:loading.remove wire:target="generate">Buat Laporan</span>
-                        <span wire:loading wire:target="generate">Memproses...</span>
-                    </button>
-                </div>
-            @else
-                {{-- Custom Layout Mode --}}
-                <div class="mt-4">
-                    @if (! empty($this->importId) && ! empty($this->fields))
-                        <livewire:layout-builder
-                            :import-id="$this->importId"
-                            :fields="$this->fields"
-                            :key="'layout-builder-'.$this->importId"
-                        />
-                    @else
-                        <p class="text-sm text-gray-500">Pilih import dan kolom terlebih dahulu di bagian atas.</p>
-                    @endif
-                </div>
+            @if ($this->format === 'pdf')
+                <label class="block mt-4 text-sm text-gray-700">
+                    Orientasi PDF:
+                    <select wire:model.live="orientation" class="ml-2 border-gray-300 rounded-md text-sm">
+                        <option value="portrait">Portrait</option>
+                        <option value="landscape">Landscape</option>
+                    </select>
+                </label>
             @endif
+
+            <div class="flex justify-end mt-6">
+                <button type="button" wire:click="generate" wire:loading.attr="disabled" class="inline-flex items-center px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50">
+                    <span wire:loading.remove wire:target="generate">Buat Laporan</span>
+                    <span wire:loading wire:target="generate">Memproses...</span>
+                </button>
+            </div>
         </div>
 
         {{-- 5. Simpan sebagai template --}}
