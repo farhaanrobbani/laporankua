@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        @page { size: A4; margin: 15mm; }
+        @page { size: A4; margin: 15mm 18mm; }
 
         @media print {
             .no-print { display: none !important; }
@@ -36,7 +36,7 @@
             .no-print .record-info { font-size: 14px; color: #6b7280; }
             .page {
                 max-width: 210mm; min-height: 297mm; margin: 60px auto 20px; background: #fff;
-                box-shadow: 0 2px 8px rgba(0,0,0,.15); padding: 15mm; position: relative;
+                box-shadow: 0 2px 8px rgba(0,0,0,.15); padding: 15mm 18mm; position: relative;
             }
         }
 
