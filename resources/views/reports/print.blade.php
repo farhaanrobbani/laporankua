@@ -99,6 +99,30 @@
             @endphp
 
             <div class="mb-4">
+                @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
+                    <div class="text-center mb-3">
+                        <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                        <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor'] ?? '' }}</p>
+                        @if (! empty($dataset['alamat_kantor']))
+                            <p class="text-xs">{{ $dataset['alamat_kantor'] }}</p>
+                        @endif
+                        @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                            <p class="text-xs">
+                                @if (! empty($dataset['telepon_kantor']))
+                                    Telp: {{ $dataset['telepon_kantor'] }}
+                                @endif
+                                @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                    |
+                                @endif
+                                @if (! empty($dataset['email_kantor']))
+                                    Email: {{ $dataset['email_kantor'] }}
+                                @endif
+                            </p>
+                        @endif
+                        <hr class="border-t border-gray-900 mt-2">
+                    </div>
+                @endif
+
                 <h1 class="text-lg font-bold text-center">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
                 <div class="mt-2 text-sm">
                     <p>Bulan : {{ $bulanName }}</p>

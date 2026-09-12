@@ -29,6 +29,11 @@ class ProfileUpdateRequest extends FormRequest
             'kecamatan' => ['nullable', 'string', 'max:255'],
             'nama_kepala_kua' => ['nullable', 'string', 'max:255'],
             'nip_kepala' => ['nullable', 'string', 'max:255'],
+            'nama_kementerian' => ['nullable', 'string', 'max:255'],
+            'nama_kantor' => ['nullable', 'string', 'max:255'],
+            'alamat_kantor' => ['nullable', 'string', 'max:255'],
+            'telepon_kantor' => ['nullable', 'string', 'max:255'],
+            'email_kantor' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

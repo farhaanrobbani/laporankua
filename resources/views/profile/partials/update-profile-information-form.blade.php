@@ -65,6 +65,38 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <x-input-label for="nama_kementerian" :value="__('Nama Kementerian')" />
+                <x-text-input id="nama_kementerian" name="nama_kementerian" type="text" class="mt-1 block w-full" :value="old('nama_kementerian', $user->nama_kementerian ?? 'Kementerian Agama')" />
+                <x-input-error class="mt-2" :messages="$errors->get('nama_kementerian')" />
+            </div>
+            <div>
+                <x-input-label for="nama_kantor" :value="__('Nama Kantor')" />
+                <x-text-input id="nama_kantor" name="nama_kantor" type="text" class="mt-1 block w-full" :value="old('nama_kantor', $user->nama_kantor)" placeholder="Contoh: Kantor Urusan Agama Kecamatan X" />
+                <x-input-error class="mt-2" :messages="$errors->get('nama_kantor')" />
+            </div>
+        </div>
+
+        <div>
+            <x-input-label for="alamat_kantor" :value="__('Alamat Kantor')" />
+            <x-text-input id="alamat_kantor" name="alamat_kantor" type="text" class="mt-1 block w-full" :value="old('alamat_kantor', $user->alamat_kantor)" placeholder="Jl. ..." />
+            <x-input-error class="mt-2" :messages="$errors->get('alamat_kantor')" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <x-input-label for="telepon_kantor" :value="__('Telepon Kantor')" />
+                <x-text-input id="telepon_kantor" name="telepon_kantor" type="text" class="mt-1 block w-full" :value="old('telepon_kantor', $user->telepon_kantor)" />
+                <x-input-error class="mt-2" :messages="$errors->get('telepon_kantor')" />
+            </div>
+            <div>
+                <x-input-label for="email_kantor" :value="__('Email Kantor')" />
+                <x-text-input id="email_kantor" name="email_kantor" type="email" class="mt-1 block w-full" :value="old('email_kantor', $user->email_kantor)" />
+                <x-input-error class="mt-2" :messages="$errors->get('email_kantor')" />
+            </div>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
