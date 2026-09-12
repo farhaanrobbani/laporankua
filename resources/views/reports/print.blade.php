@@ -9,7 +9,7 @@
         @media print {
             .no-print { display: none !important; }
             body { margin: 0; }
-            @page { size: A4; margin: 15mm; }
+            @page { size: A4; margin: 8mm 15mm 15mm 15mm; }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; }
         }
