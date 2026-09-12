@@ -88,10 +88,12 @@ class ReportsController extends Controller
         $dataset['nama_kepala_kua'] = $config['nama_kepala_kua'] ?? null;
         $dataset['nip_kepala'] = $config['nip_kepala'] ?? null;
         $dataset['nama_kementerian'] = $config['nama_kementerian'] ?? null;
+        $dataset['nama_kantor_kota'] = $config['nama_kantor_kota'] ?? null;
         $dataset['nama_kantor'] = $config['nama_kantor'] ?? null;
         $dataset['alamat_kantor'] = $config['alamat_kantor'] ?? null;
         $dataset['telepon_kantor'] = $config['telepon_kantor'] ?? null;
         $dataset['email_kantor'] = $config['email_kantor'] ?? null;
+        $dataset['logo_kantor'] = $config['logo_kantor'] ?? null;
 
         return view('reports.print', compact('dataset'));
     }

@@ -13,7 +13,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
         @csrf
         @method('patch')
 
@@ -65,14 +65,19 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
                 <x-input-label for="nama_kementerian" :value="__('Nama Kementerian')" />
                 <x-text-input id="nama_kementerian" name="nama_kementerian" type="text" class="mt-1 block w-full" :value="old('nama_kementerian', $user->nama_kementerian ?? 'Kementerian Agama')" />
                 <x-input-error class="mt-2" :messages="$errors->get('nama_kementerian')" />
             </div>
             <div>
-                <x-input-label for="nama_kantor" :value="__('Nama Kantor')" />
+                <x-input-label for="nama_kantor_kota" :value="__('Nama Kantor Kemenag Kota')" />
+                <x-text-input id="nama_kantor_kota" name="nama_kantor_kota" type="text" class="mt-1 block w-full" :value="old('nama_kantor_kota', $user->nama_kantor_kota)" placeholder="Contoh: Kantor Kementerian Agama Kota X" />
+                <x-input-error class="mt-2" :messages="$errors->get('nama_kantor_kota')" />
+            </div>
+            <div>
+                <x-input-label for="nama_kantor" :value="__('Nama Kantor (KUA)')" />
                 <x-text-input id="nama_kantor" name="nama_kantor" type="text" class="mt-1 block w-full" :value="old('nama_kantor', $user->nama_kantor)" placeholder="Contoh: Kantor Urusan Agama Kecamatan X" />
                 <x-input-error class="mt-2" :messages="$errors->get('nama_kantor')" />
             </div>
@@ -95,6 +100,23 @@
                 <x-text-input id="email_kantor" name="email_kantor" type="email" class="mt-1 block w-full" :value="old('email_kantor', $user->email_kantor)" />
                 <x-input-error class="mt-2" :messages="$errors->get('email_kantor')" />
             </div>
+        </div>
+
+        <div>
+            <x-input-label for="logo_kantor" :value="__('Logo Kop Surat')" />
+            <div class="mt-1 flex items-center gap-4">
+                @if ($user->logo_kantor)
+                    <img src="{{ asset('storage/' . $user->logo_kantor) }}" alt="Logo" class="h-16 w-16 object-contain border rounded" />
+                @else
+                    <div class="h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 text-xs">Logo</div>
+                @endif
+                <div>
+                    <input type="file" id="logo_kantor" name="logo_kantor" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="document.getElementById('logo-preview').src = window.URL.createObjectURL(this.files[0]); document.getElementById('logo-preview').classList.remove('hidden');" />
+                    <p class="text-xs text-gray-500 mt-1">PNG, JPG, atau SVG. Maks 2MB.</p>
+                    <img id="logo-preview" src="" alt="Preview" class="h-16 w-16 object-contain border rounded mt-2 hidden" />
+                </div>
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('logo_kantor')" />
         </div>
 
         <div class="flex items-center gap-4">
