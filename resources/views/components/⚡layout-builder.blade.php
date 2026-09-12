@@ -114,6 +114,14 @@ new class extends Component
         }
     }
 
+    public function updateFieldPosition(int $index, float $x, float $y): void
+    {
+        if (isset($this->layoutFields[$index])) {
+            $this->layoutFields[$index]['x'] = round($x, 1);
+            $this->layoutFields[$index]['y'] = round($y, 1);
+        }
+    }
+
     public function loadRecord(): void
     {
         if ($this->selectedRecordId === null || $this->importId === null) {
@@ -314,7 +322,7 @@ new class extends Component
                     @endif
                 </div>
 
-                <div class="relative bg-white border border-gray-300 shadow-sm" style="width: 794px; height: 1123px; transform: scale(0.7); transform-origin: top left;" id="canvas">
+                <div class="relative bg-white border border-gray-300 shadow-sm" style="width: 794px; height: 1123px; transform: scale(0.7); transform-origin: top left;" id="canvas" wire:ignore.self>
                     @foreach ($this->layoutFields as $index => $field)
                         <div wire:click="selectField({{ $index }})"
                              class="absolute cursor-move border border-dashed rounded px-2 py-1 text-sm select-none {{ $this->selectedField === $index ? 'border-blue-600 bg-blue-100' : 'border-blue-400 bg-blue-50 hover:bg-blue-100' }}"
@@ -399,7 +407,9 @@ function startDrag(e, el, index) {
         canvas: canvas,
         canvasRect: canvasRect,
         el: el,
-        wireId: el.closest('[wire\\:id]').getAttribute('wire:id')
+        wireId: el.closest('[wire\\:id]').getAttribute('wire:id'),
+        lastX: null,
+        lastY: null
     };
 
     document.addEventListener('mousemove', onDrag);
@@ -422,14 +432,17 @@ function onDrag(e) {
     dragState.el.style.left = (x * 3.7795) + 'px';
     dragState.el.style.top = (y * 3.7795) + 'px';
 
-    const component = Livewire.find(dragState.wireId);
-    if (component) {
-        component.set('layoutFields.' + dragState.index + '.x', x);
-        component.set('layoutFields.' + dragState.index + '.y', y);
-    }
+    dragState.lastX = x;
+    dragState.lastY = y;
 }
 
 function stopDrag() {
+    if (dragState && dragState.lastX !== null) {
+        const component = Livewire.find(dragState.wireId);
+        if (component) {
+            component.call('updateFieldPosition', dragState.index, dragState.lastX, dragState.lastY);
+        }
+    }
     dragState = null;
     document.removeEventListener('mousemove', onDrag);
     document.removeEventListener('mouseup', stopDrag);
