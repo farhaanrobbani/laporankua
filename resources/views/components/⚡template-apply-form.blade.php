@@ -27,6 +27,10 @@ new class extends Component
 
     public ?int $importId = null;
 
+    public string $filterMonth = '';
+
+    public string $filterYear = '';
+
     public function mount(ReportTemplate $template): void
     {
         $this->template = $template;
@@ -87,6 +91,8 @@ new class extends Component
                 'sort_column' => $sorting['column'] ?? null,
                 'sort_direction' => $sorting['direction'] ?? 'asc',
                 'orientation' => $layout['orientation'] ?? 'portrait',
+                'filter_month' => $this->filterMonth ?: null,
+                'filter_year' => $this->filterYear ?: null,
             ], $user, ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
             'status' => $this->template->output_format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->template->output_format === 'print' ? now() : null,
@@ -147,6 +153,8 @@ new class extends Component
                 'is_merged' => true,
                 'merged_import_ids' => $this->mergeImportIds,
                 'join_column' => $this->joinColumn,
+                'filter_month' => $this->filterMonth ?: null,
+                'filter_year' => $this->filterYear ?: null,
             ], $user, ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
             'status' => $this->template->output_format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->template->output_format === 'print' ? now() : null,
@@ -249,6 +257,42 @@ new class extends Component
                 @error('joinColumn') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
         @endif
+    @endif
+
+    {{-- Filter Bulan/Tahun (print only) --}}
+    @if ($template->output_format === 'print')
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Filter Akad/Pelaksanaan</label>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Bulan</label>
+                    <select wire:model.live="filterMonth" class="border-gray-300 rounded-md text-sm w-full">
+                        <option value="">Semua Bulan</option>
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Tahun</label>
+                    <select wire:model.live="filterYear" class="border-gray-300 rounded-md text-sm w-full">
+                        <option value="">Semua Tahun</option>
+                        @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+            </div>
+        </div>
     @endif
 
     {{-- Title --}}

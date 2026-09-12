@@ -6,6 +6,7 @@ use App\Models\ImportData;
 use App\Models\Report;
 use App\Services\MergeService;
 use App\Services\ReportGenerationService;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -100,6 +101,60 @@ class ReportsController extends Controller
         }
         $dataset['title'] = $report->title;
         $dataset['table_layout'] = $config['table_layout'] ?? null;
+
+        $filterMonth = $config['filter_month'] ?? null;
+        $filterYear = $config['filter_year'] ?? null;
+
+        if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '')) {
+            $tableLayout = $config['table_layout'] ?? [];
+            $layoutColumns = $tableLayout['columns'] ?? [];
+            $tanggalNikahField = null;
+            foreach ($layoutColumns as $col) {
+                if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
+                    $tanggalNikahField = $col['field'];
+                    break;
+                }
+                if (($col['type'] ?? '') === 'group') {
+                    foreach ($col['children'] ?? [] as $child) {
+                        if (($child['field'] ?? '') === 'Tanggal Nikah') {
+                            $tanggalNikahField = $child['field'];
+                            break 2;
+                        }
+                    }
+                }
+            }
+
+            if ($tanggalNikahField !== null) {
+                $dataset['rows'] = array_values(array_filter($dataset['rows'], function ($row) use ($tanggalNikahField, $filterMonth, $filterYear) {
+                    $dateVal = $row[$tanggalNikahField] ?? null;
+                    if ($dateVal === null || $dateVal === '') {
+                        return false;
+                    }
+                    try {
+                        $date = Carbon::parse($dateVal);
+                    } catch (\Exception $e) {
+                        return false;
+                    }
+                    if ($filterMonth !== null && $filterMonth !== '' && (int) $date->month !== (int) $filterMonth) {
+                        return false;
+                    }
+                    if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
+                        return false;
+                    }
+
+                    return true;
+                }));
+            }
+
+            $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            if ($filterMonth !== null && $filterMonth !== '') {
+                $dataset['bulan_override'] = $monthNames[(int) $filterMonth] ?? '-';
+            }
+            if ($filterYear !== null && $filterYear !== '') {
+                $dataset['tahun_override'] = $filterYear;
+            }
+        }
+
         $dataset['kecamatan'] = $config['kecamatan'] ?? null;
         $dataset['nama_kepala_kua'] = $config['nama_kepala_kua'] ?? null;
         $dataset['nip_kepala'] = $config['nip_kepala'] ?? null;

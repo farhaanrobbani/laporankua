@@ -94,8 +94,8 @@
                 $countAll = $countK + $countLK;
                 $hariName = $lastDate ? $monthDays[$lastDate->dayOfWeek] : '-';
                 $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
-                $bulanName = $lastDate ? $monthNames[$lastDate->month] : '-';
-                $tahunName = $lastDate ? $lastDate->year : '-';
+                $bulanName = $dataset['bulan_override'] ?? ($lastDate ? $monthNames[$lastDate->month] : '-');
+                $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
             @endphp
 
             <div class="mb-0">
