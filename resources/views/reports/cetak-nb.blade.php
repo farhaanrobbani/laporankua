@@ -50,28 +50,41 @@
     </style>
 </head>
 <body>
+    @php
+        $multiMode = $multiMode ?? false;
+        $records = $records ?? ($recordData ? [$recordData] : []);
+    @endphp
+
     <div class="no-print">
         <div class="flex gap-2">
-            @if ($prevId !== null)
-                @if (($entryMode ?? 'report') === 'data')
-                    <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
-                @else
-                    <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
-                @endif
+            @if ($multiMode)
+                <span class="record-info">{{ count($records) }} record dipilih</span>
             @else
-                <button class="nav-btn" disabled>&larr; Sebelumnya</button>
-            @endif
-
-            <span class="record-info">Record {{ $currentPosition }} dari {{ $totalRecords }}</span>
-
-            @if ($nextId !== null)
-                @if (($entryMode ?? 'report') === 'data')
-                    <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                @if ($prevId !== null)
+                    @if (($entryMode ?? 'report') === 'cetak-nb')
+                        <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
+                    @elseif (($entryMode ?? 'report') === 'data')
+                        <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
+                    @else
+                        <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $prevId]) }}" class="nav-btn">&larr; Sebelumnya</a>
+                    @endif
                 @else
-                    <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                    <button class="nav-btn" disabled>&larr; Sebelumnya</button>
                 @endif
-            @else
-                <button class="nav-btn" disabled>Berikutnya &rarr;</button>
+
+                <span class="record-info">Record {{ $currentPosition }} dari {{ $totalRecords }}</span>
+
+                @if ($nextId !== null)
+                    @if (($entryMode ?? 'report') === 'cetak-nb')
+                        <a href="{{ route('cetak-nb.print', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                    @elseif (($entryMode ?? 'report') === 'data')
+                        <a href="{{ route('data.cetak-nb', ['import_id' => $importId, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                    @else
+                        <a href="{{ route('reports.cetak-nb', ['report' => $report->id, 'record' => $nextId]) }}" class="nav-btn">Berikutnya &rarr;</a>
+                    @endif
+                @else
+                    <button class="nav-btn" disabled>Berikutnya &rarr;</button>
+                @endif
             @endif
         </div>
         <div class="flex gap-2">
@@ -80,15 +93,17 @@
         </div>
     </div>
 
-    <div class="page">
-        <div class="field" style="top: 30mm; left: 0;">
-            <span class="field-label">Nomor Akta:</span>
-            <span class="field-value">{{ $recordData['Nomor Akta Nikah'] ?? '-' }}</span>
-        </div>
+    @foreach ($records as $rd)
+        <div class="page">
+            <div class="field" style="top: 30mm; left: 0;">
+                <span class="field-label">Nomor Akta:</span>
+                <span class="field-value">{{ $rd['Nomor Akta Nikah'] ?? '-' }}</span>
+            </div>
 
-        <div class="field" style="top: 60mm; right: 0;">
-            <span class="field-value">{{ $recordData['No Porforasi Suami'] ?? '-' }} & {{ $recordData['No Porforasi Istri'] ?? '-' }}</span>
+            <div class="field" style="top: 60mm; right: 0;">
+                <span class="field-value">{{ $rd['No Porforasi Suami'] ?? '-' }} & {{ $rd['No Porforasi Istri'] ?? '-' }}</span>
+            </div>
         </div>
-    </div>
+    @endforeach
 </body>
 </html>

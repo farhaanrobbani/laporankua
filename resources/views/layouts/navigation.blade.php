@@ -22,6 +22,10 @@
                         <x-heroicon-o-table-cells class="w-4 h-4 me-1" />
                         {{ __('Data') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
+                        <x-heroicon-o-printer class="w-4 h-4 me-1" />
+                        {{ __('Cetak NB') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                         <x-heroicon-o-document-text class="w-4 h-4 me-1" />
                         {{ __('Laporan') }}
@@ -83,6 +87,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('data.index')" :active="request()->routeIs('data.*')">
                 {{ __('Data') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
+                {{ __('Cetak NB') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                 {{ __('Laporan') }}

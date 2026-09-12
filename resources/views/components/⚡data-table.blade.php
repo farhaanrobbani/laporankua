@@ -261,9 +261,6 @@ new class extends Component
             <option value="100">100 / halaman</option>
         </select>
         @if (! $this->isMergeMode)
-            <a href="{{ route('data.cetak-nb', ['import_id' => $this->importId]) }}" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700">
-                Cetak NB
-            </a>
             <a href="{{ $this->exportUrl }}" class="lg:ml-auto inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700">
                 Export Excel
             </a>
