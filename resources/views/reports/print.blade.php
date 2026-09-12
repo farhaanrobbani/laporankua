@@ -101,32 +101,38 @@
             <div class="mb-0">
                 @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
                     @if (! empty($dataset['logo_kantor']))
-                        <div style="position: relative; text-align: center;" class="mb-1">
-                            <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="position: absolute; left: 0; max-height: 80px; max-width: 80px;" />
-                            <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
-                            @if (! empty($dataset['nama_kantor_kota']))
-                                <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor_kota'] }}</p>
-                            @endif
-                            @if (! empty($dataset['nama_kantor']))
-                                <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor'] }}</p>
-                            @endif
-                            @if (! empty($dataset['alamat_kantor']))
-                                <p class="text-xs">{{ $dataset['alamat_kantor'] }}</p>
-                            @endif
-                            @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                <p class="text-xs">
-                                    @if (! empty($dataset['telepon_kantor']))
-                                        Telp: {{ $dataset['telepon_kantor'] }}
+                        <table class="w-full mb-1">
+                            <tr>
+                                <td class="align-top pr-1" style="width: 80px;">
+                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="margin-left: 64px; max-height: 80px; max-width: 80px;" />
+                                </td>
+                                <td class="text-center">
+                                    <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                                    @if (! empty($dataset['nama_kantor_kota']))
+                                        <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor_kota'] }}</p>
                                     @endif
-                                    @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
-                                        |
+                                    @if (! empty($dataset['nama_kantor']))
+                                        <p class="text-sm font-bold uppercase">{{ $dataset['nama_kantor'] }}</p>
                                     @endif
-                                    @if (! empty($dataset['email_kantor']))
-                                        Email: {{ $dataset['email_kantor'] }}
+                                    @if (! empty($dataset['alamat_kantor']))
+                                        <p class="text-xs">{{ $dataset['alamat_kantor'] }}</p>
                                     @endif
-                                </p>
-                            @endif
-                        </div>
+                                    @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                                        <p class="text-xs">
+                                            @if (! empty($dataset['telepon_kantor']))
+                                                Telp: {{ $dataset['telepon_kantor'] }}
+                                            @endif
+                                            @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                                |
+                                            @endif
+                                            @if (! empty($dataset['email_kantor']))
+                                                Email: {{ $dataset['email_kantor'] }}
+                                            @endif
+                                        </p>
+                                    @endif
+                                </td>
+                            </tr>
+                        </table>
                     @else
                         <div class="text-center mb-1">
                             <p class="text-sm font-bold uppercase">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
