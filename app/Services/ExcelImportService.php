@@ -112,7 +112,6 @@ class ExcelImportService
         }
 
         $existingHashes = [];
-        $targetImportId = $import->id;
 
         if ($appendToImportId !== null) {
             $existingRows = ImportData::where('import_id', $appendToImportId)
@@ -120,10 +119,9 @@ class ExcelImportService
                 ->all();
 
             $existingHashes = array_map(fn ($row) => md5(json_encode($row)), $existingRows);
-            $targetImportId = $appendToImportId;
         }
 
-        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, $appendToImportId, $existingHashes, $targetImportId, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
+        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, $appendToImportId, $existingHashes, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
             foreach ($rawRows as $index => $row) {
                 $excelRow = $index + 2;
 
@@ -177,7 +175,7 @@ class ExcelImportService
                 }
 
                 $batch[] = [
-                    'import_id' => $targetImportId,
+                    'import_id' => $import->id,
                     'row_data' => json_encode($record, JSON_UNESCAPED_UNICODE),
                     'row_number' => $excelRow,
                     'dedup_key_value' => $dedupKeyValue,
@@ -197,11 +195,6 @@ class ExcelImportService
             }
 
             if ($appendToImportId !== null) {
-                $existingImport = Import::find($appendToImportId);
-                $existingImport->total_rows += $imported;
-                $existingImport->imported_rows += $imported;
-                $existingImport->save();
-
                 $import->update([
                     'status' => 'appended',
                     'total_rows' => $totalRows,
