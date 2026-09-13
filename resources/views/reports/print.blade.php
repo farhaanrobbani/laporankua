@@ -228,9 +228,9 @@
 
             <div class="mt-4 leading-relaxed" style="font-size: 12px;">
                 <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
-                <p class="mt-2 ml-4"><span style="display:inline-block; width:20ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
-                <p class="ml-4"><span style="display:inline-block; width:20ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
-                <p class="ml-4"><span style="display:inline-block; width:20ch;">Jumlah Keseluruhan</span> : <strong>{{ $countAll }}</strong> N</p>
+                <p class="mt-2 ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
+                <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
+                <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Keseluruhan</span> : <strong>{{ $countAll }}</strong> N</p>
 
                 <div class="mt-6 flex justify-end">
                     <div class="text-center">
