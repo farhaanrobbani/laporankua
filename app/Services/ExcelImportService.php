@@ -203,8 +203,13 @@ class ExcelImportService
                     'imported_rows' => $existingImport->imported_rows + $imported,
                 ]);
 
-                Storage::disk('local')->delete($import->file_path);
-                $import->delete();
+                $import->update([
+                    'status' => 'appended',
+                    'total_rows' => $totalRows,
+                    'imported_rows' => 0,
+                    'failed_rows' => $totalRows,
+                    'error_log' => [['row' => 0, 'reason' => 'Data di-append ke import #'.$appendToImportId.'. '.number_format($imported).' baris baru, '.number_format($skipped).' baris di-skip (duplikat).']],
+                ]);
             } else {
                 $import->update([
                     'status' => 'success',
