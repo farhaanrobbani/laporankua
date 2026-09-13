@@ -103,7 +103,7 @@ new class extends Component
             'file_name' => (string) $this->originalName,
             'table_name' => $this->tableName,
             'default_sort_column' => $this->defaultSortColumn,
-            'default_sort_direction' => $this->defaultSortColumn ? 'asc' : null,
+            'default_sort_direction' => $this->defaultSortColumn ? 'desc' : null,
             'file_path' => $permanentPath,
             'file_size' => $this->fileSize,
             'sheet_name' => $this->sheet,

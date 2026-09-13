@@ -78,6 +78,13 @@ class ImportData extends Model
             return $query->orderBy('row_number', $direction);
         }
 
+        if (str_contains(mb_strtolower($column), 'tanggal')) {
+            return $query->orderByRaw(
+                'STR_TO_DATE(JSON_UNQUOTE(JSON_EXTRACT(row_data, ?)), \'%d-%m-%Y\') '.$direction,
+                [self::jsonPath($column)],
+            );
+        }
+
         return $query->orderBy('row_data->'.$column, $direction);
     }
 
