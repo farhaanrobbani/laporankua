@@ -19,7 +19,7 @@
                                     <option value="">-- Pilih file import --</option>
                                     @foreach ($imports as $import)
                                         <option value="{{ $import->id }}" @selected($selectedImport?->id === $import->id)>
-                                            {{ $import->file_name }} ({{ number_format($import->import_data_count) }} baris)
+                                            {{ $import->table_name }} ({{ number_format($import->import_data_count) }} baris)
                                         </option>
                                     @endforeach
                                 </select>

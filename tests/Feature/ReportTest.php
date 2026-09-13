@@ -45,7 +45,7 @@ class ReportTest extends TestCase
 
         $this->actingAs($user)->get('/reports/create')
             ->assertOk()
-            ->assertSee($import->file_name);
+            ->assertSee($import->table_name);
     }
 
     public function test_generate_pdf_menyimpan_file(): void

@@ -16,7 +16,7 @@
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div><dt class="text-gray-500">Judul</dt><dd class="font-medium text-gray-900">{{ $report->title }}</dd></div>
                         <div><dt class="text-gray-500">Format</dt><dd class="font-medium text-gray-900">{{ strtoupper($report->output_format) }}</dd></div>
-                        <div><dt class="text-gray-500">Sumber data</dt><dd class="font-medium text-gray-900">{{ $report->import?->file_name ?? '-' }}</dd></div>
+                        <div><dt class="text-gray-500">Sumber data</dt><dd class="font-medium text-gray-900">{{ $report->import?->table_name ?? '-' }}</dd></div>
                         <div>
                             <dt class="text-gray-500">Status</dt>
                             <dd class="font-medium">

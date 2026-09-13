@@ -81,7 +81,7 @@
                         @foreach ($recentImports as $import)
                             <div class="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition">
                                 <div class="min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $import->file_name }}</p>
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $import->table_name }}</p>
                                     <p class="text-xs text-gray-400">{{ $import->sheet_name ?? '-' }} &middot; {{ $import->created_at->diffForHumans() }}</p>
                                 </div>
                                 <span class="shrink-0 px-2 py-0.5 text-xs font-medium rounded-full {{ $import->status === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700' }}">

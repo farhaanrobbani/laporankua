@@ -22,14 +22,14 @@ class DashboardTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $import = Import::factory()->for($user)->create(['file_name' => 'data_karyawan.xlsx']);
+        $import = Import::factory()->for($user)->create(['file_name' => 'data_karyawan.xlsx', 'table_name' => 'data karyawan']);
         ImportData::factory()->for($import)->count(3)->create();
         Report::factory()->for($user)->for($import)->create(['title' => 'Laporan Karyawan']);
 
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('data_karyawan.xlsx');
+        $response->assertSee('data karyawan');
         $response->assertSee('Laporan Karyawan');
         $response->assertSee('Total File Import');
         $response->assertSee('Total Data Record');
@@ -41,13 +41,13 @@ class DashboardTest extends TestCase
         $userA = User::factory()->create();
         $userB = User::factory()->create();
 
-        $importB = Import::factory()->for($userB)->create(['file_name' => 'rahasia_b.xlsx']);
+        $importB = Import::factory()->for($userB)->create(['file_name' => 'rahasia_b.xlsx', 'table_name' => 'rahasia b']);
         Report::factory()->for($userB)->for($importB)->create(['title' => 'Laporan Rahasia B']);
 
         $response = $this->actingAs($userA)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertDontSee('rahasia_b.xlsx');
+        $response->assertDontSee('rahasia b');
         $response->assertDontSee('Laporan Rahasia B');
     }
 

@@ -30,7 +30,7 @@ class TemplateController extends Controller
         $imports = Import::where('user_id', auth()->id())
             ->where('status', 'success')
             ->latest()
-            ->get(['id', 'file_name']);
+            ->get(['id', 'file_name', 'table_name']);
 
         $sourceImport = null;
         $columns = [];
@@ -107,7 +107,7 @@ class TemplateController extends Controller
         $imports = Import::where('user_id', auth()->id())
             ->where('status', 'success')
             ->latest()
-            ->get(['id', 'file_name']);
+            ->get(['id', 'file_name', 'table_name']);
 
         $columns = $template->fields_json ?? [];
 
@@ -202,7 +202,7 @@ class TemplateController extends Controller
         $imports = Import::where('user_id', auth()->id())
             ->where('status', 'success')
             ->latest()
-            ->get(['id', 'file_name']);
+            ->get(['id', 'file_name', 'table_name']);
 
         return view('templates.use', compact('template', 'imports'));
     }

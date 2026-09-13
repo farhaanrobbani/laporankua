@@ -64,7 +64,7 @@
                                 <tbody class="divide-y divide-gray-200">
                                     @foreach ($recentImports as $import)
                                         <tr>
-                                            <td class="px-4 py-2 font-medium text-gray-900">{{ $import->file_name }}</td>
+                                            <td class="px-4 py-2 font-medium text-gray-900">{{ $import->table_name }}</td>
                                             <td class="px-4 py-2 text-gray-600">{{ $import->sheet_name ?? '-' }}</td>
                                             <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->import_data_count) }}</td>
                                             <td class="px-4 py-2">

@@ -13,7 +13,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">Baris {{ $record->row_number }}</h3>
-                    <p class="text-sm text-gray-500 mb-4">Dari file: {{ $record->import->file_name }}</p>
+                    <p class="text-sm text-gray-500 mb-4">Dari file: {{ $record->import->table_name }}</p>
 
                     <dl class="divide-y divide-gray-200 border border-gray-200 rounded-md">
                         @foreach ($record->row_data ?? [] as $key => $value)

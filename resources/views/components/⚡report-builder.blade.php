@@ -12,7 +12,7 @@ new class extends Component
 {
     public ?int $importId = null;
 
-    /** @var array<int, array{id: int, file_name: string}> */
+    /** @var array<int, array{id: int, file_name: string, table_name: string|null}> */
     public array $imports = [];
 
     /** @var string[] */
@@ -59,8 +59,8 @@ new class extends Component
         $this->imports = Import::where('user_id', auth()->id())
             ->where('status', 'success')
             ->latest()
-            ->get(['id', 'file_name'])
-            ->map(fn (Import $import) => ['id' => $import->id, 'file_name' => $import->file_name])
+            ->get(['id', 'file_name', 'table_name'])
+            ->map(fn (Import $import) => ['id' => $import->id, 'file_name' => $import->file_name, 'table_name' => $import->table_name])
             ->all();
 
         $this->hasDefaultTemplate = ReportTemplate::where('user_id', auth()->id())
@@ -186,7 +186,7 @@ new class extends Component
         $this->fields = $this->columns;
 
         if ($this->title === '') {
-            $this->title = 'Laporan '.pathinfo($import->file_name, PATHINFO_FILENAME);
+            $this->title = 'Laporan '.($import->table_name ?? pathinfo($import->file_name, PATHINFO_FILENAME));
         }
 
         $this->loadPreview();
@@ -415,7 +415,7 @@ new class extends Component
                     @foreach ($this->imports as $import)
                         <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
                             <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600" />
-                            {{ $import['file_name'] }}
+                            {{ $import['table_name'] }}
                         </label>
                     @endforeach
                 </div>
@@ -444,7 +444,7 @@ new class extends Component
                     <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
                         <option value="">-- Pilih file import --</option>
                         @foreach ($this->imports as $import)
-                            <option value="{{ $import['id'] }}">{{ $import['file_name'] }}</option>
+                            <option value="{{ $import['id'] }}">{{ $import['table_name'] }}</option>
                         @endforeach
                     </select>
                     @if ($this->hasDefaultTemplate)

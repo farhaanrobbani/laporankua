@@ -45,7 +45,7 @@ class DataTest extends TestCase
         $response->assertOk();
         $response->assertSee('Budi');
         $response->assertSee('Siti');
-        $response->assertSee($import->file_name);
+        $response->assertSee($import->table_name);
     }
 
     public function test_isolasi_data_antar_user(): void
@@ -57,7 +57,7 @@ class DataTest extends TestCase
         $recordB = $importB->importData()->first();
 
         // Picker tidak menampilkan import user lain
-        $this->actingAs($userA)->get('/data')->assertOk()->assertDontSee($importB->file_name);
+        $this->actingAs($userA)->get('/data')->assertOk()->assertDontSee($importB->table_name);
 
         // Akses langsung import user lain → 404
         $this->actingAs($userA)->get('/data?import_id='.$importB->id)->assertNotFound();

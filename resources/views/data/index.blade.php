@@ -42,7 +42,7 @@
                                         <option value="">-- Pilih file import --</option>
                                         @foreach ($imports as $import)
                                             <option value="{{ $import->id }}" @selected($selectedImport?->id === $import->id)>
-                                                {{ $import->file_name }} ({{ number_format($import->import_data_count) }} baris)
+                                                {{ $import->table_name }} ({{ number_format($import->import_data_count) }} baris)
                                             </option>
                                         @endforeach
                                     </select>
@@ -68,7 +68,7 @@
                                                 <input type="checkbox" name="merge_imports[]" value="{{ $import->id }}"
                                                     @checked(in_array($import->id, $mergeImports))
                                                     class="rounded text-blue-600" />
-                                                {{ $import->file_name }} ({{ number_format($import->import_data_count) }} baris)
+                                                {{ $import->table_name }} ({{ number_format($import->import_data_count) }} baris)
                                             </label>
                                         @endforeach
                                     </div>

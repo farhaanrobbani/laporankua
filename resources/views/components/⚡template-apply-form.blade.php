@@ -10,7 +10,7 @@ new class extends Component
 {
     public ReportTemplate $template;
 
-    /** @var array<int, array{id: int, file_name: string}> */
+    /** @var array<int, array{id: int, file_name: string, table_name: string|null}> */
     public array $imports = [];
 
     public bool $isMergeMode = false;
@@ -39,8 +39,8 @@ new class extends Component
         $this->imports = Import::where('user_id', auth()->id())
             ->where('status', 'success')
             ->latest()
-            ->get(['id', 'file_name'])
-            ->map(fn (Import $import) => ['id' => $import->id, 'file_name' => $import->file_name])
+            ->get(['id', 'file_name', 'table_name'])
+            ->map(fn (Import $import) => ['id' => $import->id, 'file_name' => $import->file_name, 'table_name' => $import->table_name])
             ->all();
     }
 
@@ -221,7 +221,7 @@ new class extends Component
             <select wire:model.live="importId" class="mt-1 border-gray-300 rounded-md text-sm w-full">
                 <option value="">-- Pilih file import --</option>
                 @foreach ($imports as $import)
-                    <option value="{{ $import['id'] }}">{{ $import['file_name'] }}</option>
+                    <option value="{{ $import['id'] }}">{{ $import['table_name'] }}</option>
                 @endforeach
             </select>
             @error('importId') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -236,7 +236,7 @@ new class extends Component
                 @foreach ($imports as $import)
                     <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
                         <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600" />
-                        {{ $import['file_name'] }}
+                        {{ $import['table_name'] }}
                     </label>
                 @endforeach
             </div>

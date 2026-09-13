@@ -25,7 +25,7 @@
                                             <p class="font-semibold text-gray-900 truncate">{{ $report->title }}</p>
                                             <p class="text-xs text-gray-500 mt-1">
                                                 <x-status-badge :status="$report->output_format" />
-                                                &middot; {{ $report->import?->file_name ?? '-' }}
+                                                &middot; {{ $report->import?->table_name ?? '-' }}
                                                 &middot; {{ $report->created_at->format('d M Y H:i') }}
                                             </p>
                                         </div>

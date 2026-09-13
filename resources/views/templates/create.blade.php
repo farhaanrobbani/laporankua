@@ -51,7 +51,7 @@
                         <select onchange="window.location.href='{{ route('templates.create') }}?source_import_id='+this.value" class="mt-1 border-gray-300 rounded-md text-sm w-full sm:w-auto">
                             <option value="">-- Pilih file --</option>
                             @foreach ($imports as $import)
-                                <option value="{{ $import->id }}" @selected($sourceImport?->id === $import->id)>{{ $import->file_name }}</option>
+                                <option value="{{ $import->id }}" @selected($sourceImport?->id === $import->id)>{{ $import->table_name }}</option>
                             @endforeach
                         </select>
                     </div>
