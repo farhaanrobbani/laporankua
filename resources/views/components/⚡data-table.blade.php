@@ -50,11 +50,11 @@ new class extends Component
         } elseif ($importIds !== null && count($importIds) >= 1) {
             $this->isMergeMode = true;
             $this->importIds = $importIds;
-            $this->columns = app(MergeService::class)->getAllColumns($importIds);
+            $this->columns = array_values(array_filter(app(MergeService::class)->getAllColumns($importIds), fn ($col) => $col !== 'No'));
         } elseif ($importId !== null) {
             $import = Import::where('user_id', auth()->id())->findOrFail($importId);
             $this->importId = $import->id;
-            $this->columns = $import->availableColumns();
+            $this->columns = array_values(array_filter($import->availableColumns(), fn ($col) => $col !== 'No'));
 
             if ($import->default_sort_column && in_array($import->default_sort_column, $this->columns, true)) {
                 $this->sortColumn = $import->default_sort_column;
