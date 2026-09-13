@@ -30,6 +30,11 @@ new class extends Component
         $import = Import::where('user_id', auth()->id())->findOrFail($importId);
         $this->importId = $import->id;
         $this->columns = $import->availableColumns();
+
+        if ($import->default_sort_column && in_array($import->default_sort_column, $this->columns, true)) {
+            $this->sortColumn = $import->default_sort_column;
+            $this->sortDirection = $import->default_sort_direction ?? 'asc';
+        }
     }
 
     public function updatingSearch(): void
