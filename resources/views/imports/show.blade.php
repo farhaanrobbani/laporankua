@@ -37,17 +37,27 @@
                         @if ($import->status === 'success')
                             <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">Lihat Data</a>
                         @endif
-                        <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-delete-import')">Hapus</x-danger-button>
+                        @if ($import->reports_count > 0)
+                            <span class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 text-sm font-semibold rounded-md cursor-not-allowed" title="Import ini masih digunakan oleh {{ $import->reports_count }} laporan">Hapus</span>
+                        @else
+                            <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-delete-import')">Hapus</x-danger-button>
+                        @endif
 
                         <x-modal name="confirm-delete-import" :show="false" focusable>
                             <form method="POST" action="{{ route('imports.destroy', $import) }}" class="p-6">
                                 @csrf
                                 @method('DELETE')
                                 <h2 class="text-lg font-medium text-gray-900">Hapus data import?</h2>
-                                <p class="mt-1 text-sm text-gray-600">File "{{ $import->file_name }}" beserta seluruh record-nya akan dihapus permanen.</p>
+                                @if ($import->reports_count > 0)
+                                    <p class="mt-1 text-sm text-red-600">Import ini digunakan oleh {{ $import->reports_count }} laporan. Hapus laporan terlebih dahulu sebelum menghapus import ini.</p>
+                                @else
+                                    <p class="mt-1 text-sm text-gray-600">File "{{ $import->file_name }}" beserta seluruh record-nya akan dihapus permanen.</p>
+                                @endif
                                 <div class="mt-6 flex justify-end gap-3">
                                     <x-secondary-button x-on:click="$dispatch('close')">Batal</x-secondary-button>
-                                    <x-danger-button>Hapus</x-danger-button>
+                                    @if ($import->reports_count === 0)
+                                        <x-danger-button>Hapus</x-danger-button>
+                                    @endif
                                 </div>
                             </form>
                         </x-modal>

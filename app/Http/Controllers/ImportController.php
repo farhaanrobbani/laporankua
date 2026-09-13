@@ -31,7 +31,7 @@ class ImportController extends Controller
     {
         $this->authorize('view', $import);
 
-        $import->loadCount('importData');
+        $import->loadCount('importData', 'reports');
 
         return view('imports.show', compact('import'));
     }
@@ -39,6 +39,12 @@ class ImportController extends Controller
     public function destroy(Import $import): RedirectResponse
     {
         $this->authorize('delete', $import);
+
+        if ($import->reports()->count() > 0) {
+            return back()->withErrors([
+                'import' => 'Import ini masih digunakan oleh '.$import->reports()->count().' laporan. Hapus laporan terlebih dahulu.',
+            ]);
+        }
 
         foreach ($import->reports as $report) {
             if ($report->file_path) {
