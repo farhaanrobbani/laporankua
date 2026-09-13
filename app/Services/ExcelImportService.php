@@ -198,16 +198,15 @@ class ExcelImportService
 
             if ($appendToImportId !== null) {
                 $existingImport = Import::find($appendToImportId);
-                $existingImport->update([
-                    'total_rows' => $existingImport->total_rows + $imported,
-                    'imported_rows' => $existingImport->imported_rows + $imported,
-                ]);
+                $existingImport->total_rows += $imported;
+                $existingImport->imported_rows += $imported;
+                $existingImport->save();
 
                 $import->update([
                     'status' => 'appended',
                     'total_rows' => $totalRows,
-                    'imported_rows' => 0,
-                    'failed_rows' => $totalRows,
+                    'imported_rows' => $imported,
+                    'failed_rows' => 0,
                     'error_log' => [['row' => 0, 'reason' => 'Data di-append ke import #'.$appendToImportId.'. '.number_format($imported).' baris baru, '.number_format($skipped).' baris di-skip (duplikat).']],
                 ]);
             } else {
