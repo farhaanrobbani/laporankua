@@ -2,7 +2,6 @@
 
 use App\Jobs\ProcessExcelImport;
 use App\Models\Import;
-use App\Models\ImportData;
 use App\Services\ExcelImportService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -37,13 +36,9 @@ new class extends Component
 
     public ?Import $existingImport = null;
 
-    public int $newRowCount = 0;
-
-    public int $duplicateRowCount = 0;
-
     public function updatedFile(ExcelImportService $service): void
     {
-        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'existingImport', 'newRowCount', 'duplicateRowCount']);
+        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'existingImport']);
         $this->fileSize = 0;
 
         $this->validate([
@@ -59,7 +54,7 @@ new class extends Component
             $this->sheets = $service->getSheetNames($absolute);
             $this->sheet = $this->sheets[0] ?? null;
             $this->loadPreview($service);
-            $this->detectExistingImport($service);
+            $this->detectExistingImport();
         } catch (\Throwable $e) {
             report($e);
             $this->addError('file', 'File Excel tidak dapat dibaca. Pastikan file tidak rusak.');
@@ -70,7 +65,7 @@ new class extends Component
     {
         if ($this->tmpPath) {
             $this->loadPreview($service);
-            $this->detectExistingImport($service);
+            $this->detectExistingImport();
         }
     }
 
@@ -115,53 +110,13 @@ new class extends Component
         $this->redirectRoute('imports.show', $import);
     }
 
-    private function detectExistingImport(ExcelImportService $service): void
+    private function detectExistingImport(): void
     {
         $this->existingImport = Import::where('user_id', auth()->id())
             ->where('file_name', $this->originalName)
             ->where('status', 'success')
             ->latest()
             ->first();
-
-        if (! $this->existingImport) {
-            return;
-        }
-
-        try {
-            $absolute = Storage::disk('local')->path($this->tmpPath);
-            $preview = $service->previewRows($absolute, $this->sheet, 10000);
-
-            $existingRows = ImportData::where('import_id', $this->existingImport->id)
-                ->pluck('row_data')
-                ->map(fn ($rd) => json_decode($rd, true))
-                ->all();
-
-            $existingHashes = array_map(fn ($row) => md5(json_encode($row)), $existingRows);
-
-            $newCount = 0;
-            $dupCount = 0;
-
-            foreach ($preview['rows'] as $row) {
-                $record = [];
-                foreach ($preview['headers'] as $i => $header) {
-                    $record[$header] = $row[$i] ?? null;
-                }
-
-                $rowHash = md5(json_encode($record));
-
-                if (in_array($rowHash, $existingHashes, true)) {
-                    $dupCount++;
-                } else {
-                    $newCount++;
-                }
-            }
-
-            $this->newRowCount = $newCount;
-            $this->duplicateRowCount = $dupCount;
-        } catch (\Throwable $e) {
-            report($e);
-            $this->existingImport = null;
-        }
     }
 
     private function loadPreview(ExcelImportService $service): void
@@ -208,15 +163,7 @@ new class extends Component
             @if ($existingImport)
                 <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
                     <p class="text-sm font-medium text-amber-800">File <span class="font-semibold">{{ $originalName }}</span> sudah pernah di-import ({{ $existingImport->created_at->format('d M Y') }}).</p>
-                    @if ($newRowCount > 0)
-                        <p class="text-sm text-amber-700 mt-1">Ditemukan {{ number_format($newRowCount) }} baris baru yang akan ditambahkan ke data existing.</p>
-                    @endif
-                    @if ($duplicateRowCount > 0)
-                        <p class="text-sm text-amber-600">{{ number_format($duplicateRowCount) }} baris sudah ada (akan di-skip).</p>
-                    @endif
-                    @if ($newRowCount === 0)
-                        <p class="text-sm text-amber-600 mt-1">Semua baris sudah ada di data existing. Tidak ada baris baru yang ditambahkan.</p>
-                    @endif
+                    <p class="text-sm text-amber-700 mt-1">Baris baru yang belum ada di data existing akan ditambahkan otomatis. Baris yang sudah ada akan di-skip.</p>
                 </div>
             @endif
 
