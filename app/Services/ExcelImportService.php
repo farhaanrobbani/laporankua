@@ -53,7 +53,7 @@ class ExcelImportService
     /**
      * Proses import penuh sebuah record Import (dipanggil dari Job).
      */
-    public function import(Import $import, ?int $appendToImportId = null): void
+    public function import(Import $import): void
     {
         $import->update(['status' => 'processing', 'imported_at' => now()]);
 
@@ -111,17 +111,7 @@ class ExcelImportService
                 ->toArray();
         }
 
-        $existingHashes = [];
-
-        if ($appendToImportId !== null) {
-            $existingRows = ImportData::where('import_id', $appendToImportId)
-                ->pluck('row_data')
-                ->all();
-
-            $existingHashes = array_map(fn ($row) => md5(json_encode($row)), $existingRows);
-        }
-
-        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, $appendToImportId, $existingHashes, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
+        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
             foreach ($rawRows as $index => $row) {
                 $excelRow = $index + 2;
 
@@ -134,16 +124,6 @@ class ExcelImportService
                     }
 
                     continue;
-                }
-
-                if ($appendToImportId !== null) {
-                    $rowHash = md5(json_encode($record));
-
-                    if (in_array($rowHash, $existingHashes, true)) {
-                        $skipped++;
-
-                        continue;
-                    }
                 }
 
                 $dedupKeyValue = null;
@@ -194,23 +174,13 @@ class ExcelImportService
                 ImportData::insert($batch);
             }
 
-            if ($appendToImportId !== null) {
-                $import->update([
-                    'status' => 'appended',
-                    'total_rows' => $totalRows,
-                    'imported_rows' => $imported,
-                    'failed_rows' => 0,
-                    'error_log' => [['row' => 0, 'reason' => 'Data di-append ke import #'.$appendToImportId.'. '.number_format($imported).' baris baru, '.number_format($skipped).' baris di-skip (duplikat).']],
-                ]);
-            } else {
-                $import->update([
-                    'status' => 'success',
-                    'total_rows' => $totalRows,
-                    'imported_rows' => $imported,
-                    'failed_rows' => $failed,
-                    'error_log' => $errors === [] ? null : $errors,
-                ]);
-            }
+            $import->update([
+                'status' => 'success',
+                'total_rows' => $totalRows,
+                'imported_rows' => $imported,
+                'failed_rows' => $failed,
+                'error_log' => $errors === [] ? null : $errors,
+            ]);
         });
     }
 

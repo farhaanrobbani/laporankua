@@ -38,11 +38,9 @@ new class extends Component
 
     public ?string $defaultSortColumn = null;
 
-    public ?Import $existingImport = null;
-
     public function updatedFile(ExcelImportService $service): void
     {
-        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'defaultSortColumn', 'existingImport']);
+        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'defaultSortColumn']);
         $this->fileSize = 0;
 
         $this->validate([
@@ -59,7 +57,6 @@ new class extends Component
             $this->sheets = $service->getSheetNames($absolute);
             $this->sheet = $this->sheets[0] ?? null;
             $this->loadPreview($service);
-            $this->detectExistingImport();
         } catch (\Throwable $e) {
             report($e);
             $this->addError('file', 'File Excel tidak dapat dibaca. Pastikan file tidak rusak.');
@@ -70,7 +67,6 @@ new class extends Component
     {
         if ($this->tmpPath) {
             $this->loadPreview($service);
-            $this->detectExistingImport();
         }
     }
 
@@ -111,28 +107,13 @@ new class extends Component
             'status' => 'pending',
         ]);
 
-        $appendToImportId = $this->existingImport?->id;
-
         if ($this->total < 1000) {
-            app(ExcelImportService::class)->import($import->fresh(), $appendToImportId);
+            app(ExcelImportService::class)->import($import->fresh());
         } else {
-            ProcessExcelImport::dispatch($import, $appendToImportId);
+            ProcessExcelImport::dispatch($import);
         }
 
         $this->redirectRoute('imports.show', $import);
-    }
-
-    private function detectExistingImport(): void
-    {
-        if (! $this->tableName) {
-            return;
-        }
-
-        $this->existingImport = Import::where('user_id', auth()->id())
-            ->where('table_name', $this->tableName)
-            ->where('status', 'success')
-            ->latest()
-            ->first();
     }
 
     private function loadPreview(ExcelImportService $service): void
@@ -179,16 +160,9 @@ new class extends Component
             </div>
 
             @if ($tableName)
-                @if ($existingImport)
-                    <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
-                        <p class="text-sm font-medium text-amber-800">Tabel: <span class="font-semibold">{{ $tableName }}</span></p>
-                        <p class="text-sm text-amber-700 mt-1">Sudah ada data dari file "{{ $existingImport->file_name }}" ({{ $existingImport->created_at->format('d M Y') }}). Baris baru akan ditambahkan otomatis.</p>
-                    </div>
-                @else
-                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                        <p class="text-sm font-medium text-blue-800">Tabel baru: <span class="font-semibold">{{ $tableName }}</span></p>
-                    </div>
-                @endif
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <p class="text-sm font-medium text-blue-800">Tabel: <span class="font-semibold">{{ $tableName }}</span></p>
+                </div>
             @endif
 
             @if (! empty($headers))

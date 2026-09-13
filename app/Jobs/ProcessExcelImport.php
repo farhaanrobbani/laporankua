@@ -16,12 +16,11 @@ class ProcessExcelImport implements ShouldQueue
 
     public function __construct(
         public Import $import,
-        public ?int $appendToImportId = null,
     ) {}
 
     public function handle(ExcelImportService $service): void
     {
-        $service->import($this->import->fresh(), $this->appendToImportId);
+        $service->import($this->import->fresh());
     }
 
     public function failed(?Throwable $exception): void
