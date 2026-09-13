@@ -14,7 +14,6 @@
                     @else
                         @php
                             $mode = request('mode', 'single');
-                            $mergeImports = request('merge_imports', []);
                             $joinColumn = request('join_column', '');
                         @endphp
 
@@ -64,14 +63,12 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Pilih file import (minimal 2)</label>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                         @foreach ($grouped as $group)
-                                            @foreach ($group['import_ids'] as $idx => $importId)
-                                                <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
-                                                    <input type="checkbox" name="merge_imports[]" value="{{ $importId }}"
-                                                        @checked(in_array($importId, $mergeImports))
-                                                        class="rounded text-blue-600" />
-                                                    {{ $group['table_name'] }} #{{ $idx + 1 }}
-                                                </label>
-                                            @endforeach
+                                            <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
+                                                <input type="checkbox" name="merge_imports[]" value="{{ json_encode($group['import_ids']) }}"
+                                                    @checked(!empty(array_intersect($group['import_ids'], $mergeImports)))
+                                                    class="rounded text-blue-600" />
+                                                {{ $group['table_name'] }} ({{ number_format($group['total_rows']) }} baris)
+                                            </label>
                                         @endforeach
                                     </div>
                                 </div>

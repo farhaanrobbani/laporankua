@@ -19,7 +19,6 @@ class DataController extends Controller
     public function index(Request $request): View
     {
         $imports = Import::where('user_id', auth()->id())
-            ->where('status', 'success')
             ->withCount('importData')
             ->latest()
             ->get();
@@ -39,7 +38,18 @@ class DataController extends Controller
             $selectedGroup = $grouped->firstWhere('table_name', $import->table_name);
         }
 
-        return view('data.index', compact('grouped', 'selectedGroup'));
+        $mergeImports = [];
+        foreach ($request->input('merge_imports', []) as $val) {
+            $decoded = json_decode($val, true);
+            if (is_array($decoded)) {
+                $mergeImports = array_merge($mergeImports, $decoded);
+            } else {
+                $mergeImports[] = (int) $val;
+            }
+        }
+        $mergeImports = array_values(array_unique($mergeImports));
+
+        return view('data.index', compact('grouped', 'selectedGroup', 'mergeImports'));
     }
 
     public function show(ImportData $record): View
