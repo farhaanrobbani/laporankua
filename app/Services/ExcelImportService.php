@@ -117,7 +117,6 @@ class ExcelImportService
         if ($appendToImportId !== null) {
             $existingRows = ImportData::where('import_id', $appendToImportId)
                 ->pluck('row_data')
-                ->map(fn ($rd) => json_decode($rd, true))
                 ->all();
 
             $existingHashes = array_map(fn ($row) => md5(json_encode($row)), $existingRows);
