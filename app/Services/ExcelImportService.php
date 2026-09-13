@@ -53,7 +53,7 @@ class ExcelImportService
     /**
      * Proses import penuh sebuah record Import (dipanggil dari Job).
      */
-    public function import(Import $import): void
+    public function import(Import $import, ?int $appendToImportId = null): void
     {
         $import->update(['status' => 'processing', 'imported_at' => now()]);
 
@@ -111,9 +111,22 @@ class ExcelImportService
                 ->toArray();
         }
 
-        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
+        $existingHashes = [];
+        $targetImportId = $import->id;
+
+        if ($appendToImportId !== null) {
+            $existingRows = ImportData::where('import_id', $appendToImportId)
+                ->pluck('row_data')
+                ->map(fn ($rd) => json_decode($rd, true))
+                ->all();
+
+            $existingHashes = array_map(fn ($row) => md5(json_encode($row)), $existingRows);
+            $targetImportId = $appendToImportId;
+        }
+
+        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, $appendToImportId, $existingHashes, $targetImportId, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
             foreach ($rawRows as $index => $row) {
-                $excelRow = $index + 2; // +1 header, +1 base-1
+                $excelRow = $index + 2;
 
                 $record = $this->mapRow($headers, $row);
 
@@ -124,6 +137,16 @@ class ExcelImportService
                     }
 
                     continue;
+                }
+
+                if ($appendToImportId !== null) {
+                    $rowHash = md5(json_encode($record));
+
+                    if (in_array($rowHash, $existingHashes, true)) {
+                        $skipped++;
+
+                        continue;
+                    }
                 }
 
                 $dedupKeyValue = null;
@@ -155,7 +178,7 @@ class ExcelImportService
                 }
 
                 $batch[] = [
-                    'import_id' => $import->id,
+                    'import_id' => $targetImportId,
                     'row_data' => json_encode($record, JSON_UNESCAPED_UNICODE),
                     'row_number' => $excelRow,
                     'dedup_key_value' => $dedupKeyValue,
@@ -174,13 +197,29 @@ class ExcelImportService
                 ImportData::insert($batch);
             }
 
-            $import->update([
-                'status' => 'success',
-                'total_rows' => $totalRows,
-                'imported_rows' => $imported,
-                'failed_rows' => $failed,
-                'error_log' => $errors === [] ? null : $errors,
-            ]);
+            if ($appendToImportId !== null) {
+                $existingImport = Import::find($appendToImportId);
+                $existingImport->update([
+                    'total_rows' => $existingImport->total_rows + $imported,
+                    'imported_rows' => $existingImport->imported_rows + $imported,
+                ]);
+
+                $import->update([
+                    'status' => 'success',
+                    'total_rows' => $totalRows,
+                    'imported_rows' => 0,
+                    'failed_rows' => $totalRows,
+                    'error_log' => [['row' => 0, 'reason' => number_format($imported).' baris baru ditambahkan ke import #'.$appendToImportId.'. '.number_format($skipped).' baris di-skip (sudah ada).']],
+                ]);
+            } else {
+                $import->update([
+                    'status' => 'success',
+                    'total_rows' => $totalRows,
+                    'imported_rows' => $imported,
+                    'failed_rows' => $failed,
+                    'error_log' => $errors === [] ? null : $errors,
+                ]);
+            }
         });
     }
 
