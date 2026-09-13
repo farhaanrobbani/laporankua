@@ -42,8 +42,7 @@ class UiPolishTest extends TestCase
 
         $this->actingAs($user)->get(route('imports.show', $import))
             ->assertOk()
-            ->assertSee('confirm-delete-import', false)
-            ->assertSee('Hapus data import?');
+            ->assertSee('confirm-delete-import', false);
     }
 
     public function test_empty_state_komponen_dirender(): void

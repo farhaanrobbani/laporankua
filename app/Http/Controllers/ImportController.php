@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Import;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
 
 class ImportController extends Controller
@@ -16,10 +18,40 @@ class ImportController extends Controller
     {
         $imports = Import::where('user_id', auth()->id())
             ->withCount('importData')
-            ->latest()
-            ->paginate(10);
+            ->orderByDesc('id')
+            ->get();
 
-        return view('imports.index', compact('imports'));
+        $grouped = $imports->groupBy('table_name')->map(function (Collection $rows, string $tableName) {
+            $latest = $rows->first();
+
+            $fileNames = $rows->pluck('file_name')->toArray();
+            $statusCounts = $rows->pluck('status')->countBy()->toArray();
+
+            return (object) [
+                'table_name' => $tableName,
+                'latest_id' => $latest->id,
+                'first_id' => $rows->last()->id,
+                'file_names_list' => $fileNames,
+                'file_count' => count($fileNames),
+                'total_rows' => $rows->sum('total_rows'),
+                'imported_rows' => $rows->sum('imported_rows'),
+                'failed_rows' => $rows->sum('failed_rows'),
+                'status_summary' => $statusCounts,
+                'latest_created_at' => $latest->created_at,
+            ];
+        });
+
+        $perPage = 10;
+        $page = request()->get('page', 1);
+        $paginated = new LengthAwarePaginator(
+            $grouped->slice(($page - 1) * $perPage, $perPage),
+            $grouped->count(),
+            $perPage,
+            $page,
+            ['path' => route('imports.index')],
+        );
+
+        return view('imports.index', ['imports' => $paginated]);
     }
 
     public function create(): View
@@ -31,9 +63,16 @@ class ImportController extends Controller
     {
         $this->authorize('view', $import);
 
-        $import->loadCount('importData', 'reports');
+        $imports = Import::where('user_id', auth()->id())
+            ->where('table_name', $import->table_name)
+            ->withCount('importData', 'reports')
+            ->orderBy('id')
+            ->get();
 
-        return view('imports.show', compact('import'));
+        return view('imports.show', [
+            'tableName' => $import->table_name,
+            'imports' => $imports,
+        ]);
     }
 
     public function destroy(Import $import): RedirectResponse
