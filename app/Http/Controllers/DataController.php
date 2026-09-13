@@ -30,9 +30,7 @@ class DataController extends Controller
                 ->findOrFail($request->integer('import_id'));
         }
 
-        $allImportIds = $imports->pluck('id')->toArray();
-
-        return view('data.index', compact('imports', 'selectedImport', 'allImportIds'));
+        return view('data.index', compact('imports', 'selectedImport'));
     }
 
     public function show(ImportData $record): View

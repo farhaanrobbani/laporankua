@@ -13,7 +13,7 @@
                         <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         @php
-                            $mode = request('mode', request('import_id') ? 'single' : 'all');
+                            $mode = request('mode', 'single');
                             $mergeImports = request('merge_imports', []);
                             $joinColumn = request('join_column', '');
                         @endphp
@@ -21,10 +21,6 @@
                         {{-- Mode Toggle --}}
                         <div class="mb-6">
                             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
-                                <a href="{{ route('data.index', ['mode' => 'all']) }}"
-                                   class="px-4 py-2 text-sm font-medium rounded-md transition {{ $mode === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
-                                    Semua Data
-                                </a>
                                 <a href="{{ route('data.index', ['mode' => 'single', 'import_id' => request('import_id')]) }}"
                                    class="px-4 py-2 text-sm font-medium rounded-md transition {{ $mode === 'single' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
                                     Single Import
@@ -36,22 +32,7 @@
                             </div>
                         </div>
 
-                        @if ($mode === 'all')
-                            {{-- All Data Mode (Concat) --}}
-                            <div class="mb-4 text-sm text-gray-600">
-                                Menampilkan semua data dari {{ $imports->count() }} file import ({{ number_format($imports->sum('import_data_count')) }} baris)
-                            </div>
-
-                            @if (count($allImportIds) >= 1)
-                                <livewire:data-table
-                                    :import-ids="$allImportIds"
-                                    :key="'data-table-all'"
-                                />
-                            @else
-                                <x-empty-state title="Tidak ada data untuk ditampilkan" />
-                            @endif
-
-                        @elseif ($mode === 'single')
+                        @if ($mode === 'single')
                             {{-- Single Import Mode --}}
                             <form method="GET" action="{{ route('data.index') }}" class="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center">
                                 <input type="hidden" name="mode" value="single" />

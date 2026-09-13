@@ -47,10 +47,6 @@ new class extends Component
             $this->joinColumn = $joinColumn;
             $this->columns = app(MergeService::class)->getAllColumns($importIds);
             $this->sortColumn = $joinColumn;
-        } elseif ($importIds !== null && count($importIds) >= 1) {
-            $this->isMergeMode = true;
-            $this->importIds = $importIds;
-            $this->columns = app(MergeService::class)->getAllColumns($importIds);
         } elseif ($importId !== null) {
             $import = Import::where('user_id', auth()->id())->findOrFail($importId);
             $this->importId = $import->id;
@@ -169,10 +165,6 @@ new class extends Component
 
     public function mergeQuery(): array
     {
-        if ($this->joinColumn === '') {
-            return app(MergeService::class)->concatImports($this->importIds);
-        }
-
         return app(MergeService::class)->mergeByColumn($this->importIds, $this->joinColumn);
     }
 
@@ -254,11 +246,7 @@ new class extends Component
             <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
             </svg>
-            @if ($this->joinColumn !== '')
-                <span>Mode Gabung: JOIN berdasarkan kolom <strong>{{ $this->joinColumn }}</strong> dari {{ count($this->importIds) }} file import</span>
-            @else
-                <span>Mode Gabung: Semua data dari {{ count($this->importIds) }} file import</span>
-            @endif
+            <span>Mode Gabung: JOIN berdasarkan kolom <strong>{{ $this->joinColumn }}</strong> dari {{ count($this->importIds) }} file import</span>
         </div>
     @endif
 
@@ -315,7 +303,7 @@ new class extends Component
                                 <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
                                     <button type="button" wire:click="sortBy('{{ $column }}')" class="hover:text-gray-800">
                                         {{ $column }}
-                                        @if ($this->joinColumn !== '' && $column === $this->joinColumn)
+                                        @if ($column === $this->joinColumn)
                                             <span class="text-blue-600 text-xs">(JOIN)</span>
                                         @endif
                                         @if ($this->sortColumn === $column) {{ $this->sortDirection === 'asc' ? '↑' : '↓' }} @endif
