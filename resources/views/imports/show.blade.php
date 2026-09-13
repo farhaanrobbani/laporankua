@@ -41,10 +41,10 @@
                                         <td class="px-4 py-2 text-gray-600">{{ $import->created_at->format('d M Y H:i') }}</td>
                                         <td class="px-4 py-2 text-right whitespace-nowrap">
                                             @if ($import->status === 'success')
-                                                <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="text-green-600 hover:text-green-800 text-sm font-medium">Data</a>
+                                                <a href="{{ route('imports.data', $import) }}" class="text-green-600 hover:text-green-800 text-sm font-medium">Data</a>
                                                 <span class="text-gray-300 mx-1">|</span>
                                             @elseif ($import->status === 'appended')
-                                                <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Data</a>
+                                                <a href="{{ route('imports.data', $import) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Data</a>
                                                 <span class="text-gray-300 mx-1">|</span>
                                             @endif
                                             @if ($import->reports_count > 0)

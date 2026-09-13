@@ -75,6 +75,15 @@ class ImportController extends Controller
         ]);
     }
 
+    public function data(Import $import): View
+    {
+        $this->authorize('view', $import);
+
+        return view('imports.data', [
+            'import' => $import,
+        ]);
+    }
+
     public function destroy(Import $import): RedirectResponse
     {
         $this->authorize('delete', $import);

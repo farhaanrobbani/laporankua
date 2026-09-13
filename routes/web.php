@@ -20,6 +20,7 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
     Route::get('/imports/upload', [ImportController::class, 'create'])->name('imports.create');
     Route::get('/imports/{import}', [ImportController::class, 'show'])->name('imports.show');
+    Route::get('/imports/{import}/data', [ImportController::class, 'data'])->name('imports.data');
     Route::delete('/imports/{import}', [ImportController::class, 'destroy'])->name('imports.destroy');
 
     Route::get('/data', [DataController::class, 'index'])->name('data.index');
