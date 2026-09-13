@@ -36,11 +36,13 @@ new class extends Component
 
     public ?string $tableName = null;
 
+    public ?string $defaultSortColumn = null;
+
     public ?Import $existingImport = null;
 
     public function updatedFile(ExcelImportService $service): void
     {
-        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'existingImport']);
+        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'defaultSortColumn', 'existingImport']);
         $this->fileSize = 0;
 
         $this->validate([
@@ -100,6 +102,8 @@ new class extends Component
             'user_id' => auth()->id(),
             'file_name' => (string) $this->originalName,
             'table_name' => $this->tableName,
+            'default_sort_column' => $this->defaultSortColumn,
+            'default_sort_direction' => $this->defaultSortColumn ? 'asc' : null,
             'file_path' => $permanentPath,
             'file_size' => $this->fileSize,
             'sheet_name' => $this->sheet,
@@ -137,6 +141,8 @@ new class extends Component
             $this->rows = $preview['rows'];
             $this->total = $preview['total'];
             $this->sheet = $preview['sheet'];
+
+            $this->defaultSortColumn = in_array('Tanggal Nikah', $this->headers) ? 'Tanggal Nikah' : null;
         } catch (\Throwable $e) {
             report($e);
             $this->addError('file', 'Sheet tidak dapat dibaca.');

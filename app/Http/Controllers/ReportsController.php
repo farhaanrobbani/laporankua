@@ -75,6 +75,9 @@ class ReportsController extends Controller
         $config = $report->config_json ?? [];
         $fields = array_values(array_filter($config['fields'] ?? []));
 
+        $sortColumn = $config['sort_column'] ?? $report->import?->default_sort_column;
+        $sortDirection = $config['sort_direction'] ?? $report->import?->default_sort_direction ?? 'asc';
+
         if (! empty($config['is_merged']) && ! empty($config['merged_import_ids'])) {
             $mergeService = app(MergeService::class);
             $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
@@ -84,8 +87,8 @@ class ReportsController extends Controller
                 $config['search'] ?? null,
                 $config['filter_column'] ?? null,
                 $config['filter_value'] ?? null,
-                $config['sort_column'] ?? null,
-                $config['sort_direction'] ?? 'asc',
+                $sortColumn,
+                $sortDirection,
             );
         } else {
             $dataset = $service->buildDataset(
@@ -94,8 +97,8 @@ class ReportsController extends Controller
                 $config['search'] ?? null,
                 $config['filter_column'] ?? null,
                 $config['filter_value'] ?? null,
-                $config['sort_column'] ?? null,
-                $config['sort_direction'] ?? 'asc',
+                $sortColumn,
+                $sortDirection,
             );
         }
         $dataset['title'] = $report->title;

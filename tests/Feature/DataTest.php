@@ -54,10 +54,11 @@ class DataTest extends TestCase
         $userB = User::factory()->create();
 
         $importB = $this->importWithRows($userB, [['Rahasia', 999]]);
+        $importB->update(['table_name' => 'data_rahasia_user_b']);
         $recordB = $importB->importData()->first();
 
         // Picker tidak menampilkan import user lain
-        $this->actingAs($userA)->get('/data')->assertOk()->assertDontSee($importB->table_name);
+        $this->actingAs($userA)->get('/data')->assertOk()->assertDontSee('data_rahasia_user_b');
 
         // Akses langsung import user lain → 404
         $this->actingAs($userA)->get('/data?import_id='.$importB->id)->assertNotFound();

@@ -203,13 +203,8 @@ class ExcelImportService
                     'imported_rows' => $existingImport->imported_rows + $imported,
                 ]);
 
-                $import->update([
-                    'status' => 'success',
-                    'total_rows' => $totalRows,
-                    'imported_rows' => 0,
-                    'failed_rows' => $totalRows,
-                    'error_log' => [['row' => 0, 'reason' => number_format($imported).' baris baru ditambahkan ke import #'.$appendToImportId.'. '.number_format($skipped).' baris di-skip (sudah ada).']],
-                ]);
+                Storage::disk('local')->delete($import->file_path);
+                $import->delete();
             } else {
                 $import->update([
                     'status' => 'success',
