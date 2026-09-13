@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    @if ($imports->isEmpty())
+                    @if ($grouped->isEmpty())
                         <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         @php
@@ -21,7 +21,7 @@
                         {{-- Mode Toggle --}}
                         <div class="mb-6">
                             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
-                                <a href="{{ route('data.index', ['mode' => 'single', 'import_id' => request('import_id')]) }}"
+                                <a href="{{ route('data.index', ['mode' => 'single']) }}"
                                    class="px-4 py-2 text-sm font-medium rounded-md transition {{ $mode === 'single' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
                                     Single Import
                                 </a>
@@ -40,17 +40,17 @@
                                     Sumber data:
                                     <select name="import_id" onchange="this.form.submit()" class="ml-2 border-gray-300 rounded-md text-sm">
                                         <option value="">-- Pilih file import --</option>
-                                        @foreach ($imports as $import)
-                                            <option value="{{ $import->id }}" @selected($selectedImport?->id === $import->id)>
-                                                {{ $import->table_name }} ({{ number_format($import->import_data_count) }} baris)
+                                        @foreach ($grouped as $group)
+                                            <option value="{{ $group['import_ids'][0] }}" @selected($selectedGroup && $selectedGroup['table_name'] === $group['table_name'])>
+                                                {{ $group['table_name'] }} ({{ number_format($group['total_rows']) }} baris)
                                             </option>
                                         @endforeach
                                     </select>
                                 </label>
                             </form>
 
-                            @if ($selectedImport)
-                                <livewire:data-table :import-id="$selectedImport->id" :key="'data-table-'.$selectedImport->id" />
+                            @if ($selectedGroup)
+                                <livewire:data-table :import-ids="$selectedGroup['import_ids']" :key="'data-table-'.$selectedGroup['table_name']" />
                             @else
                                 <x-empty-state title="Pilih file import untuk melihat datanya" />
                             @endif
@@ -63,13 +63,15 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Pilih file import (minimal 2)</label>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                        @foreach ($imports as $import)
-                                            <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
-                                                <input type="checkbox" name="merge_imports[]" value="{{ $import->id }}"
-                                                    @checked(in_array($import->id, $mergeImports))
-                                                    class="rounded text-blue-600" />
-                                                {{ $import->table_name }} ({{ number_format($import->import_data_count) }} baris)
-                                            </label>
+                                        @foreach ($grouped as $group)
+                                            @foreach ($group['import_ids'] as $idx => $importId)
+                                                <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
+                                                    <input type="checkbox" name="merge_imports[]" value="{{ $importId }}"
+                                                        @checked(in_array($importId, $mergeImports))
+                                                        class="rounded text-blue-600" />
+                                                    {{ $group['table_name'] }} #{{ $idx + 1 }}
+                                                </label>
+                                            @endforeach
                                         @endforeach
                                     </div>
                                 </div>
