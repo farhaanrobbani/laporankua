@@ -33,8 +33,8 @@
                                         <td class="px-4 py-2 text-gray-500">{{ $index + 1 }}</td>
                                         <td class="px-4 py-2 font-medium text-gray-900">{{ $import->file_name }}</td>
                                         <td class="px-4 py-2 text-gray-600">{{ $import->sheet_name ?? '-' }}</td>
-                                        <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->import_data_count) }}</td>
-                                        <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->import_data_count) }}</td>
+                                        <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->total_rows) }}</td>
+                                        <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->imported_rows) }}</td>
                                         <td class="px-4 py-2">
                                             <x-status-badge :status="$import->status" />
                                         </td>
@@ -44,7 +44,7 @@
                                                 <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="text-green-600 hover:text-green-800 text-sm font-medium">Data</a>
                                                 <span class="text-gray-300 mx-1">|</span>
                                             @elseif ($import->status === 'appended')
-                                                <a href="{{ route('data.index', ['import_id' => $imports->first()->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Data</a>
+                                                <a href="{{ route('data.index', ['import_id' => $import->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Data</a>
                                                 <span class="text-gray-300 mx-1">|</span>
                                             @endif
                                             @if ($import->reports_count > 0)
@@ -87,11 +87,11 @@
                             </div>
                             <div class="bg-gray-50 rounded-md px-4 py-3">
                                 <div class="text-gray-500">Total Baris</div>
-                                <div class="font-semibold text-gray-900">{{ number_format($imports->sum('import_data_count')) }}</div>
+                                <div class="font-semibold text-gray-900">{{ number_format($imports->sum('total_rows')) }}</div>
                             </div>
                             <div class="bg-green-50 rounded-md px-4 py-3">
                                 <div class="text-green-600">Berhasil</div>
-                                <div class="font-semibold text-green-700">{{ number_format($imports->sum('import_data_count')) }}</div>
+                                <div class="font-semibold text-green-700">{{ number_format($imports->sum('imported_rows')) }}</div>
                             </div>
                             <div class="bg-red-50 rounded-md px-4 py-3">
                                 <div class="text-red-600">Gagal</div>
