@@ -200,9 +200,18 @@ class TemplateController extends Controller
         $this->authorize('view', $template);
 
         $imports = Import::where('user_id', auth()->id())
-            ->where('status', 'success')
             ->latest()
-            ->get(['id', 'file_name', 'table_name']);
+            ->withCount('importData')
+            ->get(['id', 'file_name', 'table_name'])
+            ->groupBy('table_name')
+            ->map(fn ($rows, $tableName) => [
+                'id' => $rows->first()->id,
+                'table_name' => $tableName,
+                'total_rows' => $rows->sum('import_data_count'),
+                'import_ids' => $rows->pluck('id')->toArray(),
+            ])
+            ->values()
+            ->all();
 
         return view('templates.use', compact('template', 'imports'));
     }
