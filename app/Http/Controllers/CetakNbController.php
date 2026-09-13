@@ -15,18 +15,26 @@ class CetakNbController extends Controller
     public function index(Request $request): View
     {
         $imports = Import::where('user_id', auth()->id())
-            ->where('status', 'success')
             ->withCount('importData')
             ->latest()
             ->get();
 
-        $selectedImport = null;
+        $grouped = $imports->groupBy('table_name')->map(function ($rows, $tableName) {
+            return [
+                'table_name' => $tableName,
+                'total_rows' => $rows->sum('import_data_count'),
+                'import_ids' => $rows->pluck('id')->toArray(),
+            ];
+        })->values();
+
+        $selectedGroup = null;
         if ($request->filled('import_id')) {
-            $selectedImport = Import::where('user_id', auth()->id())
+            $import = Import::where('user_id', auth()->id())
                 ->findOrFail($request->integer('import_id'));
+            $selectedGroup = $grouped->firstWhere('table_name', $import->table_name);
         }
 
-        return view('cetak-nb.index', compact('imports', 'selectedImport'));
+        return view('cetak-nb.index', compact('grouped', 'selectedGroup'));
     }
 
     public function print(Request $request): View

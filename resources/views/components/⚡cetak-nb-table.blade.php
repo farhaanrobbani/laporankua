@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Import;
+use App\Models\ImportData;
+use App\Services\MergeService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -9,6 +11,9 @@ new class extends Component
     use WithPagination;
 
     public ?int $importId = null;
+
+    /** @var int[] */
+    public array $importIds = [];
 
     /** @var string[] */
     public array $columns = [];
@@ -25,15 +30,21 @@ new class extends Component
 
     public int $perPage = 10;
 
-    public function mount(int $importId): void
+    public function mount(?int $importId = null, ?array $importIds = null): void
     {
-        $import = Import::where('user_id', auth()->id())->findOrFail($importId);
-        $this->importId = $import->id;
-        $this->columns = $import->availableColumns();
+        if ($importIds !== null && count($importIds) >= 1) {
+            $this->importIds = $importIds;
+            $this->columns = app(MergeService::class)->getAllColumns($importIds);
+        } elseif ($importId !== null) {
+            $import = Import::where('user_id', auth()->id())->findOrFail($importId);
+            $this->importId = $import->id;
+            $this->importIds = [$import->id];
+            $this->columns = $import->availableColumns();
 
-        if ($import->default_sort_column && in_array($import->default_sort_column, $this->columns, true)) {
-            $this->sortColumn = $import->default_sort_column;
-            $this->sortDirection = $import->default_sort_direction ?? 'asc';
+            if ($import->default_sort_column && in_array($import->default_sort_column, $this->columns, true)) {
+                $this->sortColumn = $import->default_sort_column;
+                $this->sortDirection = $import->default_sort_direction ?? 'asc';
+            }
         }
     }
 
@@ -77,7 +88,7 @@ new class extends Component
 
     private function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = \App\Models\ImportData::where('import_id', $this->importId);
+        $query = \App\Models\ImportData::whereIn('import_id', $this->importIds);
 
         if ($this->search !== '') {
             $query->search($this->search);
@@ -139,7 +150,7 @@ new class extends Component
                     @foreach ($records as $record)
                         <tr>
                             <td class="px-3 py-2 text-right whitespace-nowrap">
-                                <a href="{{ route('cetak-nb.print', ['import_id' => $this->importId, 'record' => $record->id]) }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Cetak NB</a>
+                                <a href="{{ route('cetak-nb.print', ['import_id' => $record->import_id, 'record' => $record->id]) }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Cetak NB</a>
                             </td>
                             @foreach ($this->columns as $column)
                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record->row_data[$column] ?? '' }}">
