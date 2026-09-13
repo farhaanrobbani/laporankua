@@ -113,7 +113,11 @@ new class extends Component
 
         $appendToImportId = $this->existingImport?->id;
 
-        ProcessExcelImport::dispatch($import, $appendToImportId);
+        if ($this->total < 1000) {
+            app(ExcelImportService::class)->import($import->fresh(), $appendToImportId);
+        } else {
+            ProcessExcelImport::dispatch($import, $appendToImportId);
+        }
 
         $this->redirectRoute('imports.show', $import);
     }
