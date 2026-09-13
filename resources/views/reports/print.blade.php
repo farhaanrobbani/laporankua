@@ -165,8 +165,8 @@
 
                 <h1 class="font-bold text-center" style="font-size: 14px;">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
                 <div class="mt-2 mb-3" style="font-size: 12px;">
-                    <p>Bulan : {{ $bulanName }}</p>
-                    <p>Tahun : {{ $tahunName }}</p>
+                    <p><span style="display:inline-block; width:5.5ch; font-weight: bold;">Bulan</span> : {{ $bulanName }}</p>
+                    <p><span style="display:inline-block; width:5.5ch; font-weight: bold;">Tahun</span> : {{ $tahunName }}</p>
                 </div>
             </div>
 
@@ -228,9 +228,9 @@
 
             <div class="mt-4 leading-relaxed" style="font-size: 12px;">
                 <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
-                <p class="mt-2 ml-4">Jumlah Nikah Kantor : <strong>{{ $countK }}</strong> N</p>
-                <p class="ml-4">Jumlah Nikah Luar Kantor : <strong>{{ $countLK }}</strong> N</p>
-                <p class="ml-4">Jumlah Keseluruhan : <strong>{{ $countAll }}</strong> N</p>
+                <p class="mt-2 ml-4"><span style="display:inline-block; width:20ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
+                <p class="ml-4"><span style="display:inline-block; width:20ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
+                <p class="ml-4"><span style="display:inline-block; width:20ch;">Jumlah Keseluruhan</span> : <strong>{{ $countAll }}</strong> N</p>
 
                 <div class="mt-6 flex justify-end">
                     <div class="text-center">
