@@ -14,6 +14,7 @@ class Import extends Model
     protected $fillable = [
         'user_id',
         'file_name',
+        'table_name',
         'file_path',
         'file_size',
         'sheet_name',
@@ -47,6 +48,20 @@ class Import extends Model
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
+    }
+
+    /**
+     * Parse filename menjadi table_name.
+     * Contoh: "laporan-peristiwa-nikah-08-2026.xlsx" → "laporan peristiwa nikah"
+     */
+    public static function parseTableName(string $filename): string
+    {
+        $name = pathinfo($filename, PATHINFO_FILENAME);
+        $name = preg_replace('/[0-9]+/', '', $name);
+        $name = str_replace('-', ' ', $name);
+        $name = preg_replace('/\s+/', ' ', trim($name));
+
+        return $name;
     }
 
     /**

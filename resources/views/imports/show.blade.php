@@ -14,6 +14,7 @@
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Import</h3>
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div><dt class="text-gray-500">Tabel</dt><dd class="font-medium text-gray-900">{{ $import->table_name ?? '-' }}</dd></div>
                         <div><dt class="text-gray-500">File</dt><dd class="font-medium text-gray-900">{{ $import->file_name }}</dd></div>
                         <div><dt class="text-gray-500">Sheet</dt><dd class="font-medium text-gray-900">{{ $import->sheet_name ?? '-' }}</dd></div>
                         <div><dt class="text-gray-500">Ukuran</dt><dd class="font-medium text-gray-900">{{ number_format($import->file_size / 1024, 1) }} KB</dd></div>

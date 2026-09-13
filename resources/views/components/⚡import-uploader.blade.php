@@ -34,11 +34,13 @@ new class extends Component
 
     public ?string $dedupColumn = '';
 
+    public ?string $tableName = null;
+
     public ?Import $existingImport = null;
 
     public function updatedFile(ExcelImportService $service): void
     {
-        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'existingImport']);
+        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'existingImport']);
         $this->fileSize = 0;
 
         $this->validate([
@@ -48,6 +50,7 @@ new class extends Component
         $this->originalName = $this->file->getClientOriginalName();
         $this->fileSize = $this->file->getSize();
         $this->tmpPath = $this->file->store('tmp/imports');
+        $this->tableName = Import::parseTableName($this->originalName);
 
         try {
             $absolute = Storage::disk('local')->path($this->tmpPath);
@@ -96,6 +99,7 @@ new class extends Component
         $import = Import::create([
             'user_id' => auth()->id(),
             'file_name' => (string) $this->originalName,
+            'table_name' => $this->tableName,
             'file_path' => $permanentPath,
             'file_size' => $this->fileSize,
             'sheet_name' => $this->sheet,
@@ -112,8 +116,12 @@ new class extends Component
 
     private function detectExistingImport(): void
     {
+        if (! $this->tableName) {
+            return;
+        }
+
         $this->existingImport = Import::where('user_id', auth()->id())
-            ->where('file_name', $this->originalName)
+            ->where('table_name', $this->tableName)
             ->where('status', 'success')
             ->latest()
             ->first();
@@ -160,11 +168,17 @@ new class extends Component
                 </label>
             </div>
 
-            @if ($existingImport)
-                <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
-                    <p class="text-sm font-medium text-amber-800">File <span class="font-semibold">{{ $originalName }}</span> sudah pernah di-import ({{ $existingImport->created_at->format('d M Y') }}).</p>
-                    <p class="text-sm text-amber-700 mt-1">Baris baru yang belum ada di data existing akan ditambahkan otomatis. Baris yang sudah ada akan di-skip.</p>
-                </div>
+            @if ($tableName)
+                @if ($existingImport)
+                    <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
+                        <p class="text-sm font-medium text-amber-800">Tabel: <span class="font-semibold">{{ $tableName }}</span></p>
+                        <p class="text-sm text-amber-700 mt-1">Sudah ada data dari file "{{ $existingImport->file_name }}" ({{ $existingImport->created_at->format('d M Y') }}). Baris baru akan ditambahkan otomatis.</p>
+                    </div>
+                @else
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <p class="text-sm font-medium text-blue-800">Tabel baru: <span class="font-semibold">{{ $tableName }}</span></p>
+                    </div>
+                @endif
             @endif
 
             @if (! empty($headers))

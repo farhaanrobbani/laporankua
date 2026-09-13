@@ -18,23 +18,25 @@
                         <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-4 py-2 text-left font-medium text-gray-500">File</th>
-                                        <th class="px-4 py-2 text-left font-medium text-gray-500">Sheet</th>
-                                        <th class="px-4 py-2 text-right font-medium text-gray-500">Berhasil</th>
-                                        <th class="px-4 py-2 text-right font-medium text-gray-500">Gagal</th>
-                                        <th class="px-4 py-2 text-left font-medium text-gray-500">Status</th>
-                                        <th class="px-4 py-2 text-left font-medium text-gray-500">Tanggal</th>
-                                        <th class="px-4 py-2 text-right font-medium text-gray-500">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    @foreach ($imports as $import)
-                                        <tr>
-                                            <td class="px-4 py-2 font-medium text-gray-900">{{ $import->file_name }}</td>
-                                            <td class="px-4 py-2 text-gray-600">{{ $import->sheet_name ?? '-' }}</td>
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left font-medium text-gray-500">Tabel</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-500">File</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-500">Sheet</th>
+                                <th class="px-4 py-2 text-right font-medium text-gray-500">Berhasil</th>
+                                <th class="px-4 py-2 text-right font-medium text-gray-500">Gagal</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-500">Status</th>
+                                <th class="px-4 py-2 text-left font-medium text-gray-500">Tanggal</th>
+                                <th class="px-4 py-2 text-right font-medium text-gray-500">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach ($imports as $import)
+                                <tr>
+                                    <td class="px-4 py-2 font-medium text-gray-900">{{ $import->table_name ?? '-' }}</td>
+                                    <td class="px-4 py-2 text-gray-600">{{ $import->file_name }}</td>
+                                    <td class="px-4 py-2 text-gray-600">{{ $import->sheet_name ?? '-' }}</td>
                                             <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->imported_rows) }}</td>
                                             <td class="px-4 py-2 text-right text-gray-600">{{ number_format($import->failed_rows) }}</td>
                                             <td class="px-4 py-2">
