@@ -35,6 +35,11 @@ new class extends Component
         if ($importIds !== null && count($importIds) >= 1) {
             $this->importIds = $importIds;
             $this->columns = app(MergeService::class)->getAllColumns($importIds);
+
+            if (in_array('Tanggal Nikah', $this->columns, true)) {
+                $this->sortColumn = 'Tanggal Nikah';
+                $this->sortDirection = 'desc';
+            }
         } elseif ($importId !== null) {
             $import = Import::where('user_id', auth()->id())->findOrFail($importId);
             $this->importId = $import->id;
