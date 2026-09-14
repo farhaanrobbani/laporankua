@@ -94,12 +94,11 @@ class MergeService
             }
         }
 
-        // 6. Bangun merged rows — hanya baris yang ada di SEMUA file (INNER JOIN)
-        $totalFiles = count($importIds);
+        // 6. Bangun merged rows — hanya baris yang ada di minimal 2 file (INNER JOIN)
         $mergedRows = [];
 
         foreach ($indexedData as $key => $row) {
-            if (($keyFileCount[$key] ?? 0) < $totalFiles) {
+            if (($keyFileCount[$key] ?? 0) < 2) {
                 continue;
             }
 
@@ -138,14 +137,19 @@ class MergeService
      */
     private function selectBestJoinKey(array $sharedColumns): array
     {
-        $identifiers = array_values(array_filter($sharedColumns, function ($col) {
-            $lower = mb_strtolower($col);
+        $nomorDaftar = array_values(array_filter($sharedColumns, fn ($c) => mb_strtolower($c) === 'nomor daftar'));
+        if ($nomorDaftar !== []) {
+            return $nomorDaftar;
+        }
 
-            return str_contains($lower, 'nomor') || str_contains($lower, 'nik')
-                || str_contains($lower, 'daftar') || str_contains($lower, 'id');
+        $nameDate = array_values(array_filter($sharedColumns, function ($c) {
+            return in_array($c, ['Nama Suami', 'Nama Istri', 'Tanggal Nikah'], true);
         }));
+        if (count($nameDate) === 3) {
+            return $nameDate;
+        }
 
-        return $identifiers !== [] ? $identifiers : $sharedColumns;
+        return $sharedColumns;
     }
 
     /**

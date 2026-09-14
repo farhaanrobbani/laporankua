@@ -118,6 +118,19 @@ new class extends Component
         }
     }
 
+    public function toggleImportGroup(array $ids): void
+    {
+        $allChecked = count(array_intersect($ids, $this->mergeImportIds)) === count($ids);
+
+        if ($allChecked) {
+            $this->mergeImportIds = array_values(array_diff($this->mergeImportIds, $ids));
+        } else {
+            $this->mergeImportIds = array_values(array_unique(array_merge($this->mergeImportIds, $ids)));
+        }
+
+        $this->updatedMergeImportIds();
+    }
+
     public function loadDefaultTemplate(): void
     {
         $template = ReportTemplate::where('is_global', true)
@@ -510,8 +523,9 @@ new class extends Component
                 <label class="block text-sm font-medium text-gray-700 mb-1">Pilih file import (minimal 2)</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     @foreach ($this->imports as $import)
+                        @php $allChecked = count(array_intersect($import['import_ids'], $this->mergeImportIds)) === count($import['import_ids']); @endphp
                         <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
-                            <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600" />
+                            <input type="checkbox" wire:click="toggleImportGroup({{ json_encode($import['import_ids']) }})" @checked($allChecked) class="rounded text-blue-600" />
                             {{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)
                         </label>
                     @endforeach
