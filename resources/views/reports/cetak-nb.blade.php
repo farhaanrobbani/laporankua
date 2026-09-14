@@ -96,7 +96,7 @@
                 <span class="field-value" style="font-size: 20px;">{{ $rd['Nomor Akta Nikah'] ?? '-' }}</span>
             </div>
 
-            <div class="field" style="top: 30mm; right: 30mm;">
+            <div class="field" style="top: 30mm; right: 20mm;">
                 <span class="field-value">{{ $rd['No Porforasi Suami'] ?? '-' }} & {{ $rd['No Porforasi Istri'] ?? '-' }}</span>
             </div>
         </div>
