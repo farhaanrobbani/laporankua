@@ -31,6 +31,9 @@ class ExcelImportService
             'No. Daftar' => 'Nomor Daftar',
             'Petugas' => 'Penghulu',
         ],
+        'laporan pendaftaran nikah' => [
+            'Tanggal Akad' => 'Tanggal Nikah',
+        ],
     ];
 
     /**
