@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\DownloadController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\UserController;
@@ -14,10 +13,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
-
-    Route::get('/downloads', [DownloadController::class, 'index'])->name('downloads.index');
-    Route::post('/downloads', [DownloadController::class, 'store'])->name('downloads.store');
-    Route::delete('/downloads/{download}', [DownloadController::class, 'destroy'])->name('downloads.destroy');
 
     Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
     Route::get('/templates/create', [TemplateController::class, 'create'])->name('templates.create');

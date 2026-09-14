@@ -3,7 +3,6 @@
 use App\Http\Controllers\CetakNbController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataController;
-use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportsController;
@@ -38,9 +37,6 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/reports/{report}/print', [ReportsController::class, 'print'])->name('reports.print');
     Route::get('/reports/{report}/cetak-nb/{record}', [ReportsController::class, 'cetakNb'])->name('reports.cetak-nb');
     Route::delete('/reports/{report}', [ReportsController::class, 'destroy'])->name('reports.destroy');
-
-    Route::get('/downloads', [DownloadController::class, 'index'])->name('downloads.index');
-    Route::get('/downloads/{download}/file', [DownloadController::class, 'download'])->name('downloads.download');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

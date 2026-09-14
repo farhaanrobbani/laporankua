@@ -115,10 +115,6 @@
                                 <p class="font-semibold text-gray-900 text-sm">Buat Laporan</p>
                                 <p class="text-xs text-gray-500 mt-1">PDF, Word, Excel, Print</p>
                             </a>
-                            <a href="{{ route('downloads.index') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
-                                <p class="font-semibold text-gray-900 text-sm">Download</p>
-                                <p class="text-xs text-gray-500 mt-1">File &amp; dokumen</p>
-                            </a>
                             <a href="{{ route('profile.edit') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50">
                                 <p class="font-semibold text-gray-900 text-sm">Profil</p>
                                 <p class="text-xs text-gray-500 mt-1">Pengaturan akun</p>

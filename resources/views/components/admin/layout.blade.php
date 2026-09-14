@@ -26,7 +26,6 @@
                         $isActiveDashboard = request()->routeIs('admin.index');
                         $isActiveUsers = request()->routeIs('admin.users.*');
                         $isActiveSettings = request()->routeIs('admin.settings.*');
-                        $isActiveDownloads = request()->routeIs('admin.downloads.*');
                         $isActiveTemplates = request()->routeIs('admin.templates.*');
                     @endphp
 
@@ -39,11 +38,6 @@
                        class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveUsers ? '' : 'text-gray-700 hover:bg-gray-100' }}"
                        @if($isActiveUsers) style="background-color: #111827; color: #fff;" @endif>
                         User Management
-                    </a>
-                    <a href="{{ route('admin.downloads.index') }}"
-                       class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveDownloads ? '' : 'text-gray-700 hover:bg-gray-100' }}"
-                       @if($isActiveDownloads) style="background-color: #111827; color: #fff;" @endif>
-                        Download
                     </a>
                     <a href="{{ route('admin.templates.index') }}"
                        class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveTemplates ? '' : 'text-gray-700 hover:bg-gray-100' }}"
