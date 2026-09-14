@@ -242,6 +242,8 @@ new class extends Component
             'rows' => $dataset['rows'],
             'total' => $dataset['total'],
         ];
+
+        $this->applyPreviewFilter();
     }
 
     private function loadMergePreview(): void
@@ -269,6 +271,67 @@ new class extends Component
             'rows' => $dataset['rows'],
             'total' => $dataset['total'],
         ];
+
+        $this->applyPreviewFilter();
+    }
+
+    private function applyPreviewFilter(): void
+    {
+        if (! $this->preview || ($this->filterMonth === '' && $this->filterYear === '')) {
+            return;
+        }
+
+        if (! $this->tableLayout) {
+            return;
+        }
+
+        $tanggalNikahField = null;
+        foreach ($this->tableLayout['columns'] ?? [] as $col) {
+            if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
+                $tanggalNikahField = $col['field'];
+                break;
+            }
+            if (($col['type'] ?? '') === 'group') {
+                foreach ($col['children'] ?? [] as $child) {
+                    if (($child['field'] ?? '') === 'Tanggal Nikah') {
+                        $tanggalNikahField = $child['field'];
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (! $tanggalNikahField || ! in_array($tanggalNikahField, $this->fields, true)) {
+            return;
+        }
+
+        $filterMonth = $this->filterMonth;
+        $filterYear = $this->filterYear;
+
+        $this->preview['rows'] = array_values(array_filter(
+            $this->preview['rows'],
+            function ($row) use ($tanggalNikahField, $filterMonth, $filterYear) {
+                $dateVal = $row[$tanggalNikahField] ?? null;
+                if ($dateVal === null || $dateVal === '') {
+                    return false;
+                }
+                try {
+                    $date = \Carbon\Carbon::parse($dateVal);
+                } catch (\Exception $e) {
+                    return false;
+                }
+                if ($filterMonth !== '' && (int) $date->month !== (int) $filterMonth) {
+                    return false;
+                }
+                if ($filterYear !== '' && (int) $date->year !== (int) $filterYear) {
+                    return false;
+                }
+
+                return true;
+            }
+        ));
+
+        $this->preview['total'] = count($this->preview['rows']);
     }
 
     public function generate(): void
