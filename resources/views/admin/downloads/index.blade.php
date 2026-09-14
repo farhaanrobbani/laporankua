@@ -21,11 +21,11 @@
                 </div>
 
                 <div x-data="{ mode: 'upload' }">
-                    <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-3">
-                        <button type="button" @click="mode = 'upload'" :class="mode === 'upload' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'" class="px-4 py-2 text-sm font-medium rounded-md transition">
+                    <div class="flex items-center gap-1 bg-gray-200 rounded-lg p-1 w-fit mb-3">
+                        <button type="button" @click="mode = 'upload'" :class="mode === 'upload' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'" class="px-4 py-2 text-sm font-medium rounded-md transition">
                             Upload File
                         </button>
-                        <button type="button" @click="mode = 'link'" :class="mode === 'link' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'" class="px-4 py-2 text-sm font-medium rounded-md transition">
+                        <button type="button" @click="mode = 'link'" :class="mode === 'link' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'" class="px-4 py-2 text-sm font-medium rounded-md transition">
                             Link Eksternal
                         </button>
                     </div>
