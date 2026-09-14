@@ -31,8 +31,13 @@
                     </div>
 
                     <div x-show="mode === 'upload'" x-transition>
-                        <label class="block text-sm font-medium text-gray-700">Pilih File (max 10MB)</label>
-                        <input type="file" name="file" class="mt-1 block w-full border-gray-300 rounded-md text-sm" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rar" />
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih File (max 10MB)</label>
+                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
+                            <x-heroicon-o-arrow-up-tray class="w-8 h-8 text-gray-400 mb-2" />
+                            <span class="text-sm text-gray-500">Klik untuk memilih file</span>
+                            <span class="text-xs text-gray-400 mt-1">PDF, Word, Excel, Gambar, ZIP</span>
+                            <input type="file" name="file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rar" />
+                        </label>
                         @error('file') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
@@ -44,7 +49,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit" class="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-md hover:opacity-90">Simpan</button>
+                    <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 transition">Simpan</button>
                 </div>
             </form>
         </div>
