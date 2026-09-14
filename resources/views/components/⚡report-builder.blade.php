@@ -103,8 +103,6 @@ new class extends Component
         $this->fields = [];
         $this->preview = null;
         $this->tableLayout = null;
-        $this->filterMonth = '';
-        $this->filterYear = '';
         $this->autoJoinColumns = [];
 
         if (count($this->mergeImportIds) >= 2) {
@@ -201,8 +199,6 @@ new class extends Component
 
         $this->reset(['columns', 'fields', 'preview', 'filterColumn', 'filterValue', 'sortColumn', 'search']);
         $this->tableLayout = null;
-        $this->filterMonth = '';
-        $this->filterYear = '';
 
         $import = $this->selectedImport();
 
