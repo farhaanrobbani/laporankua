@@ -91,7 +91,7 @@
 
     @foreach ($records as $rd)
         <div class="page">
-            <div class="field" style="top: 0mm; left: 0;">
+            <div class="field" style="top: 0mm; left: -5mm;">
                 <span class="field-label" style="font-size: 20px;">Nomor Akta:</span>
                 <span class="field-value" style="font-size: 20px;">{{ $rd['Nomor Akta Nikah'] ?? '-' }}</span>
             </div>
