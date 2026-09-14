@@ -57,6 +57,8 @@ new class extends Component
 
     public ?int $selectedTemplateId = null;
 
+    public ?array $tableLayout = null;
+
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
@@ -100,6 +102,7 @@ new class extends Component
         $this->columns = [];
         $this->fields = [];
         $this->preview = null;
+        $this->tableLayout = null;
 
         if (count($this->mergeImportIds) >= 2) {
             $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
@@ -150,8 +153,16 @@ new class extends Component
         $this->filterValue = $template->filters_json['filter_value'] ?? '';
         $this->sortColumn = $template->sorting_json['column'] ?? '';
         $this->sortDirection = $template->sorting_json['direction'] ?? 'asc';
+        $this->tableLayout = $template->layout_json['table_layout'] ?? null;
 
-        if ($this->importId) {
+        if ($this->isMergeMode && count($this->mergeImportIds) >= 2) {
+            $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
+            $this->fields = array_values(array_intersect($template->fields_json ?? [], $this->columns));
+            if ($this->fields === []) {
+                $this->fields = $this->columns;
+            }
+            $this->loadPreview();
+        } elseif ($this->importId) {
             $import = $this->selectedImport();
             if ($import) {
                 $this->columns = $import->availableColumns();
@@ -171,6 +182,7 @@ new class extends Component
         }
 
         $this->reset(['columns', 'fields', 'preview', 'filterColumn', 'filterValue', 'sortColumn', 'search']);
+        $this->tableLayout = null;
 
         $import = $this->selectedImport();
 
@@ -286,7 +298,7 @@ new class extends Component
             'import_id' => $import->id,
             'title' => $this->title,
             'output_format' => $this->format,
-            'config_json' => [
+            'config_json' => array_merge([
                 'fields' => $fields === [] ? $import->availableColumns() : $fields,
                 'search' => $this->search ?: null,
                 'filter_column' => $this->filterColumn ?: null,
@@ -294,7 +306,7 @@ new class extends Component
                 'sort_column' => $this->sortColumn ?: null,
                 'sort_direction' => $this->sortDirection,
                 'orientation' => $this->orientation,
-            ],
+            ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
         ]);
@@ -339,7 +351,7 @@ new class extends Component
             'import_id' => $firstImport->id,
             'title' => $this->title,
             'output_format' => $this->format,
-            'config_json' => [
+            'config_json' => array_merge([
                 'fields' => $this->fields,
                 'search' => $this->search ?: null,
                 'filter_column' => $this->filterColumn ?: null,
@@ -350,7 +362,7 @@ new class extends Component
                 'is_merged' => true,
                 'merged_import_ids' => $this->mergeImportIds,
                 'join_column' => $this->joinColumn,
-            ],
+            ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
         ]);
