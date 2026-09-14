@@ -21,6 +21,19 @@ class ExcelImportService
     public const MAX_LOGGED_ERRORS = 50;
 
     /**
+     * Mapping nama kolom Excel → nama kolom database per table_name.
+     * Digunakan untuk me-rename kolom yang sedikit berbeda saat import.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private const COLUMN_ALIASES = [
+        'laporan peristiwa nikah' => [
+            'No. Daftar' => 'Nomor Daftar',
+            'Petugas' => 'Penghulu',
+        ],
+    ];
+
+    /**
      * Daftar nama sheet dalam file Excel.
      *
      * @return string[]
@@ -76,6 +89,7 @@ class ExcelImportService
         }
 
         $headers = $this->normalizeHeaders(array_shift($rawRows) ?? []);
+        $headers = $this->applyAliases($import->table_name, $headers);
         $totalRows = count($rawRows);
 
         if ($totalRows === 0) {
@@ -273,6 +287,23 @@ class ExcelImportService
         }
 
         return $headers;
+    }
+
+    /**
+     * Rename headers berdasarkan COLUMN_ALIASES per table_name.
+     *
+     * @param  string[]  $headers
+     * @return string[]
+     */
+    private function applyAliases(string $tableName, array $headers): array
+    {
+        $aliases = self::COLUMN_ALIASES[$tableName] ?? [];
+
+        if ($aliases === []) {
+            return $headers;
+        }
+
+        return array_map(fn (string $h) => $aliases[$h] ?? $h, $headers);
     }
 
     /**
