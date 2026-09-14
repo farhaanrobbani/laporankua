@@ -33,13 +33,14 @@ class MergeService
             return ['headings' => [], 'rows' => [], 'total' => 0, 'shared_columns' => []];
         }
 
-        // 2. Cari intersection (kolom yang ada di SEMUA file)
+        // 2. Cari intersection, exclude "No" (row number)
         $sharedColumns = null;
         foreach ($importColumns as $cols) {
+            $filteredCols = array_values(array_filter($cols, fn ($c) => $c !== 'No'));
             if ($sharedColumns === null) {
-                $sharedColumns = $cols;
+                $sharedColumns = $filteredCols;
             } else {
-                $sharedColumns = array_values(array_intersect($sharedColumns, $cols));
+                $sharedColumns = array_values(array_intersect($sharedColumns, $filteredCols));
             }
         }
 
@@ -47,10 +48,13 @@ class MergeService
             return ['headings' => [], 'rows' => [], 'total' => 0, 'shared_columns' => []];
         }
 
-        // 3. Dapatkan semua kolom (union)
+        // 3. Pilih kolom join key terbaik
+        $joinKeyColumns = $this->selectBestJoinKey($sharedColumns);
+
+        // 4. Dapatkan semua kolom (union)
         $allColumns = $this->getAllColumns($importIds);
 
-        // 4. Index semua baris per file berdasarkan composite key
+        // 5. Index semua baris per file berdasarkan composite key
         $indexedData = [];
         $keyFileCount = [];
 
@@ -68,7 +72,7 @@ class MergeService
 
             $seenKeys = [];
             foreach ($rows as $row) {
-                $key = $this->buildCompositeKey($row, $sharedColumns);
+                $key = $this->buildCompositeKey($row, $joinKeyColumns);
                 if ($key === '') {
                     continue;
                 }
@@ -85,18 +89,16 @@ class MergeService
                 }
             }
 
-            // Hitung berapa file yang punya key ini
             foreach (array_keys($seenKeys) as $key) {
                 $keyFileCount[$key] = ($keyFileCount[$key] ?? 0) + 1;
             }
         }
 
-        // 5. Bangun merged rows — hanya baris yang ada di SEMUA file (INNER JOIN)
+        // 6. Bangun merged rows — hanya baris yang ada di SEMUA file (INNER JOIN)
         $totalFiles = count($importIds);
         $mergedRows = [];
 
         foreach ($indexedData as $key => $row) {
-            // Skip baris yang tidak ada di semua file
             if (($keyFileCount[$key] ?? 0) < $totalFiles) {
                 continue;
             }
@@ -112,7 +114,7 @@ class MergeService
             'headings' => $allColumns,
             'rows' => $mergedRows,
             'total' => count($mergedRows),
-            'shared_columns' => $sharedColumns,
+            'shared_columns' => $joinKeyColumns,
         ];
     }
 
@@ -128,6 +130,22 @@ class MergeService
         }
 
         return implode('|', $parts);
+    }
+
+    /**
+     * Pilih kolom join key terbaik dari shared columns.
+     * Prioritas: kolom identifier (Nomor, NIK, Daftar, ID) > semua.
+     */
+    private function selectBestJoinKey(array $sharedColumns): array
+    {
+        $identifiers = array_values(array_filter($sharedColumns, function ($col) {
+            $lower = mb_strtolower($col);
+
+            return str_contains($lower, 'nomor') || str_contains($lower, 'nik')
+                || str_contains($lower, 'daftar') || str_contains($lower, 'id');
+        }));
+
+        return $identifiers !== [] ? $identifiers : $sharedColumns;
     }
 
     /**
