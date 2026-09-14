@@ -30,13 +30,24 @@
                         </button>
                     </div>
 
-                    <div x-show="mode === 'upload'" x-transition>
+                    <div x-show="mode === 'upload'" x-transition x-data="{ fileName: '' }">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Pilih File (max 10MB)</label>
-                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
-                            <x-heroicon-o-arrow-up-tray class="w-8 h-8 text-gray-400 mb-2" />
-                            <span class="text-sm text-gray-500">Klik untuk memilih file</span>
-                            <span class="text-xs text-gray-400 mt-1">PDF, Word, Excel, Gambar, ZIP</span>
-                            <input type="file" name="file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rar" />
+                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition" :class="fileName ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'">
+                            <template x-if="!fileName">
+                                <div class="flex flex-col items-center">
+                                    <x-heroicon-o-arrow-up-tray class="w-8 h-8 text-gray-400 mb-2" />
+                                    <span class="text-sm text-gray-500">Klik untuk memilih file</span>
+                                    <span class="text-xs text-gray-400 mt-1">PDF, Word, Excel, Gambar, ZIP</span>
+                                </div>
+                            </template>
+                            <template x-if="fileName">
+                                <div class="flex flex-col items-center">
+                                    <x-heroicon-o-document-check class="w-8 h-8 text-blue-500 mb-2" />
+                                    <span class="text-sm text-gray-900 font-medium" x-text="fileName"></span>
+                                    <span class="text-xs text-gray-400 mt-1">Klik untuk mengganti file</span>
+                                </div>
+                            </template>
+                            <input type="file" name="file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rar" @change="fileName = $event.target.files[0]?.name || ''" />
                         </label>
                         @error('file') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
