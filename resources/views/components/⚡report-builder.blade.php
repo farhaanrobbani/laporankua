@@ -276,7 +276,6 @@ new class extends Component
             $this->filterValue ?: null,
             $this->sortColumn ?: null,
             $this->sortDirection,
-            10,
         );
 
         $this->preview = [
@@ -286,6 +285,11 @@ new class extends Component
         ];
 
         $this->applyPreviewFilter();
+
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        if (! $hasFilter && count($this->preview['rows']) > 10) {
+            $this->preview['rows'] = array_slice($this->preview['rows'], 0, 10);
+        }
     }
 
     private function applyPreviewFilter(): void
