@@ -173,24 +173,24 @@
             <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
                 <thead>
                     <tr class="bg-gray-100">
-                        @foreach ($columns as $col)
-                            @if ($col['type'] === 'row_number')
-                                <th rowspan="{{ $col['rowspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
-                            @elseif ($col['type'] === 'group')
-                                <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
-                            @elseif ($col['type'] === 'field')
-                                <th rowspan="{{ $col['rowspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
-                            @endif
-                        @endforeach
+                    @foreach ($columns as $col)
+                        @if ($col['type'] === 'row_number')
+                            <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
+                        @elseif ($col['type'] === 'group')
+                            <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
+                        @elseif ($col['type'] === 'field')
+                            <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
+                        @endif
+                    @endforeach
                     </tr>
                     <tr class="bg-gray-100">
-                        @foreach ($columns as $col)
-                            @if ($col['type'] === 'group')
-                                @foreach ($col['children'] ?? [] as $child)
-                                    <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $child['label'] ?? $child['field'] ?? '' }}</th>
-                                @endforeach
-                            @endif
-                        @endforeach
+                    @foreach ($columns as $col)
+                        @if ($col['type'] === 'group')
+                            @foreach ($col['children'] ?? [] as $child)
+                                <th @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $child['label'] ?? $child['field'] ?? '' }}</th>
+                            @endforeach
+                        @endif
+                    @endforeach
                     </tr>
                 </thead>
                 <tbody style="font-size: 11px;">
@@ -198,7 +198,7 @@
                         <tr>
                             @foreach ($columns as $col)
                                 @if ($col['type'] === 'row_number')
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $rowIndex + 1 }}</td>
+                                    <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $rowIndex + 1 }}</td>
                                 @elseif ($col['type'] === 'group')
                                     @foreach ($col['children'] ?? [] as $child)
                                         @php
@@ -208,7 +208,7 @@
                                                 $value = $applyTransform($value, $cellData[1]);
                                             }
                                         @endphp
-                                        <td class="border border-gray-700 px-1 py-0.5">{{ $value }}</td>
+                                        <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5">{{ $value }}</td>
                                     @endforeach
                                 @elseif ($col['type'] === 'field')
                                     @php
@@ -218,7 +218,7 @@
                                             $value = $applyTransform($value, $cellData[1]);
                                         }
                                     @endphp
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                    <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                 @endif
                             @endforeach
                         </tr>
