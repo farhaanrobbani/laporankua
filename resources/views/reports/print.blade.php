@@ -103,33 +103,33 @@
                     @if (! empty($dataset['logo_kantor']))
                         <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
                             <tr>
-                                <td class="align-top" style="padding: 0;">
-                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="float: right; max-height: 80px; max-width: 80px;" />
-                                    <div class="text-center" style="margin-right: 90px;">
-                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
-                                        @if (! empty($dataset['nama_kantor_kota']))
-                                            <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
-                                        @endif
-                                        @if (! empty($dataset['nama_kantor']))
-                                            <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
-                                        @endif
-                                        @if (! empty($dataset['alamat_kantor']))
-                                            <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
-                                        @endif
-                                        @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                            <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
-                                                @if (! empty($dataset['telepon_kantor']))
-                                                    Telp: {{ $dataset['telepon_kantor'] }}
-                                                @endif
-                                                @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
-                                                    |
-                                                @endif
-                                                @if (! empty($dataset['email_kantor']))
-                                                    Email: {{ $dataset['email_kantor'] }}
-                                                @endif
-                                            </p>
-                                        @endif
-                                    </div>
+                                <td class="align-top" style="width: 80px; padding: 0;">
+                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="max-height: 80px; max-width: 80px; display: block; margin-left: auto;" />
+                                </td>
+                                <td class="text-center" style="padding: 0;">
+                                    <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                                    @if (! empty($dataset['nama_kantor_kota']))
+                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
+                                    @endif
+                                    @if (! empty($dataset['nama_kantor']))
+                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
+                                    @endif
+                                    @if (! empty($dataset['alamat_kantor']))
+                                        <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
+                                    @endif
+                                    @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                                        <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
+                                            @if (! empty($dataset['telepon_kantor']))
+                                                Telp: {{ $dataset['telepon_kantor'] }}
+                                            @endif
+                                            @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                                |
+                                            @endif
+                                            @if (! empty($dataset['email_kantor']))
+                                                Email: {{ $dataset['email_kantor'] }}
+                                            @endif
+                                        </p>
+                                    @endif
                                 </td>
                             </tr>
                         </table>
