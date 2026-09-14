@@ -556,6 +556,9 @@ new class extends Component
         @if ($this->preview)
             <div class="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 mb-3">Pratinjau ({{ $this->preview['total'] }} baris pertama)</h3>
+                @if ($this->tableLayout)
+                    <p class="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-3">Format final akan menggunakan layout struktural (kop surat, tabel grup, tanda tangan, dll).</p>
+                @endif
                 <div class="overflow-x-auto border border-gray-200 rounded-md">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
