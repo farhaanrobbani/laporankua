@@ -15,7 +15,7 @@
         }
 
         @media screen {
-            body { background: #e5e7eb; font-family: 'Times New Roman', Times, serif; }
+            body { background: #e5e7eb; font-family: Arial, sans-serif; }
             .no-print {
                 position: fixed; top: 0; left: 0; right: 0; z-index: 10;
                 background: #fff; border-bottom: 1px solid #d1d5db;
@@ -43,8 +43,8 @@
         }
 
         .field { position: absolute; }
-        .field-label { font-weight: bold; font-size: 14px; }
-        .field-value { font-size: 14px; }
+        .field-label { font-weight: bold; font-size: 16px; }
+        .field-value { font-size: 16px; }
     </style>
 </head>
 <body>
@@ -91,12 +91,12 @@
 
     @foreach ($records as $rd)
         <div class="page">
-            <div class="field" style="top: 30mm; left: 0;">
+            <div class="field" style="top: 5mm; left: 0;">
                 <span class="field-label">Nomor Akta:</span>
                 <span class="field-value">{{ $rd['Nomor Akta Nikah'] ?? '-' }}</span>
             </div>
 
-            <div class="field" style="top: 60mm; right: 0;">
+            <div class="field" style="top: 35mm; right: 0;">
                 <span class="field-value">{{ $rd['No Porforasi Suami'] ?? '-' }} & {{ $rd['No Porforasi Istri'] ?? '-' }}</span>
             </div>
         </div>
