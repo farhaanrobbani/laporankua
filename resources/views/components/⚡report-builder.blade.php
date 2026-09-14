@@ -37,6 +37,10 @@ new class extends Component
 
     public string $orientation = 'portrait';
 
+    public string $filterMonth = '';
+
+    public string $filterYear = '';
+
     /** @var array{headings: string[], rows: array, total: int}|null */
     public ?array $preview = null;
 
@@ -103,6 +107,8 @@ new class extends Component
         $this->fields = [];
         $this->preview = null;
         $this->tableLayout = null;
+        $this->filterMonth = '';
+        $this->filterYear = '';
 
         if (count($this->mergeImportIds) >= 2) {
             $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
@@ -154,6 +160,8 @@ new class extends Component
         $this->sortColumn = $template->sorting_json['column'] ?? '';
         $this->sortDirection = $template->sorting_json['direction'] ?? 'asc';
         $this->tableLayout = $template->layout_json['table_layout'] ?? null;
+        $this->filterMonth = '';
+        $this->filterYear = '';
 
         if ($this->isMergeMode && count($this->mergeImportIds) >= 2) {
             $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
@@ -183,6 +191,8 @@ new class extends Component
 
         $this->reset(['columns', 'fields', 'preview', 'filterColumn', 'filterValue', 'sortColumn', 'search']);
         $this->tableLayout = null;
+        $this->filterMonth = '';
+        $this->filterYear = '';
 
         $import = $this->selectedImport();
 
@@ -306,6 +316,8 @@ new class extends Component
                 'sort_column' => $this->sortColumn ?: null,
                 'sort_direction' => $this->sortDirection,
                 'orientation' => $this->orientation,
+                'filter_month' => $this->filterMonth ?: null,
+                'filter_year' => $this->filterYear ?: null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -362,6 +374,8 @@ new class extends Component
                 'is_merged' => true,
                 'merged_import_ids' => $this->mergeImportIds,
                 'join_column' => $this->joinColumn,
+                'filter_month' => $this->filterMonth ?: null,
+                'filter_year' => $this->filterYear ?: null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -483,6 +497,25 @@ new class extends Component
                 @if ($this->hasDefaultTemplate)
                     <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
                 @endif
+            </div>
+        @endif
+        @if ($this->format === 'print')
+            <div class="mt-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Filter Bulan/Tahun</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <select wire:model.live="filterMonth" class="border-gray-300 rounded-md text-sm w-full">
+                        <option value="">Semua Bulan</option>
+                        @for ($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
+                        @endfor
+                    </select>
+                    <select wire:model.live="filterYear" class="border-gray-300 rounded-md text-sm w-full">
+                        <option value="">Semua Tahun</option>
+                        @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
             </div>
         @endif
         @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
