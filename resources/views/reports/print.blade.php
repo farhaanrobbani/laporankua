@@ -208,7 +208,7 @@
                                                 $value = $applyTransform($value, $cellData[1]);
                                             }
                                         @endphp
-                                        <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5">{{ $value }}</td>
+                                        <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 @if(($child['align'] ?? '') === 'center')text-center @endif">{{ $value }}</td>
                                     @endforeach
                                 @elseif ($col['type'] === 'field')
                                     @php
