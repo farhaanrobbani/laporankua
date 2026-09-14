@@ -80,10 +80,9 @@ class ReportsController extends Controller
 
         if (! empty($config['is_merged']) && ! empty($config['merged_import_ids'])) {
             $mergeService = app(MergeService::class);
-            $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
-            $dataset = $mergeService->buildConcatDataset(
+            $dataset = $mergeService->buildMergedDataset(
                 $config['merged_import_ids'],
-                $fields === [] ? $allColumns : $fields,
+                $fields,
                 $config['search'] ?? null,
                 $config['filter_column'] ?? null,
                 $config['filter_value'] ?? null,
