@@ -113,6 +113,10 @@ new class extends Component
         if (count($this->mergeImportIds) >= 2) {
             $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
             $this->fields = $this->columns;
+
+            if ($this->selectedTemplateId) {
+                $this->applySelectedTemplate();
+            }
         }
     }
 
@@ -207,7 +211,11 @@ new class extends Component
             $this->title = 'Laporan '.($import->table_name ?? pathinfo($import->file_name, PATHINFO_FILENAME));
         }
 
-        $this->loadPreview();
+        if ($this->selectedTemplateId) {
+            $this->applySelectedTemplate();
+        } else {
+            $this->loadPreview();
+        }
     }
 
     public function loadPreview(): void
@@ -592,7 +600,6 @@ new class extends Component
                         <option value="desc">Z → A</option>
                     </select>
                 </div>
-                <button type="button" wire:click="loadPreview" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Muat Pratinjau</button>
                 @if ($this->format === 'print')
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Filter Bulan/Tahun</label>
@@ -612,6 +619,7 @@ new class extends Component
                         </div>
                     </div>
                 @endif
+                <button type="button" wire:click="loadPreview" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Muat Pratinjau</button>
             </div>
         </div>
 
