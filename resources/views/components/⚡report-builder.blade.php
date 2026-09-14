@@ -42,8 +42,6 @@ new class extends Component
 
     public bool $hasDefaultTemplate = false;
 
-    public string $templateName = '';
-
     public bool $isMergeMode = false;
 
     /** @var int[] */
@@ -141,52 +139,6 @@ new class extends Component
         }
 
         $this->applyTemplateConfig($template);
-    }
-
-    public function saveAsTemplate(): void
-    {
-        $this->validate([
-            'templateName' => 'required|string|max:255',
-        ]);
-
-        if ($this->isMergeMode) {
-            if (count($this->mergeImportIds) < 2 || $this->joinColumn === '') {
-                $this->addError('importId', 'Pilih minimal 2 file import dan kolom penggabung.');
-
-                return;
-            }
-        } else {
-            $this->validate(['importId' => 'required|integer']);
-
-            $import = $this->selectedImport();
-            if (! $import) {
-                $this->addError('importId', 'Sumber data tidak valid.');
-
-                return;
-            }
-        }
-
-        ReportTemplate::create([
-            'user_id' => auth()->id(),
-            'name' => $this->templateName,
-            'output_format' => $this->format,
-            'fields_json' => $this->fields,
-            'filters_json' => [
-                'search' => $this->search ?: null,
-                'filter_column' => $this->filterColumn ?: null,
-                'filter_value' => $this->filterValue ?: null,
-            ],
-            'sorting_json' => [
-                'column' => $this->sortColumn ?: null,
-                'direction' => $this->sortDirection,
-            ],
-            'layout_json' => ['orientation' => $this->orientation],
-            'is_default' => false,
-            'is_global' => true,
-        ]);
-
-        $this->templateName = '';
-        session()->flash('template_saved', 'Template berhasil disimpan.');
     }
 
     private function applyTemplateConfig(ReportTemplate $template): void
@@ -295,15 +247,6 @@ new class extends Component
             'rows' => $dataset['rows'],
             'total' => $dataset['total'],
         ];
-    }
-
-    public function toggleField(string $column): void
-    {
-        if (in_array($column, $this->fields, true)) {
-            $this->fields = array_values(array_diff($this->fields, [$column]));
-        } else {
-            $this->fields[] = $column;
-        }
     }
 
     public function generate(): void
@@ -511,27 +454,9 @@ new class extends Component
     </div>
 
     @if (($this->isMergeMode && count($this->mergeImportIds) >= 2 && $this->joinColumn !== '') || (! $this->isMergeMode && $this->importId && ! empty($this->columns)))
-        {{-- 2. Kolom --}}
+        {{-- 2. Filter & Urutan --}}
         <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">2. Kolom Laporan</h3>
-            <p class="text-sm text-gray-500 mb-3">Centang kolom yang ditampilkan.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                @foreach ($this->columns as $column)
-                    <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
-                        <input type="checkbox" wire:click="toggleField('{{ $column }}')" @checked(in_array($column, $this->fields, true)) class="rounded text-blue-600" />
-                        {{ $column }}
-                        @if ($this->isMergeMode && $column === $this->joinColumn)
-                            <span class="text-xs text-blue-600 font-medium">(JOIN)</span>
-                        @endif
-                    </label>
-                @endforeach
-            </div>
-            @error('fields') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-        </div>
-
-        {{-- 3. Filter & Urutan --}}
-        <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">3. Filter &amp; Urutan</h3>
+            <h3 class="font-semibold text-gray-900 mb-1">2. Filter &amp; Urutan</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                 <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari..." class="border-gray-300 rounded-md text-sm" />
                 <div class="flex gap-2">
@@ -586,9 +511,9 @@ new class extends Component
             </div>
         @endif
 
-        {{-- 4. Format & Generate --}}
+        {{-- 3. Judul & Format Output --}}
         <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">4. Judul &amp; Format Output</h3>
+            <h3 class="font-semibold text-gray-900 mb-1">3. Judul &amp; Format Output</h3>
             <input type="text" wire:model="title" placeholder="Judul laporan" class="mt-3 border-gray-300 rounded-md text-sm w-full" />
             @error('title') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
 
@@ -631,20 +556,6 @@ new class extends Component
                     <span wire:loading wire:target="generate">Memproses...</span>
                 </button>
             </div>
-        </div>
-
-        {{-- 5. Simpan sebagai template --}}
-        <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">5. Simpan sebagai Template <span class="font-normal text-gray-500">(opsional)</span></h3>
-            <p class="text-sm text-gray-500 mb-3">Simpan konfigurasi di atas untuk dipakai berulang.</p>
-            @if (session('template_saved'))
-                <p class="mb-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-4 py-2">{{ session('template_saved') }}</p>
-            @endif
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" wire:model="templateName" placeholder="Nama template, misal: Laporan Bulanan" class="border-gray-300 rounded-md text-sm flex-1" />
-                <button type="button" wire:click="saveAsTemplate" class="px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded-md hover:bg-purple-700">Simpan Template</button>
-            </div>
-            @error('templateName') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
     @endif
 </div>

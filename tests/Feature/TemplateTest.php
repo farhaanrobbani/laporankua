@@ -136,25 +136,6 @@ class TemplateTest extends TestCase
             ->assertSet('search', $template->filters_json['search'] ?? '');
     }
 
-    public function test_builder_bisa_simpan_sebagai_template(): void
-    {
-        $user = User::factory()->create();
-        $import = $this->importWithRows($user);
-
-        Livewire::actingAs($user)
-            ->test('report-builder')
-            ->set('importId', $import->id)
-            ->set('templateName', 'Dari Builder')
-            ->call('saveAsTemplate')
-            ->assertHasNoErrors();
-
-        $this->assertDatabaseHas('report_templates', [
-            'user_id' => $user->id,
-            'name' => 'Dari Builder',
-            'is_global' => true,
-        ]);
-    }
-
     public function test_builder_bisa_muat_template_default(): void
     {
         $user = User::factory()->create();
