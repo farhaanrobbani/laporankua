@@ -173,7 +173,7 @@ class ReportsController extends Controller
         $dataset['font_size_kop_alamat'] = $config['font_size_kop_alamat'] ?? null;
         $dataset['font_size_kop_kontak'] = $config['font_size_kop_kontak'] ?? null;
 
-        return view('reports.print', compact('dataset'));
+        return view('reports.print', compact('dataset', 'report'));
     }
 
     public function cetakNb(Report $report, int $record): View

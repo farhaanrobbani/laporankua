@@ -85,7 +85,7 @@
         </div>
         <div class="flex gap-2">
             <button onclick="window.print()" class="print-btn">Print / Simpan PDF</button>
-            <button onclick="window.history.back()" class="close-btn">Tutup</button>
+            <button onclick="@if(($entryMode ?? 'report') === 'cetak-nb')window.location='{{ route('cetak-nb.index') }}'@elseif(($entryMode ?? 'report') === 'data')window.location='{{ route('data.index') }}'@elsewindow.location='{{ route('reports.index') }}'@endif" class="close-btn">Tutup</button>
         </div>
     </div>
 
