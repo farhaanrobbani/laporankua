@@ -562,25 +562,6 @@ new class extends Component
                 @endif
             </div>
         @endif
-        @if ($this->format === 'print')
-            <div class="mt-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Filter Bulan/Tahun</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <select wire:model.live="filterMonth" class="border-gray-300 rounded-md text-sm w-full">
-                        <option value="">Semua Bulan</option>
-                        @for ($m = 1; $m <= 12; $m++)
-                            <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
-                        @endfor
-                    </select>
-                    <select wire:model.live="filterYear" class="border-gray-300 rounded-md text-sm w-full">
-                        <option value="">Semua Tahun</option>
-                        @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
-                            <option value="{{ $y }}">{{ $y }}</option>
-                        @endfor
-                    </select>
-                </div>
-            </div>
-        @endif
         @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
 
@@ -612,6 +593,25 @@ new class extends Component
                     </select>
                 </div>
                 <button type="button" wire:click="loadPreview" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Muat Pratinjau</button>
+                @if ($this->format === 'print')
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Filter Bulan/Tahun</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <select wire:model.live="filterMonth" class="border-gray-300 rounded-md text-sm w-full">
+                                <option value="">Semua Bulan</option>
+                                @for ($m = 1; $m <= 12; $m++)
+                                    <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
+                                @endfor
+                            </select>
+                            <select wire:model.live="filterYear" class="border-gray-300 rounded-md text-sm w-full">
+                                <option value="">Semua Tahun</option>
+                                @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
