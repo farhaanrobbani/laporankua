@@ -103,8 +103,8 @@
                     @if (! empty($dataset['logo_kantor']))
                         <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
                             <tr>
-                                <td class="align-top" style="width: 90px; padding: 0;">
-                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="max-height: 80px; max-width: 80px; display: block; margin-left: auto;" />
+                                <td class="align-top" style="width: 120px; padding: 0;">
+                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="max-height: 80px; max-width: 80px; float: right;" />
                                 </td>
                                 <td class="text-center" style="padding: 0;">
                                     <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
