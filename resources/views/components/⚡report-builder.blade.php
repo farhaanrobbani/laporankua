@@ -51,10 +51,8 @@ new class extends Component
     /** @var int[] */
     public array $mergeImportIds = [];
 
-    public string $joinColumn = '';
-
     /** @var string[] */
-    public array $sharedColumns = [];
+    public array $autoJoinColumns = [];
 
     /** @var array<int, array{id: int, name: string, description: string|null, output_format: string, fields_json: array, filters_json: array, sorting_json: array, layout_json: array}> */
     public array $globalTemplates = [];
@@ -101,28 +99,23 @@ new class extends Component
 
     public function updatedMergeImportIds(): void
     {
-        $this->sharedColumns = app(MergeService::class)->getSharedColumns($this->mergeImportIds);
-        $this->joinColumn = '';
         $this->columns = [];
         $this->fields = [];
         $this->preview = null;
         $this->tableLayout = null;
         $this->filterMonth = '';
         $this->filterYear = '';
+        $this->autoJoinColumns = [];
 
         if (count($this->mergeImportIds) >= 2) {
             $this->columns = app(MergeService::class)->getAllColumns($this->mergeImportIds);
             $this->fields = $this->columns;
+            $this->autoJoinColumns = app(MergeService::class)->getSharedColumns($this->mergeImportIds);
 
             if ($this->selectedTemplateId) {
                 $this->applySelectedTemplate();
             }
         }
-    }
-
-    public function updatedJoinColumn(): void
-    {
-        $this->preview = null;
     }
 
     public function loadDefaultTemplate(): void
@@ -256,7 +249,7 @@ new class extends Component
 
     private function loadMergePreview(): void
     {
-        if (count($this->mergeImportIds) < 2 || $this->joinColumn === '' || $this->fields === []) {
+        if (count($this->mergeImportIds) < 2 || $this->fields === []) {
             $this->preview = null;
 
             return;
@@ -264,7 +257,6 @@ new class extends Component
 
         $dataset = app(MergeService::class)->buildMergedDataset(
             $this->mergeImportIds,
-            $this->joinColumn,
             $this->fields,
             $this->search ?: null,
             $this->filterColumn ?: null,
@@ -408,7 +400,6 @@ new class extends Component
     {
         $this->validate([
             'mergeImportIds' => 'required|array|min:2',
-            'joinColumn' => 'required|string',
             'title' => 'required|string|max:255',
             'format' => 'required|in:pdf,word,excel,print',
             'orientation' => 'required|in:portrait,landscape',
@@ -444,7 +435,6 @@ new class extends Component
                 'orientation' => $this->orientation,
                 'is_merged' => true,
                 'merged_import_ids' => $this->mergeImportIds,
-                'join_column' => $this->joinColumn,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
@@ -528,15 +518,12 @@ new class extends Component
                 </div>
 
                 @if (count($this->mergeImportIds) >= 2)
-                    <div class="mt-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Kolom penggabung (JOIN key)</label>
-                        <select wire:model.live="joinColumn" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
-                            <option value="">-- Pilih kolom --</option>
-                            @foreach ($this->sharedColumns as $col)
-                                <option value="{{ $col }}">{{ $col }}</option>
-                            @endforeach
-                        </select>
-                        @if (empty($this->sharedColumns))
+                    <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p class="text-sm text-blue-700">
+                            <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                            Bergabung otomatis berdasarkan kolom: <strong>{{ implode(' + ', $this->autoJoinColumns) }}</strong>
+                        </p>
+                        @if (empty($this->autoJoinColumns))
                             <p class="text-xs text-amber-600 mt-1">Tidak ada kolom yang sama antara file yang dipilih.</p>
                         @endif
                     </div>
@@ -573,7 +560,7 @@ new class extends Component
         @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
 
-    @if (($this->isMergeMode && count($this->mergeImportIds) >= 2 && $this->joinColumn !== '') || (! $this->isMergeMode && $this->importId && ! empty($this->columns)))
+    @if (($this->isMergeMode && count($this->mergeImportIds) >= 2 && ! empty($this->autoJoinColumns)) || (! $this->isMergeMode && $this->importId && ! empty($this->columns)))
         {{-- 2. Filter & Urutan --}}
         <div class="bg-white border border-gray-200 rounded-lg p-6">
             <h3 class="font-semibold text-gray-900 mb-1">2. Filter &amp; Urutan</h3>

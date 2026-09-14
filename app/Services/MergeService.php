@@ -8,32 +8,56 @@ use App\Models\ImportData;
 class MergeService
 {
     /**
-     * JOIN data dari multiple imports berdasarkan kolom tertentu.
+     * Auto-JOIN data dari multiple imports berdasarkan kolom yang sama (intersection).
+     * Hanya baris yang cocok di SEMUA file yang ditampilkan (INNER JOIN).
      *
      * @param  int[]  $importIds
-     * @return array{headings: string[], rows: array<int, array<string, mixed>>, total: int}
+     * @return array{headings: string[], rows: array<int, array<string, mixed>>, total: int, shared_columns: string[]}
      */
-    public function mergeByColumn(array $importIds, string $joinColumn): array
+    public function autoMergeBySharedColumns(array $importIds): array
     {
-        $allColumns = [];
+        if (count($importIds) < 2) {
+            return ['headings' => [], 'rows' => [], 'total' => 0, 'shared_columns' => []];
+        }
+
+        // 1. Dapatkan kolom per file
+        $importColumns = [];
+        foreach ($importIds as $importId) {
+            $import = Import::where('id', $importId)->first();
+            if ($import) {
+                $importColumns[$importId] = $import->availableColumns();
+            }
+        }
+
+        if (count($importColumns) < 2) {
+            return ['headings' => [], 'rows' => [], 'total' => 0, 'shared_columns' => []];
+        }
+
+        // 2. Cari intersection (kolom yang ada di SEMUA file)
+        $sharedColumns = null;
+        foreach ($importColumns as $cols) {
+            if ($sharedColumns === null) {
+                $sharedColumns = $cols;
+            } else {
+                $sharedColumns = array_values(array_intersect($sharedColumns, $cols));
+            }
+        }
+
+        if (empty($sharedColumns)) {
+            return ['headings' => [], 'rows' => [], 'total' => 0, 'shared_columns' => []];
+        }
+
+        // 3. Dapatkan semua kolom (union)
+        $allColumns = $this->getAllColumns($importIds);
+
+        // 4. Index semua baris per file berdasarkan composite key
         $indexedData = [];
-        $allKeys = [];
-        $importLabels = [];
+        $keyFileCount = [];
 
         foreach ($importIds as $importId) {
             $import = Import::where('id', $importId)->first();
-
             if (! $import) {
                 continue;
-            }
-
-            $importLabels[$importId] = $import->file_name;
-
-            $columns = $import->availableColumns();
-            foreach ($columns as $col) {
-                if (! in_array($col, $allColumns, true)) {
-                    $allColumns[] = $col;
-                }
             }
 
             $rows = ImportData::where('import_id', $importId)
@@ -42,28 +66,41 @@ class MergeService
                 ->map(fn (ImportData $record) => $record->row_data ?? [])
                 ->all();
 
+            $seenKeys = [];
             foreach ($rows as $row) {
-                $key = isset($row[$joinColumn]) ? (string) $row[$joinColumn] : null;
-
-                if ($key === null || $key === '') {
-                    $key = '__unmatched_'.$importId.'_'.(array_key_exists('__unmatched_'.$importId, $allKeys) ? count($allKeys['__unmatched_'.$importId]) : 0);
-                    $allKeys[$key] = true;
-                } else {
-                    $allKeys[$key] = true;
+                $key = $this->buildCompositeKey($row, $sharedColumns);
+                if ($key === '') {
+                    continue;
                 }
+
+                $seenKeys[$key] = true;
 
                 if (! isset($indexedData[$key])) {
                     $indexedData[$key] = [];
+                    $keyFileCount[$key] = 0;
                 }
 
                 foreach ($row as $col => $val) {
                     $indexedData[$key][$col] = $val;
                 }
             }
+
+            // Hitung berapa file yang punya key ini
+            foreach (array_keys($seenKeys) as $key) {
+                $keyFileCount[$key] = ($keyFileCount[$key] ?? 0) + 1;
+            }
         }
 
+        // 5. Bangun merged rows — hanya baris yang ada di SEMUA file (INNER JOIN)
+        $totalFiles = count($importIds);
         $mergedRows = [];
+
         foreach ($indexedData as $key => $row) {
+            // Skip baris yang tidak ada di semua file
+            if (($keyFileCount[$key] ?? 0) < $totalFiles) {
+                continue;
+            }
+
             $mergedRow = [];
             foreach ($allColumns as $col) {
                 $mergedRow[$col] = $row[$col] ?? null;
@@ -71,22 +108,30 @@ class MergeService
             $mergedRows[] = $mergedRow;
         }
 
-        usort($mergedRows, function ($a, $b) use ($joinColumn) {
-            $valA = $a[$joinColumn] ?? '';
-            $valB = $b[$joinColumn] ?? '';
-
-            return strcasecmp((string) $valA, (string) $valB);
-        });
-
         return [
             'headings' => $allColumns,
             'rows' => $mergedRows,
             'total' => count($mergedRows),
+            'shared_columns' => $sharedColumns,
         ];
     }
 
     /**
-     * Build dataset untuk laporan dari merge results.
+     * Bangun composite key dari baris berdasarkan kolom-kolom tertentu.
+     */
+    private function buildCompositeKey(array $row, array $columns): string
+    {
+        $parts = [];
+        foreach ($columns as $col) {
+            $val = $row[$col] ?? null;
+            $parts[] = $val !== null ? (string) $val : '';
+        }
+
+        return implode('|', $parts);
+    }
+
+    /**
+     * Build dataset untuk laporan dari auto-merge results.
      *
      * @param  int[]  $importIds
      * @param  string[]  $fields
@@ -94,7 +139,6 @@ class MergeService
      */
     public function buildMergedDataset(
         array $importIds,
-        string $joinColumn,
         array $fields,
         ?string $search = null,
         ?string $filterColumn = null,
@@ -103,7 +147,7 @@ class MergeService
         string $sortDirection = 'asc',
         ?int $limit = null,
     ): array {
-        $mergeResult = $this->mergeByColumn($importIds, $joinColumn);
+        $mergeResult = $this->autoMergeBySharedColumns($importIds);
         $rows = $mergeResult['rows'];
 
         if ($search !== null && $search !== '') {
@@ -162,6 +206,35 @@ class MergeService
             'total' => count($filteredRows),
             'generated_at' => now()->format('d M Y H:i'),
         ];
+    }
+
+    /**
+     * Build dataset untuk laporan dari auto-merge results (untuk print view).
+     *
+     * @param  int[]  $importIds
+     * @param  string[]  $fields
+     * @return array{title: string, headings: string[], rows: array<int, array<string, mixed>>, total: int, generated_at: string}
+     */
+    public function buildConcatDataset(
+        array $importIds,
+        array $fields,
+        ?string $search = null,
+        ?string $filterColumn = null,
+        ?string $filterValue = null,
+        ?string $sortColumn = null,
+        string $sortDirection = 'asc',
+        ?int $limit = null,
+    ): array {
+        return $this->buildMergedDataset(
+            $importIds,
+            $fields,
+            $search,
+            $filterColumn,
+            $filterValue,
+            $sortColumn,
+            $sortDirection,
+            $limit,
+        );
     }
 
     /**
@@ -233,6 +306,7 @@ class MergeService
 
     /**
      * Concat data dari multiple imports (append, tanpa JOIN).
+     * Digunakan oleh data table view.
      *
      * @param  int[]  $importIds
      * @return array{headings: string[], rows: array<int, array<string, mixed>>, total: int}
@@ -272,80 +346,78 @@ class MergeService
     }
 
     /**
-     * Build dataset untuk laporan dari concat results (tanpa JOIN).
+     * JOIN data dari multiple imports berdasarkan kolom tertentu.
+     * Digunakan oleh data table view.
      *
      * @param  int[]  $importIds
-     * @param  string[]  $fields
-     * @return array{title: string, headings: string[], rows: array<int, array<string, mixed>>, total: int, generated_at: string}
+     * @return array{headings: string[], rows: array<int, array<string, mixed>>, total: int}
      */
-    public function buildConcatDataset(
-        array $importIds,
-        array $fields,
-        ?string $search = null,
-        ?string $filterColumn = null,
-        ?string $filterValue = null,
-        ?string $sortColumn = null,
-        string $sortDirection = 'asc',
-        ?int $limit = null,
-    ): array {
-        $concatResult = $this->concatImports($importIds);
-        $rows = $concatResult['rows'];
+    public function mergeByColumn(array $importIds, string $joinColumn): array
+    {
+        $allColumns = [];
+        $indexedData = [];
+        $allKeys = [];
 
-        if ($search !== null && $search !== '') {
-            $lowerSearch = mb_strtolower($search);
-            $rows = array_filter($rows, function ($row) use ($lowerSearch) {
-                foreach ($row as $val) {
-                    if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
-                        return true;
-                    }
+        foreach ($importIds as $importId) {
+            $import = Import::where('id', $importId)->first();
+
+            if (! $import) {
+                continue;
+            }
+
+            $columns = $import->availableColumns();
+            foreach ($columns as $col) {
+                if (! in_array($col, $allColumns, true)) {
+                    $allColumns[] = $col;
+                }
+            }
+
+            $rows = ImportData::where('import_id', $importId)
+                ->orderBy('row_number')
+                ->cursor()
+                ->map(fn (ImportData $record) => $record->row_data ?? [])
+                ->all();
+
+            foreach ($rows as $row) {
+                $key = isset($row[$joinColumn]) ? (string) $row[$joinColumn] : null;
+
+                if ($key === null || $key === '') {
+                    $key = '__unmatched_'.$importId.'_'.(array_key_exists('__unmatched_'.$importId, $allKeys) ? count($allKeys['__unmatched_'.$importId]) : 0);
+                    $allKeys[$key] = true;
+                } else {
+                    $allKeys[$key] = true;
                 }
 
-                return false;
-            });
-        }
+                if (! isset($indexedData[$key])) {
+                    $indexedData[$key] = [];
+                }
 
-        if ($filterColumn !== null && $filterColumn !== '' && $filterValue !== null && $filterValue !== '') {
-            $lowerFilter = mb_strtolower($filterValue);
-            $rows = array_filter($rows, function ($row) use ($filterColumn, $lowerFilter) {
-                $val = $row[$filterColumn] ?? null;
-
-                return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
-            });
-        }
-
-        $rows = array_values($rows);
-
-        if ($sortColumn !== null && $sortColumn !== '' && isset($rows[0][$sortColumn])) {
-            $dir = strtolower($sortDirection) === 'desc' ? 'desc' : 'asc';
-            usort($rows, function ($a, $b) use ($sortColumn, $dir) {
-                $valA = $a[$sortColumn] ?? '';
-                $valB = $b[$sortColumn] ?? '';
-
-                $cmp = strcasecmp((string) $valA, (string) $valB);
-
-                return $dir === 'desc' ? -$cmp : $cmp;
-            });
-        }
-
-        if ($limit !== null) {
-            $rows = array_slice($rows, 0, $limit);
-        }
-
-        $filteredRows = [];
-        foreach ($rows as $row) {
-            $filteredRow = [];
-            foreach ($fields as $field) {
-                $filteredRow[$field] = $row[$field] ?? null;
+                foreach ($row as $col => $val) {
+                    $indexedData[$key][$col] = $val;
+                }
             }
-            $filteredRows[] = $filteredRow;
         }
+
+        $mergedRows = [];
+        foreach ($indexedData as $key => $row) {
+            $mergedRow = [];
+            foreach ($allColumns as $col) {
+                $mergedRow[$col] = $row[$col] ?? null;
+            }
+            $mergedRows[] = $mergedRow;
+        }
+
+        usort($mergedRows, function ($a, $b) use ($joinColumn) {
+            $valA = $a[$joinColumn] ?? '';
+            $valB = $b[$joinColumn] ?? '';
+
+            return strcasecmp((string) $valA, (string) $valB);
+        });
 
         return [
-            'title' => 'Gabungan '.count($importIds).' file import',
-            'headings' => array_values($fields),
-            'rows' => $filteredRows,
-            'total' => count($filteredRows),
-            'generated_at' => now()->format('d M Y H:i'),
+            'headings' => $allColumns,
+            'rows' => $mergedRows,
+            'total' => count($mergedRows),
         ];
     }
 }
