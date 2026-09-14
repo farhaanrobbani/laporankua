@@ -491,19 +491,21 @@ new class extends Component
                             <option value="{{ $import['id'] }}">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)</option>
                         @endforeach
                     </select>
-                    @if (! empty($this->globalTemplates))
-                        <select wire:model.live="selectedTemplateId" wire:change="applySelectedTemplate" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
-                            <option value="">-- Pilih Template --</option>
-                            @foreach ($this->globalTemplates as $tpl)
-                                <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }} ({{ strtoupper($tpl['output_format']) }})</option>
-                            @endforeach
-                        </select>
-                    @endif
-                    @if ($this->hasDefaultTemplate)
-                        <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
-                    @endif
                 </div>
             @endif
+        @endif
+        @if (! empty($this->globalTemplates))
+            <div class="mt-3 flex items-center gap-3">
+                <select wire:model.live="selectedTemplateId" wire:change="applySelectedTemplate" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                    <option value="">-- Pilih Template --</option>
+                    @foreach ($this->globalTemplates as $tpl)
+                        <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }} ({{ strtoupper($tpl['output_format']) }})</option>
+                    @endforeach
+                </select>
+                @if ($this->hasDefaultTemplate)
+                    <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
+                @endif
+            </div>
         @endif
         @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
