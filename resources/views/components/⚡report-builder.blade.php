@@ -51,6 +51,9 @@ new class extends Component
     /** @var int[] */
     public array $mergeImportIds = [];
 
+    /** @var int[] */
+    public array $selectedImportIds = [];
+
     /** @var string[] */
     public array $autoJoinColumns = [];
 
@@ -203,8 +206,13 @@ new class extends Component
         $import = $this->selectedImport();
 
         if (! $import) {
+            $this->selectedImportIds = [];
+
             return;
         }
+
+        $group = collect($this->imports)->firstWhere('id', $import->id);
+        $this->selectedImportIds = $group['import_ids'] ?? [$import->id];
 
         $this->columns = $import->availableColumns();
         $this->fields = $this->columns;
@@ -228,16 +236,14 @@ new class extends Component
             return;
         }
 
-        $import = $this->selectedImport();
-
-        if (! $import || $this->fields === []) {
+        if ($this->selectedImportIds === [] || $this->fields === []) {
             $this->preview = null;
 
             return;
         }
 
-        $dataset = app(ReportGenerationService::class)->buildDataset(
-            $import,
+        $dataset = app(MergeService::class)->buildConcatDataset(
+            $this->selectedImportIds,
             $this->fields,
             $this->search ?: null,
             $this->filterColumn ?: null,
@@ -398,6 +404,7 @@ new class extends Component
                 'orientation' => $this->orientation,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
+                'merged_import_ids' => $this->selectedImportIds,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,

@@ -247,16 +247,65 @@ class MergeService
         string $sortDirection = 'asc',
         ?int $limit = null,
     ): array {
-        return $this->buildMergedDataset(
-            $importIds,
-            $fields,
-            $search,
-            $filterColumn,
-            $filterValue,
-            $sortColumn,
-            $sortDirection,
-            $limit,
-        );
+        $concatResult = $this->concatImports($importIds);
+        $rows = $concatResult['rows'];
+
+        if ($search !== null && $search !== '') {
+            $lowerSearch = mb_strtolower($search);
+            $rows = array_filter($rows, function ($row) use ($lowerSearch) {
+                foreach ($row as $val) {
+                    if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        if ($filterColumn !== null && $filterColumn !== '' && $filterValue !== null && $filterValue !== '') {
+            $lowerFilter = mb_strtolower($filterValue);
+            $rows = array_filter($rows, function ($row) use ($filterColumn, $lowerFilter) {
+                $val = $row[$filterColumn] ?? null;
+
+                return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
+            });
+        }
+
+        $rows = array_values($rows);
+
+        if ($sortColumn !== null && $sortColumn !== '' && isset($rows[0][$sortColumn])) {
+            $dir = strtolower($sortDirection) === 'desc' ? 'desc' : 'asc';
+            usort($rows, function ($a, $b) use ($sortColumn, $dir) {
+                $valA = $a[$sortColumn] ?? '';
+                $valB = $b[$sortColumn] ?? '';
+
+                $cmp = strcasecmp((string) $valA, (string) $valB);
+
+                return $dir === 'desc' ? -$cmp : $cmp;
+            });
+        }
+
+        if ($limit !== null) {
+            $rows = array_slice($rows, 0, $limit);
+        }
+
+        $filteredRows = [];
+        foreach ($rows as $row) {
+            $filteredRow = [];
+            foreach ($fields as $field) {
+                $filteredRow[$field] = $row[$field] ?? null;
+            }
+            $filteredRows[] = $filteredRow;
+        }
+
+        return [
+            'title' => 'Gabungan '.count($importIds).' file import',
+            'headings' => array_values($fields),
+            'rows' => $filteredRows,
+            'total' => count($filteredRows),
+            'generated_at' => now()->format('d M Y H:i'),
+        ];
     }
 
     /**

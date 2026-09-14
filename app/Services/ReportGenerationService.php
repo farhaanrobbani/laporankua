@@ -104,10 +104,19 @@ class ReportGenerationService
         }
 
         try {
-            if (! empty($config['is_merged']) && ! empty($config['merged_import_ids']) && ! empty($config['join_column'])) {
+            if (! empty($config['is_merged']) && ! empty($config['merged_import_ids'])) {
                 $dataset = app(MergeService::class)->buildMergedDataset(
                     $config['merged_import_ids'],
-                    $config['join_column'],
+                    $fields,
+                    $config['search'] ?? null,
+                    $config['filter_column'] ?? null,
+                    $config['filter_value'] ?? null,
+                    $config['sort_column'] ?? null,
+                    $config['sort_direction'] ?? 'asc',
+                );
+            } elseif (! empty($config['merged_import_ids'])) {
+                $dataset = app(MergeService::class)->buildConcatDataset(
+                    $config['merged_import_ids'],
                     $fields,
                     $config['search'] ?? null,
                     $config['filter_column'] ?? null,

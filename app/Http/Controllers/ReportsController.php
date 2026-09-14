@@ -90,6 +90,18 @@ class ReportsController extends Controller
                 $sortColumn,
                 $sortDirection,
             );
+        } elseif (! empty($config['merged_import_ids'])) {
+            $mergeService = app(MergeService::class);
+            $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
+            $dataset = $mergeService->buildConcatDataset(
+                $config['merged_import_ids'],
+                $fields === [] ? $allColumns : $fields,
+                $config['search'] ?? null,
+                $config['filter_column'] ?? null,
+                $config['filter_value'] ?? null,
+                $sortColumn,
+                $sortDirection,
+            );
         } else {
             $dataset = $service->buildDataset(
                 $report->import,
