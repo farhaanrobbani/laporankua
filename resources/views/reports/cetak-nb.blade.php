@@ -85,7 +85,7 @@
         </div>
         <div class="flex gap-2">
             <button onclick="window.print()" class="print-btn">Print / Simpan PDF</button>
-            <button onclick="window.close()" class="close-btn">Tutup</button>
+            <button onclick="window.history.back()" class="close-btn">Tutup</button>
         </div>
     </div>
 
