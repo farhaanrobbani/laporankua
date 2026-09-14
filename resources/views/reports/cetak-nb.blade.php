@@ -91,12 +91,12 @@
 
     @foreach ($records as $rd)
         <div class="page">
-            <div class="field" style="top: 5mm; left: 0;">
-                <span class="field-label">Nomor Akta:</span>
-                <span class="field-value">{{ $rd['Nomor Akta Nikah'] ?? '-' }}</span>
+            <div class="field" style="top: 0mm; left: 0;">
+                <span class="field-label" style="font-size: 20px;">Nomor Akta:</span>
+                <span class="field-value" style="font-size: 20px;">{{ $rd['Nomor Akta Nikah'] ?? '-' }}</span>
             </div>
 
-            <div class="field" style="top: 35mm; right: 0;">
+            <div class="field" style="top: 30mm; right: 0;">
                 <span class="field-value">{{ $rd['No Porforasi Suami'] ?? '-' }} & {{ $rd['No Porforasi Istri'] ?? '-' }}</span>
             </div>
         </div>
