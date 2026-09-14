@@ -298,7 +298,7 @@ new class extends Component
             'import_id' => $import->id,
             'title' => $this->title,
             'output_format' => $this->format,
-            'config_json' => array_merge([
+            'config_json' => array_merge($this->getUserConfig(), [
                 'fields' => $fields === [] ? $import->availableColumns() : $fields,
                 'search' => $this->search ?: null,
                 'filter_column' => $this->filterColumn ?: null,
@@ -351,7 +351,7 @@ new class extends Component
             'import_id' => $firstImport->id,
             'title' => $this->title,
             'output_format' => $this->format,
-            'config_json' => array_merge([
+            'config_json' => array_merge($this->getUserConfig(), [
                 'fields' => $this->fields,
                 'search' => $this->search ?: null,
                 'filter_column' => $this->filterColumn ?: null,
@@ -384,6 +384,29 @@ new class extends Component
         }
 
         return Import::where('user_id', auth()->id())->find($this->importId);
+    }
+
+    private function getUserConfig(): array
+    {
+        $user = auth()->user();
+
+        return [
+            'kecamatan' => $user->kecamatan ?? null,
+            'nama_kepala_kua' => $user->nama_kepala_kua ?? null,
+            'nip_kepala' => $user->nip_kepala ?? null,
+            'nama_kementerian' => $user->nama_kementerian ?? null,
+            'nama_kantor_kota' => $user->nama_kantor_kota ?? null,
+            'nama_kantor' => $user->nama_kantor ?? null,
+            'alamat_kantor' => $user->alamat_kantor ?? null,
+            'telepon_kantor' => $user->telepon_kantor ?? null,
+            'email_kantor' => $user->email_kantor ?? null,
+            'logo_kantor' => $user->logo_kantor ?? null,
+            'font_size_kop_kementerian' => $user->font_size_kop_kementerian ?? null,
+            'font_size_kop_kantor_kota' => $user->font_size_kop_kantor_kota ?? null,
+            'font_size_kop_kantor' => $user->font_size_kop_kantor ?? null,
+            'font_size_kop_alamat' => $user->font_size_kop_alamat ?? null,
+            'font_size_kop_kontak' => $user->font_size_kop_kontak ?? null,
+        ];
     }
 };
 ?>
