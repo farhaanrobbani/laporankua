@@ -1,28 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
-use App\Jobs\GenerateReport;
+use App\Http\Controllers\Controller;
 use App\Models\Import;
-use App\Models\Report;
 use App\Models\ReportTemplate;
 use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TemplateController extends Controller
 {
-    use AuthorizesRequests;
-
     public function index(): View
     {
         $templates = ReportTemplate::where('user_id', auth()->id())
             ->latest()
             ->paginate(10);
 
-        return view('templates.index', compact('templates'));
+        return view('admin.templates.index', compact('templates'));
     }
 
     public function create(Request $request): View
@@ -40,7 +36,7 @@ class TemplateController extends Controller
             $columns = $sourceImport?->availableColumns() ?? [];
         }
 
-        return view('templates.create', compact('imports', 'sourceImport', 'columns'));
+        return view('admin.templates.create', compact('imports', 'sourceImport', 'columns'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -93,17 +89,16 @@ class TemplateController extends Controller
                     'orientation' => $validated['orientation'] ?? 'portrait',
                 ], $tableLayout ? ['table_layout' => $tableLayout] : []),
                 'is_default' => ! empty($validated['is_default']),
+                'is_global' => true,
             ]);
         });
 
-        return redirect()->route('templates.index')
-            ->with('status', 'Template "'.$template->name.'" berhasil dibuat.');
+        return redirect()->route('admin.templates.index')
+            ->with('success', 'Template "'.$template->name.'" berhasil dibuat.');
     }
 
     public function edit(ReportTemplate $template): View
     {
-        $this->authorize('update', $template);
-
         $imports = Import::where('user_id', auth()->id())
             ->where('status', 'success')
             ->latest()
@@ -111,13 +106,11 @@ class TemplateController extends Controller
 
         $columns = $template->fields_json ?? [];
 
-        return view('templates.edit', compact('template', 'imports', 'columns'));
+        return view('admin.templates.edit', compact('template', 'imports', 'columns'));
     }
 
     public function update(Request $request, ReportTemplate $template): RedirectResponse
     {
-        $this->authorize('update', $template);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -168,128 +161,33 @@ class TemplateController extends Controller
             ]);
         });
 
-        return redirect()->route('templates.index')
-            ->with('status', 'Template berhasil diubah.');
+        return redirect()->route('admin.templates.index')
+            ->with('success', 'Template berhasil diubah.');
     }
 
     public function destroy(ReportTemplate $template): RedirectResponse
     {
-        $this->authorize('delete', $template);
-
         $template->delete();
 
-        return redirect()->route('templates.index')
-            ->with('status', 'Template berhasil dihapus.');
+        return redirect()->route('admin.templates.index')
+            ->with('success', 'Template berhasil dihapus.');
     }
 
     public function setDefault(ReportTemplate $template): RedirectResponse
     {
-        $this->authorize('update', $template);
-
         DB::transaction(function () use ($template) {
             $this->clearDefaults($template->id);
             $template->update(['is_default' => true]);
         });
 
-        return redirect()->route('templates.index')
-            ->with('status', '"'.$template->name.'" dijadikan template default.');
-    }
-
-    public function use(ReportTemplate $template): View
-    {
-        $this->authorize('view', $template);
-
-        $imports = Import::where('user_id', auth()->id())
-            ->latest()
-            ->withCount('importData')
-            ->get(['id', 'file_name', 'table_name'])
-            ->groupBy('table_name')
-            ->map(fn ($rows, $tableName) => [
-                'id' => $rows->first()->id,
-                'table_name' => $tableName,
-                'total_rows' => $rows->sum('import_data_count'),
-                'import_ids' => $rows->pluck('id')->toArray(),
-            ])
-            ->values()
-            ->all();
-
-        return view('templates.use', compact('template', 'imports'));
-    }
-
-    public function apply(Request $request, ReportTemplate $template): RedirectResponse
-    {
-        $this->authorize('view', $template);
-
-        $validated = $request->validate([
-            'import_id' => 'required|integer',
-            'title' => 'required|string|max:255',
-        ]);
-
-        $import = Import::where('user_id', auth()->id())->findOrFail($validated['import_id']);
-
-        $available = $import->availableColumns();
-        $fields = array_values(array_intersect($template->fields_json ?? [], $available));
-
-        if ($fields === []) {
-            $fields = $available;
-        }
-
-        if ($fields === [] && $template->output_format !== 'print') {
-            return back()->withErrors(['import_id' => 'Template tidak cocok dengan kolom file ini.']);
-        }
-
-        $filters = $template->filters_json ?? [];
-        $sorting = $template->sorting_json ?? [];
-        $layout = $template->layout_json ?? [];
-        $user = $request->user();
-
-        $report = Report::create([
-            'user_id' => auth()->id(),
-            'report_template_id' => $template->id,
-            'import_id' => $import->id,
-            'title' => $validated['title'],
-            'output_format' => $template->output_format,
-            'config_json' => array_merge([
-                'fields' => $fields,
-                'search' => $filters['search'] ?? null,
-                'filter_column' => $filters['filter_column'] ?? null,
-                'filter_value' => $filters['filter_value'] ?? null,
-                'sort_column' => $sorting['column'] ?? null,
-                'sort_direction' => $sorting['direction'] ?? 'asc',
-                'orientation' => $layout['orientation'] ?? 'portrait',
-                'kecamatan' => $user->kecamatan ?? null,
-                'nama_kepala_kua' => $user->nama_kepala_kua ?? null,
-                'nip_kepala' => $user->nip_kepala ?? null,
-                'nama_kementerian' => $user->nama_kementerian ?? null,
-                'nama_kantor_kota' => $user->nama_kantor_kota ?? null,
-                'nama_kantor' => $user->nama_kantor ?? null,
-                'alamat_kantor' => $user->alamat_kantor ?? null,
-                'telepon_kantor' => $user->telepon_kantor ?? null,
-                'email_kantor' => $user->email_kantor ?? null,
-                'logo_kantor' => $user->logo_kantor ?? null,
-                'font_size_kop_kementerian' => $user->font_size_kop_kementerian ?? null,
-                'font_size_kop_kantor_kota' => $user->font_size_kop_kantor_kota ?? null,
-                'font_size_kop_kantor' => $user->font_size_kop_kantor ?? null,
-                'font_size_kop_alamat' => $user->font_size_kop_alamat ?? null,
-                'font_size_kop_kontak' => $user->font_size_kop_kontak ?? null,
-            ], ! empty($layout['table_layout']) ? ['table_layout' => $layout['table_layout']] : []),
-            'status' => $template->output_format === 'print' ? 'generated' : 'pending',
-            'generated_at' => $template->output_format === 'print' ? now() : null,
-        ]);
-
-        if ($template->output_format === 'print') {
-            return redirect()->route('reports.print', $report);
-        }
-
-        GenerateReport::dispatch($report);
-
-        return redirect()->route('reports.index')
-            ->with('status', 'Laporan dari template "'.$template->name.'" sedang dibuat.');
+        return redirect()->route('admin.templates.index')
+            ->with('success', '"'.$template->name.'" dijadikan template default.');
     }
 
     private function clearDefaults(?int $exceptId = null): void
     {
         ReportTemplate::where('user_id', auth()->id())
+            ->where('is_global', true)
             ->when($exceptId, fn ($query) => $query->where('id', '!=', $exceptId))
             ->update(['is_default' => false]);
     }

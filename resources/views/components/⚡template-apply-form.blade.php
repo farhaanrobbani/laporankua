@@ -296,7 +296,7 @@ new class extends Component
 
     {{-- Actions --}}
     <div class="flex justify-end gap-3">
-        <a href="{{ route('templates.index') }}" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Batal</a>
+        <a href="{{ route('reports.create') }}" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Batal</a>
         <button type="button" wire:click="apply" class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700">Buat Laporan</button>
     </div>
 </div>

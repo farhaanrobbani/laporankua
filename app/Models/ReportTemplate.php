@@ -21,6 +21,7 @@ class ReportTemplate extends Model
         'sorting_json',
         'layout_json',
         'is_default',
+        'is_global',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class ReportTemplate extends Model
             'sorting_json' => 'array',
             'layout_json' => 'array',
             'is_default' => 'boolean',
+            'is_global' => 'boolean',
         ];
     }
 

@@ -34,10 +34,6 @@
                         <x-heroicon-o-document-text class="w-4 h-4 me-1" />
                         {{ __('Laporan') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('templates.index')" :active="request()->routeIs('templates.*')">
-                        <x-heroicon-o-document-duplicate class="w-4 h-4 me-1" />
-                        {{ __('Template') }}
-                    </x-nav-link>
                     @if (Auth::user()->isAdmin())
                         <x-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">
                             <x-heroicon-o-cog-6-tooth class="w-4 h-4 me-1" />
@@ -106,9 +102,6 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                 {{ __('Laporan') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('templates.index')" :active="request()->routeIs('templates.*')">
-                {{ __('Template') }}
             </x-responsive-nav-link>
             @if (Auth::user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">

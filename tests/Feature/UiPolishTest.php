@@ -47,12 +47,12 @@ class UiPolishTest extends TestCase
 
     public function test_empty_state_komponen_dirender(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($user)->get('/templates')
+        $this->actingAs($admin)->get(route('admin.templates.index'))
             ->assertOk()
             ->assertSee('Belum ada template')
-            ->assertSee('Buat Template');
+            ->assertSee('Tambah Template');
     }
 
     public function test_badge_format_laporan_dirender(): void

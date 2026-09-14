@@ -28,17 +28,17 @@ class SecurityTest extends TestCase
 
     public function test_mass_assignment_user_id_diabaikan(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
         $other = User::factory()->create();
 
-        $this->actingAs($user)->post('/templates', [
+        $this->actingAs($admin)->post(route('admin.templates.store'), [
             'name' => 'Nekat',
             'output_format' => 'pdf',
             'user_id' => $other->id,
-        ])->assertRedirect('/templates');
+        ])->assertRedirect(route('admin.templates.index'));
 
         $template = ReportTemplate::latest()->first();
-        $this->assertSame($user->id, $template->user_id);
+        $this->assertSame($admin->id, $template->user_id);
     }
 
     public function test_builder_menolak_import_milik_orang(): void

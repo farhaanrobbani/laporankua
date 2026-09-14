@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DownloadController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,4 +18,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/downloads', [DownloadController::class, 'index'])->name('downloads.index');
     Route::post('/downloads', [DownloadController::class, 'store'])->name('downloads.store');
     Route::delete('/downloads/{download}', [DownloadController::class, 'destroy'])->name('downloads.destroy');
+
+    Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
+    Route::get('/templates/create', [TemplateController::class, 'create'])->name('templates.create');
+    Route::post('/templates', [TemplateController::class, 'store'])->name('templates.store');
+    Route::get('/templates/{template}/edit', [TemplateController::class, 'edit'])->name('templates.edit');
+    Route::put('/templates/{template}', [TemplateController::class, 'update'])->name('templates.update');
+    Route::delete('/templates/{template}', [TemplateController::class, 'destroy'])->name('templates.destroy');
+    Route::post('/templates/{template}/default', [TemplateController::class, 'setDefault'])->name('templates.default');
 });

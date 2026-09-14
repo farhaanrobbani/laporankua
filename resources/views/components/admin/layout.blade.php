@@ -27,6 +27,7 @@
                         $isActiveUsers = request()->routeIs('admin.users.*');
                         $isActiveSettings = request()->routeIs('admin.settings.*');
                         $isActiveDownloads = request()->routeIs('admin.downloads.*');
+                        $isActiveTemplates = request()->routeIs('admin.templates.*');
                     @endphp
 
                     <a href="{{ route('admin.index') }}"
@@ -43,6 +44,11 @@
                        class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveDownloads ? '' : 'text-gray-700 hover:bg-gray-100' }}"
                        @if($isActiveDownloads) style="background-color: #111827; color: #fff;" @endif>
                         Download
+                    </a>
+                    <a href="{{ route('admin.templates.index') }}"
+                       class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveTemplates ? '' : 'text-gray-700 hover:bg-gray-100' }}"
+                       @if($isActiveTemplates) style="background-color: #111827; color: #fff;" @endif>
+                        Template
                     </a>
                     <a href="{{ route('admin.settings.index') }}"
                        class="block px-3 py-2 rounded-md text-sm font-medium {{ $isActiveSettings ? '' : 'text-gray-700 hover:bg-gray-100' }}"

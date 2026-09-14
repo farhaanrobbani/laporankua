@@ -54,16 +54,43 @@ new class extends Component
     /** @var string[] */
     public array $sharedColumns = [];
 
+    /** @var array<int, array{id: int, name: string, description: string|null, output_format: string, fields_json: array, filters_json: array, sorting_json: array, layout_json: array}> */
+    public array $globalTemplates = [];
+
+    public ?int $selectedTemplateId = null;
+
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
-            ->where('status', 'success')
             ->latest()
+            ->withCount('importData')
             ->get(['id', 'file_name', 'table_name'])
-            ->map(fn (Import $import) => ['id' => $import->id, 'file_name' => $import->file_name, 'table_name' => $import->table_name])
+            ->groupBy('table_name')
+            ->map(fn ($rows, $tableName) => [
+                'id' => $rows->first()->id,
+                'table_name' => $tableName,
+                'total_rows' => $rows->sum('import_data_count'),
+                'import_ids' => $rows->pluck('id')->toArray(),
+            ])
+            ->values()
             ->all();
 
-        $this->hasDefaultTemplate = ReportTemplate::where('user_id', auth()->id())
+        $this->globalTemplates = ReportTemplate::where('is_global', true)
+            ->latest()
+            ->get()
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'description' => $t->description,
+                'output_format' => $t->output_format,
+                'fields_json' => $t->fields_json ?? [],
+                'filters_json' => $t->filters_json ?? [],
+                'sorting_json' => $t->sorting_json ?? [],
+                'layout_json' => $t->layout_json ?? [],
+            ])
+            ->all();
+
+        $this->hasDefaultTemplate = ReportTemplate::where('is_global', true)
             ->where('is_default', true)
             ->exists();
     }
@@ -89,9 +116,25 @@ new class extends Component
 
     public function loadDefaultTemplate(): void
     {
-        $template = ReportTemplate::where('user_id', auth()->id())
+        $template = ReportTemplate::where('is_global', true)
             ->where('is_default', true)
             ->first();
+
+        if (! $template) {
+            return;
+        }
+
+        $this->applyTemplateConfig($template);
+    }
+
+    public function applySelectedTemplate(): void
+    {
+        if (! $this->selectedTemplateId) {
+            return;
+        }
+
+        $template = ReportTemplate::where('is_global', true)
+            ->find($this->selectedTemplateId);
 
         if (! $template) {
             return;
@@ -139,6 +182,7 @@ new class extends Component
             ],
             'layout_json' => ['orientation' => $this->orientation],
             'is_default' => false,
+            'is_global' => true,
         ]);
 
         $this->templateName = '';
@@ -415,7 +459,7 @@ new class extends Component
                     @foreach ($this->imports as $import)
                         <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
                             <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600" />
-                            {{ $import['table_name'] }}
+                            {{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)
                         </label>
                     @endforeach
                 </div>
@@ -444,9 +488,17 @@ new class extends Component
                     <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
                         <option value="">-- Pilih file import --</option>
                         @foreach ($this->imports as $import)
-                            <option value="{{ $import['id'] }}">{{ $import['table_name'] }}</option>
+                            <option value="{{ $import['id'] }}">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)</option>
                         @endforeach
                     </select>
+                    @if (! empty($this->globalTemplates))
+                        <select wire:model.live="selectedTemplateId" wire:change="applySelectedTemplate" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                            <option value="">-- Pilih Template --</option>
+                            @foreach ($this->globalTemplates as $tpl)
+                                <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }} ({{ strtoupper($tpl['output_format']) }})</option>
+                            @endforeach
+                        </select>
+                    @endif
                     @if ($this->hasDefaultTemplate)
                         <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
                     @endif
