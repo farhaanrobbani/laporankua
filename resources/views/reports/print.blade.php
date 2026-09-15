@@ -18,7 +18,7 @@
         }
         .kop-dengan-logo { width: 100%; border-collapse: collapse; }
         .kop-dengan-logo td { vertical-align: middle; }
-        .kop-dengan-logo .logo { width: 100px; text-align: center; }
+        .kop-dengan-logo .logo { width: 100px; text-align: right; }
         .kop-dengan-logo .logo img { width: 90px; height: auto; }
         .kop-dengan-logo .teks { text-align: center; padding-left: 6px; }
     </style>
