@@ -33,7 +33,7 @@
                 $applyTransform = function ($value, $transform) {
                     if ($transform === 'klinik_balai_nikah') {
                         $lower = mb_strtolower((string) $value);
-                        return str_contains($lower, 'balai nikah') ? 'K' : 'LK';
+                        return str_contains($lower, 'bedol') ? 'LK' : 'K';
                     }
                     return $value;
                 };
@@ -48,21 +48,21 @@
                 };
 
                 $tanggalNikahField = null;
-                $tempatNikahField = null;
+                $nikahDiField = null;
                 foreach ($columns as $col) {
                     if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
                         $tanggalNikahField = $col['field'];
                     }
-                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tempat Nikah') {
-                        $tempatNikahField = $col['field'];
+                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Nikah Di') {
+                        $nikahDiField = $col['field'];
                     }
                     if ($col['type'] === 'group') {
                         foreach ($col['children'] ?? [] as $child) {
                             if (($child['field'] ?? '') === 'Tanggal Nikah') {
                                 $tanggalNikahField = $child['field'];
                             }
-                            if (($child['field'] ?? '') === 'Tempat Nikah') {
-                                $tempatNikahField = $child['field'];
+                            if (($child['field'] ?? '') === 'Nikah Di') {
+                                $nikahDiField = $child['field'];
                             }
                         }
                     }
@@ -75,12 +75,12 @@
                 $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
                 foreach ($dataset['rows'] as $row) {
-                    if ($tempatNikahField !== null) {
-                        $tempat = mb_strtolower((string) ($row[$tempatNikahField] ?? ''));
-                        if (str_contains($tempat, 'balai nikah')) {
-                            $countK++;
-                        } else {
+                    if ($nikahDiField !== null) {
+                        $nikahDi = mb_strtolower((string) ($row[$nikahDiField] ?? ''));
+                        if (str_contains($nikahDi, 'bedol')) {
                             $countLK++;
+                        } else {
+                            $countK++;
                         }
                     }
                     if ($tanggalNikahField !== null && ! empty($row[$tanggalNikahField])) {
