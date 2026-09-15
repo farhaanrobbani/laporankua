@@ -18,7 +18,7 @@
                         <x-heroicon-o-arrow-up-tray class="w-4 h-4 me-1" />
                         {{ __('Import') }}
                     </x-nav-link>
-                    <div x-data="{ open: false }" class="relative" @click.away="open = false">
+                    <div x-data="{ open: false }" class="relative inline-flex items-center" @click.away="open = false">
                         <button @click="open = ! open" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none {{ request()->routeIs('data.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                             <x-heroicon-o-table-cells class="w-4 h-4 me-1" />
                             {{ __('Data') }}
