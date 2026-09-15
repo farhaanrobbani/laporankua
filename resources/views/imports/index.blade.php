@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Riwayat Import') }}
             </h2>
-            <a href="{{ route('imports.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700">
+            <a href="{{ route('imports.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 mt-2">
                 Upload Excel
             </a>
         </div>
