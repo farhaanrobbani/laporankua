@@ -137,6 +137,9 @@ class ExcelImportService
 
                 if ($appendExistingKeys === []) {
                     $dedupColForFallback = $import->dedup_column;
+                    if ($dedupColForFallback !== null && $dedupColForFallback !== '' && isset(self::COLUMN_ALIASES[$import->table_name][$dedupColForFallback])) {
+                        $dedupColForFallback = self::COLUMN_ALIASES[$import->table_name][$dedupColForFallback];
+                    }
                     if ($dedupColForFallback !== null && $dedupColForFallback !== '') {
                         $appendExistingKeys = ImportData::where('import_id', $appendExistingImport->id)
                             ->get()
@@ -151,6 +154,9 @@ class ExcelImportService
         }
 
         $dedupColumn = $import->dedup_column;
+        if ($dedupColumn !== null && $dedupColumn !== '' && isset(self::COLUMN_ALIASES[$import->table_name][$dedupColumn])) {
+            $dedupColumn = self::COLUMN_ALIASES[$import->table_name][$dedupColumn];
+        }
         $dedupImportIds = [];
 
         if (! $isAppend && $dedupColumn !== null && $dedupColumn !== '') {

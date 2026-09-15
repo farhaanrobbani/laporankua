@@ -71,8 +71,8 @@ new class extends Component
             $this->addError('file', 'File Excel tidak dapat dibaca. Pastikan file tidak rusak.');
         }
 
-        if (empty($this->dedupColumn) && in_array('Nomor Daftar', $this->headers)) {
-            $this->dedupColumn = 'Nomor Daftar';
+        if (empty($this->dedupColumn) && (in_array('Nomor Daftar', $this->headers) || in_array('No. Daftar', $this->headers))) {
+            $this->dedupColumn = 'No. Daftar';
         }
     }
 
