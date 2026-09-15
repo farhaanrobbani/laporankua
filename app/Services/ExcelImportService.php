@@ -139,8 +139,8 @@ class ExcelImportService
                     $dedupColForFallback = $import->dedup_column;
                     if ($dedupColForFallback !== null && $dedupColForFallback !== '') {
                         $appendExistingKeys = ImportData::where('import_id', $appendExistingImport->id)
-                            ->pluck('row_data')
-                            ->map(fn ($data) => $data[$dedupColForFallback] ?? null)
+                            ->get()
+                            ->map(fn ($model) => $model->row_data[$dedupColForFallback] ?? null)
                             ->filter(fn ($v) => $v !== null && trim((string) $v) !== '')
                             ->map(fn ($v) => (string) $v)
                             ->values()
