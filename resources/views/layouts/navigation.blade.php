@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false, dataOpen: false }" class="bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
@@ -18,33 +18,14 @@
                         <x-heroicon-o-arrow-up-tray class="w-4 h-4 me-1" />
                         {{ __('Import') }}
                     </x-nav-link>
-                    <div x-data="{ open: false }" class="relative inline-flex items-center" @click.outside="open = false" @close.stop="open = false">
-                        <button @click="open = ! open" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none {{ request()->routeIs('data.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <div class="relative inline-flex items-center" @click.away="dataOpen = false" @close.stop="dataOpen = false">
+                        <button @click="dataOpen = ! dataOpen" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none {{ request()->routeIs('data.*') ? 'border-indigo-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                             <x-heroicon-o-table-cells class="w-4 h-4 me-1" />
                             {{ __('Data') }}
                             <svg class="ms-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                             </svg>
                         </button>
-                        <div x-show="open"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1"
-                             style="display: none;"
-                             @click="open = false">
-                            <a href="{{ route('data.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('data.index') ? 'bg-gray-100' : '' }}">
-                                <x-heroicon-o-table-cells class="w-4 h-4" />
-                                {{ __('Data Import') }}
-                            </a>
-                            <a href="{{ route('data.pelaksanaan-kantor') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('data.pelaksanaan-kantor') ? 'bg-gray-100' : '' }}">
-                                <x-heroicon-o-building-office-2 class="w-4 h-4" />
-                                {{ __('Data Pelaksanaan Kantor') }}
-                            </a>
-                        </div>
                     </div>
                     <x-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
                         <x-heroicon-o-printer class="w-4 h-4 me-1" />
@@ -100,6 +81,28 @@
                     </svg>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div x-show="dataOpen"
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="opacity-0 -translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-75"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-1"
+         class="border-b border-gray-100 bg-gray-50"
+         style="display: none;"
+         @click="dataOpen = false">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2">
+            <a href="{{ route('data.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-white hover:shadow-sm rounded-md transition {{ request()->routeIs('data.index') ? 'bg-white shadow-sm font-medium' : '' }}">
+                <x-heroicon-o-table-cells class="w-4 h-4" />
+                {{ __('Data Import') }}
+            </a>
+            <a href="{{ route('data.pelaksanaan-kantor') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-white hover:shadow-sm rounded-md transition {{ request()->routeIs('data.pelaksanaan-kantor') ? 'bg-white shadow-sm font-medium' : '' }}">
+                <x-heroicon-o-building-office-2 class="w-4 h-4" />
+                {{ __('Data Pelaksanaan Kantor') }}
+            </a>
         </div>
     </div>
 
