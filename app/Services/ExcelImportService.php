@@ -117,10 +117,30 @@ class ExcelImportService
         $batch = [];
         $now = now()->toDateTimeString();
 
+        $isAppend = (bool) $import->is_append;
+        $appendExistingKeys = [];
+
+        if ($isAppend) {
+            $appendExistingImport = Import::where('user_id', $import->user_id)
+                ->where('file_name', $import->file_name)
+                ->where('id', '!=', $import->id)
+                ->latest()
+                ->first();
+
+            if ($appendExistingImport) {
+                $appendExistingKeys = ImportData::where('import_id', $appendExistingImport->id)
+                    ->whereNotNull('dedup_key_value')
+                    ->pluck('dedup_key_value')
+                    ->map(fn ($v) => (string) $v)
+                    ->values()
+                    ->all();
+            }
+        }
+
         $dedupColumn = $import->dedup_column;
         $dedupImportIds = [];
 
-        if ($dedupColumn !== null && $dedupColumn !== '') {
+        if (! $isAppend && $dedupColumn !== null && $dedupColumn !== '') {
             $dedupImportIds = Import::where('user_id', $import->user_id)
                 ->where('dedup_column', $dedupColumn)
                 ->where('id', '!=', $import->id)
@@ -128,7 +148,7 @@ class ExcelImportService
                 ->toArray();
         }
 
-        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $dedupColumn, $dedupImportIds, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
+        DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $isAppend, $appendExistingKeys, $dedupColumn, $dedupImportIds, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {
             foreach ($rawRows as $index => $row) {
                 $excelRow = $index + 2;
 
@@ -153,7 +173,17 @@ class ExcelImportService
                     }
                 }
 
-                if ($dedupKeyValue !== null && $dedupImportIds !== []) {
+                // Mode append: skip baris yang sudah ada di import existing
+                if ($isAppend && $dedupKeyValue !== null && $appendExistingKeys !== []) {
+                    if (in_array((string) $dedupKeyValue, $appendExistingKeys)) {
+                        $skipped++;
+
+                        continue;
+                    }
+                }
+
+                // Mode normal: overwrite baris yang sama di import lain
+                if (! $isAppend && $dedupKeyValue !== null && $dedupImportIds !== []) {
                     $existing = ImportData::where('dedup_key_value', $dedupKeyValue)
                         ->whereIn('import_id', $dedupImportIds)
                         ->first();
@@ -192,7 +222,7 @@ class ExcelImportService
             }
 
             $import->update([
-                'status' => 'success',
+                'status' => $isAppend ? 'appended' : 'success',
                 'total_rows' => $totalRows,
                 'imported_rows' => $imported,
                 'failed_rows' => $failed,

@@ -38,6 +38,8 @@ new class extends Component
 
     public ?string $defaultSortColumn = null;
 
+    public bool $isAppend = false;
+
     public function updatedFile(ExcelImportService $service): void
     {
         $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'defaultSortColumn']);
@@ -51,6 +53,17 @@ new class extends Component
         $this->fileSize = $this->file->getSize();
         $this->tmpPath = $this->file->store('tmp/imports');
         $this->tableName = Import::parseTableName($this->originalName);
+
+        $existingImport = Import::where('user_id', auth()->id())
+            ->where('file_name', $this->originalName)
+            ->latest()
+            ->first();
+
+        $this->isAppend = $existingImport !== null;
+
+        if ($this->isAppend && empty($this->dedupColumn)) {
+            $this->dedupColumn = 'Nomor Daftar';
+        }
 
         try {
             $absolute = Storage::disk('local')->path($this->tmpPath);
@@ -98,6 +111,7 @@ new class extends Component
             'user_id' => auth()->id(),
             'file_name' => (string) $this->originalName,
             'table_name' => $this->tableName,
+            'is_append' => $this->isAppend,
             'default_sort_column' => $this->defaultSortColumn,
             'default_sort_direction' => $this->defaultSortColumn ? 'desc' : null,
             'file_path' => $permanentPath,
@@ -162,6 +176,12 @@ new class extends Component
             @if ($tableName)
                 <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                     <p class="text-sm font-medium text-blue-800">Tabel: <span class="font-semibold">{{ $tableName }}</span></p>
+                </div>
+            @endif
+
+            @if ($isAppend)
+                <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
+                    <p class="text-sm font-medium text-amber-800">File dengan nama sama terdeteksi. Baris baru (Nomor Daftar belum ada) akan ditambahkan. Status: <span class="font-semibold">Append</span></p>
                 </div>
             @endif
 

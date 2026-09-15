@@ -15,6 +15,7 @@ class Import extends Model
         'user_id',
         'file_name',
         'table_name',
+        'is_append',
         'default_sort_column',
         'default_sort_direction',
         'file_path',
