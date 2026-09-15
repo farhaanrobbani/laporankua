@@ -42,7 +42,7 @@ new class extends Component
 
     public function updatedFile(ExcelImportService $service): void
     {
-        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'defaultSortColumn']);
+        $this->reset(['tmpPath', 'originalName', 'sheet', 'sheets', 'headers', 'rows', 'total', 'tableName', 'defaultSortColumn', 'dedupColumn']);
         $this->fileSize = 0;
 
         $this->validate([
@@ -61,10 +61,6 @@ new class extends Component
 
         $this->isAppend = $existingImport !== null;
 
-        if ($this->isAppend && empty($this->dedupColumn)) {
-            $this->dedupColumn = 'Nomor Daftar';
-        }
-
         try {
             $absolute = Storage::disk('local')->path($this->tmpPath);
             $this->sheets = $service->getSheetNames($absolute);
@@ -73,6 +69,10 @@ new class extends Component
         } catch (\Throwable $e) {
             report($e);
             $this->addError('file', 'File Excel tidak dapat dibaca. Pastikan file tidak rusak.');
+        }
+
+        if (empty($this->dedupColumn) && in_array('Nomor Daftar', $this->headers)) {
+            $this->dedupColumn = 'Nomor Daftar';
         }
     }
 
