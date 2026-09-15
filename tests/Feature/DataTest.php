@@ -31,7 +31,7 @@ class DataTest extends TestCase
 
     public function test_guest_tidak_bisa_akses_data(): void
     {
-        $this->get('/data')->assertRedirect('/login');
+        $this->get('/data/data-import')->assertRedirect('/login');
         $this->get('/data/export')->assertRedirect('/login');
     }
 
@@ -40,7 +40,7 @@ class DataTest extends TestCase
         $user = User::factory()->create();
         $import = $this->importWithRows($user);
 
-        $response = $this->actingAs($user)->get('/data?import_id='.$import->id);
+        $response = $this->actingAs($user)->get('/data/data-import?import_id='.$import->id);
 
         $response->assertOk();
         $response->assertSee('Budi');
@@ -58,10 +58,10 @@ class DataTest extends TestCase
         $recordB = $importB->importData()->first();
 
         // Picker tidak menampilkan import user lain
-        $this->actingAs($userA)->get('/data')->assertOk()->assertDontSee('data_rahasia_user_b');
+        $this->actingAs($userA)->get('/data/data-import')->assertOk()->assertDontSee('data_rahasia_user_b');
 
         // Akses langsung import user lain → 404
-        $this->actingAs($userA)->get('/data?import_id='.$importB->id)->assertNotFound();
+        $this->actingAs($userA)->get('/data/data-import?import_id='.$importB->id)->assertNotFound();
 
         // Detail record user lain → 403
         $this->actingAs($userA)->get('/data/'.$recordB->id)->assertForbidden();

@@ -22,7 +22,7 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/imports/{import}/data', [ImportController::class, 'data'])->name('imports.data');
     Route::delete('/imports/{import}', [ImportController::class, 'destroy'])->name('imports.destroy');
 
-    Route::get('/data', [DataController::class, 'index'])->name('data.index');
+    Route::get('/data/data-import', [DataController::class, 'index'])->name('data.index');
     Route::get('/data/pelaksanaan-kantor', [DataController::class, 'pelaksanaanKantor'])->name('data.pelaksanaan-kantor');
     Route::get('/data/pelaksanaan-luar-kantor', [DataController::class, 'pelaksanaanLuarKantor'])->name('data.pelaksanaan-luar-kantor');
     Route::get('/data/export', [DataController::class, 'export'])->name('data.export');

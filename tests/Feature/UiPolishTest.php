@@ -61,6 +61,6 @@ class UiPolishTest extends TestCase
         $import = Import::factory()->for($user)->create(['status' => 'success']);
         ImportData::factory()->for($import)->create();
 
-        $this->actingAs($user)->get('/data?import_id='.$import->id)->assertOk();
+        $this->actingAs($user)->get('/data/data-import?import_id='.$import->id)->assertOk();
     }
 }

@@ -65,7 +65,7 @@ class PerformanceTest extends TestCase
         ImportData::factory()->for($import)->count(30)->create();
 
         $queries = $this->countQueries(function () use ($user, $import) {
-            $this->actingAs($user)->get('/data?import_id='.$import->id)->assertOk();
+            $this->actingAs($user)->get('/data/data-import?import_id='.$import->id)->assertOk();
         });
 
         // availableColumns (1) + paginate data (1) + count (1) + picker + auth/sesi.
