@@ -29,8 +29,8 @@
                             :join-column="'Nomor Daftar'"
                             :filter-column="'Tempat Nikah'"
                             :filter-value="'balai nikah'"
-                            :filter-mode="'contains'"
-                            :key="'pelaksanaan-kantor'"
+                            :filter-mode="'not_contains'"
+                            :key="'pelaksanaan-luar-kantor'"
                         />
                     @endif
                 </div>

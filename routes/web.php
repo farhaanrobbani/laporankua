@@ -24,6 +24,7 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
 
     Route::get('/data', [DataController::class, 'index'])->name('data.index');
     Route::get('/data/pelaksanaan-kantor', [DataController::class, 'pelaksanaanKantor'])->name('data.pelaksanaan-kantor');
+    Route::get('/data/pelaksanaan-luar-kantor', [DataController::class, 'pelaksanaanLuarKantor'])->name('data.pelaksanaan-luar-kantor');
     Route::get('/data/export', [DataController::class, 'export'])->name('data.export');
     Route::get('/data/cetak-nb', [DataController::class, 'cetakNb'])->name('data.cetak-nb');
     Route::get('/data/{record}', [DataController::class, 'show'])->name('data.show');

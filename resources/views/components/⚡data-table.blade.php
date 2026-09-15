@@ -28,6 +28,8 @@ new class extends Component
 
     public string $filterValue = '';
 
+    public string $filterMode = 'contains';
+
     public string $sortColumn = 'row_number';
 
     public string $sortDirection = 'asc';
@@ -39,7 +41,7 @@ new class extends Component
     /** @var int[] */
     public array $selected = [];
 
-    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null): void
+    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null, ?string $filterMode = null): void
     {
         if ($importIds !== null && count($importIds) >= 2 && $joinColumn !== null && $joinColumn !== '') {
             $this->isMergeMode = true;
@@ -67,6 +69,9 @@ new class extends Component
         }
         if ($filterValue !== null) {
             $this->filterValue = $filterValue;
+        }
+        if ($filterMode !== null) {
+            $this->filterMode = $filterMode;
         }
     }
 
@@ -204,8 +209,13 @@ new class extends Component
         if ($this->filterColumn !== '' && $this->filterValue !== '') {
             $lowerFilter = mb_strtolower($this->filterValue);
             $filterCol = $this->filterColumn;
-            $rows = array_filter($rows, function ($row) use ($filterCol, $lowerFilter) {
+            $filterMode = $this->filterMode;
+            $rows = array_filter($rows, function ($row) use ($filterCol, $lowerFilter, $filterMode) {
                 $val = $row[$filterCol] ?? null;
+
+                if ($filterMode === 'not_contains') {
+                    return $val === null || mb_strpos(mb_strtolower((string) $val), $lowerFilter) === false;
+                }
 
                 return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
             });
