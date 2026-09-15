@@ -45,7 +45,7 @@ new class extends Component
             $this->isMergeMode = true;
             $this->importIds = $importIds;
             $this->joinColumn = $joinColumn;
-            $this->columns = app(MergeService::class)->getAllColumns($importIds);
+            $this->columns = array_values(array_filter(app(MergeService::class)->getAllColumns($importIds), fn ($col) => $col !== 'No'));
             $this->sortColumn = $joinColumn;
         } elseif ($importIds !== null && count($importIds) >= 1) {
             $this->isMergeMode = true;
