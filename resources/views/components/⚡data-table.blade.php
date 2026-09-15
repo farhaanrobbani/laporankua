@@ -39,7 +39,7 @@ new class extends Component
     /** @var int[] */
     public array $selected = [];
 
-    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null): void
+    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null): void
     {
         if ($importIds !== null && count($importIds) >= 2 && $joinColumn !== null && $joinColumn !== '') {
             $this->isMergeMode = true;
@@ -60,6 +60,13 @@ new class extends Component
                 $this->sortColumn = $import->default_sort_column;
                 $this->sortDirection = $import->default_sort_direction ?? 'asc';
             }
+        }
+
+        if ($filterColumn !== null) {
+            $this->filterColumn = $filterColumn;
+        }
+        if ($filterValue !== null) {
+            $this->filterValue = $filterValue;
         }
     }
 

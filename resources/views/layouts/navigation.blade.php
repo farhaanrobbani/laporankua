@@ -18,10 +18,23 @@
                         <x-heroicon-o-arrow-up-tray class="w-4 h-4 me-1" />
                         {{ __('Import') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('data.index')" :active="request()->routeIs('data.*')">
-                        <x-heroicon-o-table-cells class="w-4 h-4 me-1" />
-                        {{ __('Data') }}
-                    </x-nav-link>
+                    <div x-data="{ open: false }" class="relative" @click.away="open = false">
+                        <button @click="open = ! open" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none {{ request()->routeIs('data.*') ? 'border-blue-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            <x-heroicon-o-table-cells class="w-4 h-4 me-1" />
+                            {{ __('Data') }}
+                            <svg class="ms-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="absolute z-50 mt-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1" style="display: none;">
+                            <a href="{{ route('data.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('data.index') ? 'bg-gray-100' : '' }}">
+                                {{ __('Data Import') }}
+                            </a>
+                            <a href="{{ route('data.pelaksanaan-kantor') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('data.pelaksanaan-kantor') ? 'bg-gray-100' : '' }}">
+                                {{ __('Data Pelaksanaan Kantor') }}
+                            </a>
+                        </div>
+                    </div>
                     <x-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
                         <x-heroicon-o-printer class="w-4 h-4 me-1" />
                         {{ __('Cetak NB') }}
@@ -87,8 +100,11 @@
             <x-responsive-nav-link :href="route('imports.index')" :active="request()->routeIs('imports.*')">
                 {{ __('Import') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('data.index')" :active="request()->routeIs('data.*')">
-                {{ __('Data') }}
+            <x-responsive-nav-link :href="route('data.index')" :active="request()->routeIs('data.index')">
+                {{ __('Data Import') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('data.pelaksanaan-kantor')" :active="request()->routeIs('data.pelaksanaan-kantor')">
+                {{ __('Data Pelaksanaan Kantor') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
                 {{ __('Cetak NB') }}

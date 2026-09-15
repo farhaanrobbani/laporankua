@@ -41,6 +41,17 @@ class DataController extends Controller
         return view('data.index', compact('grouped', 'selectedGroup'));
     }
 
+    public function pelaksanaanKantor(): View
+    {
+        $imports = Import::where('user_id', auth()->id())
+            ->whereIn('table_name', ['laporan peristiwa nikah', 'laporan pendaftaran nikah'])
+            ->get();
+
+        $importIds = $imports->pluck('id')->toArray();
+
+        return view('data.pelaksanaan-kantor', compact('importIds'));
+    }
+
     public function show(ImportData $record): View
     {
         $this->authorize('view', $record->import);
