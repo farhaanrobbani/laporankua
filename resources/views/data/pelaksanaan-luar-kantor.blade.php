@@ -27,9 +27,9 @@
                         <livewire:data-table
                             :import-ids="$importIds"
                             :join-column="'Nomor Daftar'"
-                            :filter-column="'Tempat Nikah'"
-                            :filter-value="'balai nikah'"
-                            :filter-mode="'not_contains'"
+                            :filter-column="'Nikah Di'"
+                            :filter-value="'BEDOL'"
+                            :filter-mode="'contains'"
                             :key="'pelaksanaan-luar-kantor'"
                         />
                     @endif
