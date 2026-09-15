@@ -21,8 +21,8 @@
             <x-toast />
 
             @isset($header)
-                <header class="bg-white border-b border-gray-200 h-16">
-                    <div class="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center">
+                <header class="bg-white border-b border-gray-200 h-16 flex items-center">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                         {{ $header }}
                     </div>
                 </header>
