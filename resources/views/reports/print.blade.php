@@ -16,11 +16,6 @@
         @media screen {
             .print-sheet { max-width: 210mm; margin: 1.5rem auto; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 15mm; }
         }
-        .kop-dengan-logo { width: 100%; border-collapse: collapse; }
-        .kop-dengan-logo td { vertical-align: middle; }
-        .kop-dengan-logo .logo { width: 100px; text-align: right; }
-        .kop-dengan-logo .logo img { width: 90px; height: auto; }
-        .kop-dengan-logo .teks { text-align: center; padding-left: 6px; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900" style="font-family: Arial, sans-serif;">
@@ -106,12 +101,12 @@
             <div class="mb-0">
                 @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
                     @if (! empty($dataset['logo_kantor']))
-                        <table class="kop-dengan-logo mb-1" cellpadding="0" cellspacing="0" border="0">
+                        <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
                             <tr>
-                                <td class="logo">
-                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" />
+                                <td class="align-top pr-1" style="width: 80px;">
+                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="margin-left: 64px; max-height: 80px; max-width: 80px;" />
                                 </td>
-                                <td class="teks">
+                                <td class="text-center">
                                     <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
                                     @if (! empty($dataset['nama_kantor_kota']))
                                         <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
