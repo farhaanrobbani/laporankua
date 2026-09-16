@@ -59,6 +59,19 @@
                     };
                     $aggCols = $collectAggCols($columns);
 
+                    $l2Title = 'LAPORAN';
+                    foreach ($aggCols as $col) {
+                        $field = $col['field'] ?? '';
+                        if (str_contains($field, 'Pendidikan')) {
+                            $l2Title = 'LAPORAN PENDIDIKAN PENGANTIN';
+                            break;
+                        }
+                        if (str_contains($field, 'Usia')) {
+                            $l2Title = 'LAPORAN USIA PENGANTIN';
+                            break;
+                        }
+                    }
+
                     // Build aggregated rows
                     $staticValues = $dataset['daftar_desa'] ?? $layout['aggregation']['static_values'] ?? null;
                     $groupNames = $staticValues ?? array_keys($grouped);
@@ -194,7 +207,7 @@
                     <div class="flex items-start mb-3">
                         <span style="font-size: 21px; font-weight: bold;">L2</span>
                         <div class="text-center flex-1">
-                            <h1 class="font-bold uppercase" style="font-size: 14px;">{{ strtoupper($dataset['title'] ?? 'LAPORAN') }}</h1>
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">{{ $l2Title }}</h1>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
