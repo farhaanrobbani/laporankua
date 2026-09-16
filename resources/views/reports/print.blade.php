@@ -91,6 +91,17 @@
                         $aggRows[] = $aggRow;
                     }
                     $dataset['rows'] = $aggRows;
+
+                    // Hitung total row untuk laporan L2
+                    $totalRow = [$groupBy => 'Jumlah'];
+                    foreach ($aggCols as $col) {
+                        $key = $col['_key'];
+                        $sum = 0;
+                        foreach ($aggRows as $r) {
+                            $sum += (int) ($r[$key] ?? 0);
+                        }
+                        $totalRow[$key] = $sum;
+                    }
                 }
 
                 $applyTransform = function ($value, $transform) {
@@ -351,6 +362,41 @@
                             @endforeach
                         </tr>
                     @endforeach
+                    @if ($isL2Report)
+                        <tr style="font-weight: bold;">
+                            @foreach ($columns as $col)
+                                @if ($col['type'] === 'row_number')
+                                    <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                @elseif ($col['type'] === 'group')
+                                    @foreach ($col['children'] ?? [] as $child)
+                                        @if ($child['type'] === 'group')
+                                            @foreach ($child['children'] ?? [] as $grandchild)
+                                                @php
+                                                    $compositeKey = ($child['label'] ?? '') . '|' . ($grandchild['label'] ?? '');
+                                                    $value = $totalRow[$compositeKey] ?? 0;
+                                                @endphp
+                                                <td @if(!empty($grandchild['width']))style="max-width:{{ $grandchild['width'] }};width:{{ $grandchild['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                            @endforeach
+                                        @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total')
+                                            @php
+                                                $value = $totalRow[$child['label']] ?? 0;
+                                            @endphp
+                                            <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                        @else
+                                            <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                        @endif
+                                    @endforeach
+                                @elseif ($col['type'] === 'field')
+                                    <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
+                                @elseif ($col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count')
+                                    @php
+                                        $value = $totalRow[$col['label']] ?? 0;
+                                    @endphp
+                                    <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                @endif
+                            @endforeach
+                        </tr>
+                    @endif
                 </tbody>
             </table>
 
