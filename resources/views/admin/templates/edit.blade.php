@@ -42,6 +42,12 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-gray-700">Daftar Desa (opsional, satu per baris)</label>
+                <textarea name="static_values" rows="6" class="mt-1 border-gray-300 rounded-md text-sm w-full font-mono text-xs" placeholder="ARGOYUWONO&#10;LEBAKHARJO&#10;MULYOASRI">{{ old('static_values', !empty($template->layout_json['aggregation']['static_values']) ? implode("\n", $template->layout_json['aggregation']['static_values']) : '') }}</textarea>
+                <p class="mt-1 text-xs text-gray-400">Daftar desa yang selalu tampil di laporan agregasi, meskipun tidak ada data pernikahan di bulan tersebut.</p>
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium text-gray-700">Contoh kolom dari file (opsional, untuk memilih kolom)</label>
                 <select onchange="window.location.href='{{ route('admin.templates.edit', $template) }}?source_import_id='+this.value" class="mt-1 border-gray-300 rounded-md text-sm w-full sm:w-auto">
                     <option value="">-- Pilih file --</option>

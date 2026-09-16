@@ -58,8 +58,13 @@
                     $aggCols = $collectAggCols($columns);
 
                     // Build aggregated rows
+                    $staticValues = $layout['aggregation']['static_values'] ?? null;
+                    $groupNames = $staticValues ?? array_keys($grouped);
+                    sort($groupNames);
+
                     $aggRows = [];
-                    foreach ($grouped as $groupName => $rows) {
+                    foreach ($groupNames as $groupName) {
+                        $rows = $grouped[$groupName] ?? [];
                         $aggRow = [$groupBy => $groupName];
                         foreach ($aggCols as $col) {
                             if ($col['type'] === 'aggregate_total') {
