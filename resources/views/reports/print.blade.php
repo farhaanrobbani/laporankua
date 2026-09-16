@@ -30,6 +30,61 @@
                 $layout = $dataset['table_layout'];
                 $columns = $layout['columns'] ?? [];
 
+                // Aggregation: group data if configured
+                if (! empty($layout['aggregation'])) {
+                    $groupBy = $layout['aggregation']['group_by'];
+                    $grouped = [];
+                    foreach ($dataset['rows'] as $row) {
+                        $key = $row[$groupBy] ?? 'Lainnya';
+                        if (! isset($grouped[$key])) {
+                            $grouped[$key] = [];
+                        }
+                        $grouped[$key][] = $row;
+                    }
+
+                    // Collect aggregate columns from layout (recursively)
+                    $collectAggCols = function ($cols) use (&$collectAggCols) {
+                        $result = [];
+                        foreach ($cols as $col) {
+                            if ($col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_total') {
+                                $result[] = $col;
+                            }
+                            if (isset($col['children'])) {
+                                $result = array_merge($result, $collectAggCols($col['children']));
+                            }
+                        }
+                        return $result;
+                    };
+                    $aggCols = $collectAggCols($columns);
+
+                    // Build aggregated rows
+                    $aggRows = [];
+                    foreach ($grouped as $groupName => $rows) {
+                        $aggRow = [$groupBy => $groupName];
+                        foreach ($aggCols as $col) {
+                            if ($col['type'] === 'aggregate_total') {
+                                $aggRow[$col['label']] = count($rows);
+                            } elseif ($col['type'] === 'aggregate_count') {
+                                $count = 0;
+                                $field = $col['field'] ?? '';
+                                $matchList = $col['match'] ?? [];
+                                foreach ($rows as $row) {
+                                    $val = mb_strtolower((string) ($row[$field] ?? ''));
+                                    foreach ($matchList as $m) {
+                                        if (str_contains($val, mb_strtolower($m))) {
+                                            $count++;
+                                            break;
+                                        }
+                                    }
+                                }
+                                $aggRow[$col['label']] = $count;
+                            }
+                        }
+                        $aggRows[] = $aggRow;
+                    }
+                    $dataset['rows'] = $aggRows;
+                }
+
                 $applyTransform = function ($value, $transform) {
                     if ($transform === 'klinik_balai_nikah') {
                         $lower = mb_strtolower((string) $value);
@@ -178,7 +233,7 @@
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
                         @elseif ($col['type'] === 'group')
                             <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
-                        @elseif ($col['type'] === 'field')
+                        @elseif ($col['type'] === 'field' || $col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count')
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
                         @endif
                     @endforeach
@@ -187,11 +242,44 @@
                     @foreach ($columns as $col)
                         @if ($col['type'] === 'group')
                             @foreach ($col['children'] ?? [] as $child)
-                                <th @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $child['label'] ?? $child['field'] ?? '' }}</th>
+                                @if ($child['type'] === 'group')
+                                    <th colspan="{{ $child['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $child['label'] ?? '' }}</th>
+                                @else
+                                    <th @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $child['label'] ?? $child['field'] ?? '' }}</th>
+                                @endif
                             @endforeach
                         @endif
                     @endforeach
                     </tr>
+                    @php
+                        // Third header row: render children of nested groups
+                        $hasNestedGroups = false;
+                        foreach ($columns as $col) {
+                            if ($col['type'] === 'group') {
+                                foreach ($col['children'] ?? [] as $child) {
+                                    if ($child['type'] === 'group') {
+                                        $hasNestedGroups = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    @endphp
+                    @if ($hasNestedGroups)
+                    <tr class="bg-gray-100">
+                        @foreach ($columns as $col)
+                            @if ($col['type'] === 'group')
+                                @foreach ($col['children'] ?? [] as $child)
+                                    @if ($child['type'] === 'group')
+                                        @foreach ($child['children'] ?? [] as $grandchild)
+                                            <th @if(!empty($grandchild['width']))style="max-width:{{ $grandchild['width'] }};width:{{ $grandchild['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $grandchild['label'] ?? $grandchild['field'] ?? '' }}</th>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                            @endif
+                        @endforeach
+                    </tr>
+                    @endif
                 </thead>
                 <tbody style="font-size: 11px;">
                     @foreach ($dataset['rows'] as $rowIndex => $row)
@@ -201,14 +289,28 @@
                                     <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $rowIndex + 1 }}</td>
                                 @elseif ($col['type'] === 'group')
                                     @foreach ($col['children'] ?? [] as $child)
-                                        @php
-                                            $cellData = $getDataCells($child);
-                                            $value = $row[$cellData[0]] ?? '';
-                                            if ($cellData[1] !== null) {
-                                                $value = $applyTransform($value, $cellData[1]);
-                                            }
-                                        @endphp
-                                        <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 @if(($child['align'] ?? '') === 'center')text-center @endif">{{ $value }}</td>
+                                        @if ($child['type'] === 'group')
+                                            @foreach ($child['children'] ?? [] as $grandchild)
+                                                @php
+                                                    $value = $row[$grandchild['label']] ?? $row[$grandchild['field'] ?? ''] ?? '';
+                                                @endphp
+                                                <td @if(!empty($grandchild['width']))style="max-width:{{ $grandchild['width'] }};width:{{ $grandchild['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                            @endforeach
+                                        @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total')
+                                            @php
+                                                $value = $row[$child['label']] ?? '';
+                                            @endphp
+                                            <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                        @else
+                                            @php
+                                                $cellData = $getDataCells($child);
+                                                $value = $row[$cellData[0]] ?? '';
+                                                if ($cellData[1] !== null) {
+                                                    $value = $applyTransform($value, $cellData[1]);
+                                                }
+                                            @endphp
+                                            <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 @if(($child['align'] ?? '') === 'center')text-center @endif">{{ $value }}</td>
+                                        @endif
                                     @endforeach
                                 @elseif ($col['type'] === 'field')
                                     @php
@@ -217,6 +319,11 @@
                                         if ($cellData[1] !== null) {
                                             $value = $applyTransform($value, $cellData[1]);
                                         }
+                                    @endphp
+                                    <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
+                                @elseif ($col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count')
+                                    @php
+                                        $value = $row[$col['label']] ?? '';
                                     @endphp
                                     <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                 @endif
