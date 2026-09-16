@@ -164,10 +164,13 @@
 
             <div class="mb-0">
                 @if ($isL2Report)
-                    <div class="text-center mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN PENDIDIKAN PENGANTIN</h1>
-                        <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
-                        <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                    <div class="mb-3" style="position: relative;">
+                        <span style="font-size: 21px; font-weight: bold;">L2</span>
+                        <div class="text-center" style="position: absolute; left: 0; right: 0; top: 0;">
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN PENDIDIKAN PENGANTIN</h1>
+                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                        </div>
                     </div>
                 @else
                     @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
