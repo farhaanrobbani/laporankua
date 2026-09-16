@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Cetak NB') }}
             </h2>
         </div>
@@ -9,15 +9,15 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     @if ($grouped->isEmpty())
                         <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <form method="GET" action="{{ route('cetak-nb.index') }}" class="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center">
-                            <label class="text-sm text-gray-700">
+                            <label class="text-sm text-gray-700 dark:text-gray-300">
                                 Sumber data:
-                                <select name="import_id" onchange="this.form.submit()" class="ml-2 border-gray-300 rounded-md text-sm">
+                                <select name="import_id" onchange="this.form.submit()" class="ml-2 border-gray-300 dark:border-gray-600 rounded-md text-sm">
                                     <option value="">-- Pilih file import --</option>
                                     @foreach ($grouped as $group)
                                         <option value="{{ $group['import_ids'][0] }}" @selected($selectedGroup && $selectedGroup['table_name'] === $group['table_name'])>

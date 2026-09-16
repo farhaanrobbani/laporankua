@@ -151,21 +151,21 @@ new class extends Component
 ?>
 
 <div>
-    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500">
-        <p class="text-lg font-medium text-gray-700">Drag &amp; drop atau pilih file Excel</p>
-        <p class="text-sm text-gray-500 mt-1">Didukung: .xlsx, .xls &middot; Maks: 10MB</p>
-        <input type="file" wire:model="file" accept=".xlsx,.xls" class="mt-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
-        <div wire:loading wire:target="file" class="mt-2 text-sm text-blue-600">Mengupload &amp; membaca file...</div>
-        @error('file') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-blue-500">
+        <p class="text-lg font-medium text-gray-700 dark:text-gray-300">Drag &amp; drop atau pilih file Excel</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Didukung: .xlsx, .xls &middot; Maks: 10MB</p>
+        <input type="file" wire:model="file" accept=".xlsx,.xls" class="mt-4 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
+        <div wire:loading wire:target="file" class="mt-2 text-sm text-blue-600 dark:text-blue-400">Mengupload &amp; membaca file...</div>
+        @error('file') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
     </div>
 
     @if ($tmpPath && empty($sheets) === false)
-        <div class="mt-6 bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+        <div class="mt-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                <p class="text-sm text-gray-700"><span class="font-semibold">{{ $originalName }}</span> ({{ number_format($fileSize / 1024, 1) }} KB)</p>
-                <label class="text-sm text-gray-700 sm:ml-auto">
+                <p class="text-sm text-gray-700 dark:text-gray-300"><span class="font-semibold">{{ $originalName }}</span> ({{ number_format($fileSize / 1024, 1) }} KB)</p>
+                <label class="text-sm text-gray-700 dark:text-gray-300 sm:ml-auto">
                     Sheet:
-                    <select wire:model.live="sheet" class="ml-2 border-gray-300 rounded-md text-sm">
+                    <select wire:model.live="sheet" class="ml-2 border-gray-300 dark:border-gray-600 rounded-md text-sm">
                         @foreach ($sheets as $name)
                             <option value="{{ $name }}">{{ $name }}</option>
                         @endforeach
@@ -174,22 +174,22 @@ new class extends Component
             </div>
 
             @if ($tableName)
-                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                    <p class="text-sm font-medium text-blue-800">Tabel: <span class="font-semibold">{{ $tableName }}</span></p>
+                <div class="bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-md p-4">
+                    <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Tabel: <span class="font-semibold">{{ $tableName }}</span></p>
                 </div>
             @endif
 
             @if ($isAppend)
-                <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
-                    <p class="text-sm font-medium text-amber-800">File dengan nama sama terdeteksi. Baris baru (Nomor Daftar belum ada) akan ditambahkan. Status: <span class="font-semibold">Append</span></p>
+                <div class="bg-amber-50 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-700 rounded-md p-4">
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">File dengan nama sama terdeteksi. Baris baru (Nomor Daftar belum ada) akan ditambahkan. Status: <span class="font-semibold">Append</span></p>
                 </div>
             @endif
 
             @if (! empty($headers))
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <label class="text-sm text-gray-700">
+                    <label class="text-sm text-gray-700 dark:text-gray-300">
                         Deduplikasi kolom:
-                        <select wire:model.live="dedupColumn" class="ml-2 border-gray-300 rounded-md text-sm">
+                        <select wire:model.live="dedupColumn" class="ml-2 border-gray-300 dark:border-gray-600 rounded-md text-sm">
                             <option value="">Tidak ada</option>
                             @foreach ($headers as $header)
                                 <option value="{{ $header }}">{{ $header }}</option>
@@ -197,32 +197,32 @@ new class extends Component
                         </select>
                     </label>
                     @if ($dedupColumn !== '')
-                        <p class="text-xs text-amber-600">
+                        <p class="text-xs text-amber-600 dark:text-amber-400">
                             Baris dengan {{ $dedupColumn }} yang sama di import lain akan otomatis ter-update.
                         </p>
                     @endif
                 </div>
             @endif
 
-            <p class="text-sm text-gray-500">Pratinjau {{ count($rows) }} dari {{ number_format($total) }} baris data.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Pratinjau {{ count($rows) }} dari {{ number_format($total) }} baris data.</p>
 
             @if (empty($headers))
-                <p class="text-sm text-red-600">Sheet ini tidak memiliki data.</p>
+                <p class="text-sm text-red-600 dark:text-red-400">Sheet ini tidak memiliki data.</p>
             @else
-                <div class="overflow-x-auto border border-gray-200 rounded-md">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
                                 @foreach ($headers as $header)
-                                    <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{{ $header }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ $header }}</th>
                                 @endforeach
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach ($rows as $row)
                                 <tr>
                                     @foreach ($headers as $i => $header)
-                                        <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row[$i] ?? '' }}</td>
+                                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $row[$i] ?? '' }}</td>
                                     @endforeach
                                 </tr>
                             @endforeach

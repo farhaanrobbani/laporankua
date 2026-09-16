@@ -549,18 +549,18 @@ new class extends Component
 
 <div class="space-y-6">
     {{-- 1. Sumber data --}}
-    <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 class="font-semibold text-gray-900 mb-1">1. Sumber Data</h3>
-        <p class="text-sm text-gray-500 mb-3">Pilih file import yang akan dijadikan laporan.</p>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">1. Sumber Data</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Pilih file import yang akan dijadikan laporan.</p>
 
         {{-- Mode Toggle --}}
-        <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-4">
+        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit mb-4">
             <button type="button" wire:click="$set('isMergeMode', false)"
-                class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
+                class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 Single Import
             </button>
             <button type="button" wire:click="$set('isMergeMode', true)"
-                class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
+                class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 Gabung Data
             </button>
         </div>
@@ -568,25 +568,25 @@ new class extends Component
         @if ($this->isMergeMode)
             {{-- Merge Mode --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih file import (minimal 2)</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih file import (minimal 2)</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     @foreach ($this->imports as $import)
                         @php $allChecked = count(array_intersect($import['import_ids'], $this->mergeImportIds)) === count($import['import_ids']); @endphp
-                        <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
-                            <input type="checkbox" wire:click="toggleImportGroup({{ json_encode($import['import_ids']) }})" @checked($allChecked) class="rounded text-blue-600" />
+                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500">
+                            <input type="checkbox" wire:click="toggleImportGroup({{ json_encode($import['import_ids']) }})" @checked($allChecked) class="rounded text-blue-600 dark:text-blue-400" />
                             {{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)
                         </label>
                     @endforeach
                 </div>
 
                 @if (count($this->mergeImportIds) >= 2)
-                    <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                        <p class="text-sm text-blue-700">
+                    <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-md">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
                             <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
                             Bergabung otomatis berdasarkan kolom: <strong>{{ implode(' + ', $this->autoJoinColumns) }}</strong>
                         </p>
                         @if (empty($this->autoJoinColumns))
-                            <p class="text-xs text-amber-600 mt-1">Tidak ada kolom yang sama antara file yang dipilih.</p>
+                            <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Tidak ada kolom yang sama antara file yang dipilih.</p>
                         @endif
                     </div>
                 @endif
@@ -594,10 +594,10 @@ new class extends Component
         @else
             {{-- Single Mode --}}
             @if (empty($this->imports))
-                <p class="text-sm text-gray-500">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 font-medium">Upload Excel dulu</a>.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 dark:text-blue-400 font-medium">Upload Excel dulu</a>.</p>
             @else
                 <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
-                    <select wire:model.live="importId" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                    <select wire:model.live="importId" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-auto">
                         <option value="">-- Pilih file import --</option>
                         @foreach ($this->imports as $import)
                             <option value="{{ $import['id'] }}">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)</option>
@@ -608,58 +608,58 @@ new class extends Component
         @endif
         @if (! empty($this->globalTemplates))
             <div class="mt-3 flex items-center gap-3">
-                <select wire:model.live="selectedTemplateId" wire:change="applySelectedTemplate" class="border-gray-300 rounded-md text-sm w-full sm:w-auto">
+                <select wire:model.live="selectedTemplateId" wire:change="applySelectedTemplate" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-auto">
                     <option value="">-- Pilih Template --</option>
                     @foreach ($this->globalTemplates as $tpl)
                         <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }} ({{ strtoupper($tpl['output_format']) }})</option>
                     @endforeach
                 </select>
                 @if ($this->hasDefaultTemplate)
-                    <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 hover:text-purple-800 font-medium">Muat template default</button>
+                    <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium">Muat template default</button>
                 @endif
             </div>
         @endif
-        @error('importId') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+        @error('importId') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
     </div>
 
     @if (($this->isMergeMode && count($this->mergeImportIds) >= 2 && ! empty($this->autoJoinColumns)) || (! $this->isMergeMode && $this->importId && ! empty($this->columns)))
         {{-- 2. Filter & Urutan --}}
-        <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">2. Filter &amp; Urutan</h3>
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">2. Filter &amp; Urutan</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari..." class="border-gray-300 rounded-md text-sm" />
+                <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari..." class="border-gray-300 dark:border-gray-600 rounded-md text-sm" />
                 <div class="flex gap-2">
-                    <select wire:model.live="filterColumn" class="border-gray-300 rounded-md text-sm flex-1">
+                    <select wire:model.live="filterColumn" class="border-gray-300 dark:border-gray-600 rounded-md text-sm flex-1">
                         <option value="">Tanpa filter kolom</option>
                         @foreach ($this->columns as $column)
                             <option value="{{ $column }}">{{ $column }}</option>
                         @endforeach
                     </select>
-                    <input type="text" wire:model.live.debounce.300ms="filterValue" placeholder="Nilai" class="border-gray-300 rounded-md text-sm flex-1" />
+                    <input type="text" wire:model.live.debounce.300ms="filterValue" placeholder="Nilai" class="border-gray-300 dark:border-gray-600 rounded-md text-sm flex-1" />
                 </div>
                 <div class="flex gap-2">
-                    <select wire:model.live="sortColumn" class="border-gray-300 rounded-md text-sm flex-1">
+                    <select wire:model.live="sortColumn" class="border-gray-300 dark:border-gray-600 rounded-md text-sm flex-1">
                         <option value="">Tanpa urutan khusus</option>
                         @foreach ($this->columns as $column)
                             <option value="{{ $column }}">{{ $column }}</option>
                         @endforeach
                     </select>
-                    <select wire:model.live="sortDirection" class="border-gray-300 rounded-md text-sm">
+                    <select wire:model.live="sortDirection" class="border-gray-300 dark:border-gray-600 rounded-md text-sm">
                         <option value="asc">A → Z</option>
                         <option value="desc">Z → A</option>
                     </select>
                 </div>
                 @if ($this->format === 'print')
                     <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Filter Bulan/Tahun</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter Bulan/Tahun</label>
                         <div class="grid grid-cols-2 gap-3">
-                            <select wire:model.live="filterMonth" class="border-gray-300 rounded-md text-sm w-full">
+                            <select wire:model.live="filterMonth" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full">
                                 <option value="">Semua Bulan</option>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
                                 @endfor
                             </select>
-                            <select wire:model.live="filterYear" class="border-gray-300 rounded-md text-sm w-full">
+                            <select wire:model.live="filterYear" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full">
                                 <option value="">Semua Tahun</option>
                                 @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
                                     <option value="{{ $y }}">{{ $y }}</option>
@@ -668,31 +668,31 @@ new class extends Component
                         </div>
                     </div>
                 @endif
-                <button type="button" wire:click="loadPreview" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Muat Pratinjau</button>
+                <button type="button" wire:click="loadPreview" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">Muat Pratinjau</button>
             </div>
         </div>
 
         {{-- Pratinjau --}}
         @if ($this->preview)
-            <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 class="font-semibold text-gray-900 mb-3">Pratinjau ({{ $this->preview['total'] }} baris pertama)</h3>
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Pratinjau ({{ $this->preview['total'] }} baris pertama)</h3>
                 @if ($this->tableLayout)
-                    <p class="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-3">Format final akan menggunakan layout struktural (kop surat, tabel grup, tanda tangan, dll).</p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-md px-3 py-2 mb-3">Format final akan menggunakan layout struktural (kop surat, tabel grup, tanda tangan, dll).</p>
                 @endif
-                <div class="overflow-x-auto border border-gray-200 rounded-md">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
                                 @foreach ($this->preview['headings'] as $heading)
-                                    <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{{ $heading }}</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ $heading }}</th>
                                 @endforeach
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach ($this->preview['rows'] as $row)
                                 <tr>
                                     @foreach ($this->preview['headings'] as $heading)
-                                        <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row[$heading] ?? '' }}</td>
+                                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $row[$heading] ?? '' }}</td>
                                     @endforeach
                                 </tr>
                             @endforeach
@@ -703,38 +703,38 @@ new class extends Component
         @endif
 
         {{-- 3. Judul & Format Output --}}
-        <div class="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-1">3. Judul &amp; Format Output</h3>
-            <input type="text" wire:model="title" placeholder="Judul laporan" class="mt-3 border-gray-300 rounded-md text-sm w-full" />
-            @error('title') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">3. Judul &amp; Format Output</h3>
+            <input type="text" wire:model="title" placeholder="Judul laporan" class="mt-3 border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" />
+            @error('title') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'pdf' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-400' }}">
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'pdf' ? 'border-red-500 bg-red-50 dark:bg-red-900/50 dark:border-red-700' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
                     <input type="radio" wire:model.live="format" value="pdf" class="sr-only" />
-                    <p class="font-bold text-red-600">PDF</p>
-                    <p class="text-xs text-gray-500 mt-1">Dokumen siap cetak</p>
+                    <p class="font-bold text-red-600 dark:text-red-400">PDF</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dokumen siap cetak</p>
                 </label>
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'word' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-400' }}">
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'word' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/50 dark:border-blue-700' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
                     <input type="radio" wire:model.live="format" value="word" class="sr-only" />
-                    <p class="font-bold text-blue-600">Word</p>
-                    <p class="text-xs text-gray-500 mt-1">Bisa diedit (.docx)</p>
+                    <p class="font-bold text-blue-600 dark:text-blue-400">Word</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Bisa diedit (.docx)</p>
                 </label>
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'excel' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-400' }}">
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'excel' ? 'border-green-500 bg-green-50 dark:bg-green-900/50 dark:border-green-700' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
                     <input type="radio" wire:model.live="format" value="excel" class="sr-only" />
-                    <p class="font-bold text-green-600">Excel</p>
-                    <p class="text-xs text-gray-500 mt-1">Olah lanjut (.xlsx)</p>
+                    <p class="font-bold text-green-600 dark:text-green-400">Excel</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Olah lanjut (.xlsx)</p>
                 </label>
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'print' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 hover:border-gray-400' }}">
+                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'print' ? 'border-gray-500 bg-gray-100 dark:bg-gray-700 dark:border-gray-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
                     <input type="radio" wire:model.live="format" value="print" class="sr-only" />
-                    <p class="font-bold text-gray-600">Print</p>
-                    <p class="text-xs text-gray-500 mt-1">Pratinjau cetak</p>
+                    <p class="font-bold text-gray-600 dark:text-gray-400">Print</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pratinjau cetak</p>
                 </label>
             </div>
 
             @if ($this->format === 'pdf')
-                <label class="block mt-4 text-sm text-gray-700">
+                <label class="block mt-4 text-sm text-gray-700 dark:text-gray-300">
                     Orientasi PDF:
-                    <select wire:model.live="orientation" class="ml-2 border-gray-300 rounded-md text-sm">
+                    <select wire:model.live="orientation" class="ml-2 border-gray-300 dark:border-gray-600 rounded-md text-sm">
                         <option value="portrait">Portrait</option>
                         <option value="landscape">Landscape</option>
                     </select>
@@ -742,7 +742,7 @@ new class extends Component
             @endif
 
             <div class="flex justify-end mt-6">
-                <button type="button" wire:click="generate" wire:loading.attr="disabled" class="inline-flex items-center px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 disabled:opacity-50">
+                <button type="button" wire:click="generate" wire:loading.attr="disabled" class="inline-flex items-center px-5 py-2 bg-blue-600 dark:bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50">
                     <span wire:loading.remove wire:target="generate">Buat Laporan</span>
                     <span wire:loading wire:target="generate">Memproses...</span>
                 </button>

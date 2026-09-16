@@ -1,34 +1,34 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ $report->title }}
             </h2>
-            <a href="{{ route('reports.index') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">&larr; Kembali</a>
+            <a href="{{ route('reports.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">&larr; Kembali</a>
         </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Laporan</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ringkasan Laporan</h3>
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div><dt class="text-gray-500">Judul</dt><dd class="font-medium text-gray-900">{{ $report->title }}</dd></div>
-                        <div><dt class="text-gray-500">Format</dt><dd class="font-medium text-gray-900">{{ strtoupper($report->output_format) }}</dd></div>
-                        <div><dt class="text-gray-500">Sumber data</dt><dd class="font-medium text-gray-900">{{ $report->import?->table_name ?? '-' }}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">Judul</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{ $report->title }}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">Format</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{ strtoupper($report->output_format) }}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">Sumber data</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{ $report->import?->table_name ?? '-' }}</dd></div>
                         <div>
-                            <dt class="text-gray-500">Status</dt>
+                            <dt class="text-gray-500 dark:text-gray-400">Status</dt>
                             <dd class="font-medium">
                                 <x-status-badge :status="$report->status" />
                             </dd>
                         </div>
-                        <div><dt class="text-gray-500">Ukuran file</dt><dd class="font-medium text-gray-900">{{ $report->file_size ? number_format($report->file_size / 1024, 1).' KB' : '-' }}</dd></div>
-                        <div><dt class="text-gray-500">Dibuat pada</dt><dd class="font-medium text-gray-900">{{ $report->generated_at?->format('d M Y H:i') ?? '-' }}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">Ukuran file</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{ $report->file_size ? number_format($report->file_size / 1024, 1).' KB' : '-' }}</dd></div>
+                        <div><dt class="text-gray-500 dark:text-gray-400">Dibuat pada</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{ $report->generated_at?->format('d M Y H:i') ?? '-' }}</dd></div>
                     </dl>
 
                     @if (in_array($report->status, ['pending', 'processing']))
-                        <p class="mt-4 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md px-4 py-3">Laporan sedang dibuat di background. Muat ulang halaman ini untuk status terbaru.</p>
+                        <p class="mt-4 text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/50 border border-yellow-200 dark:border-yellow-700 rounded-md px-4 py-3">Laporan sedang dibuat di background. Muat ulang halaman ini untuk status terbaru.</p>
                     @endif
 
                     <div class="mt-6 flex flex-wrap gap-3">
@@ -44,8 +44,8 @@
                             <form method="POST" action="{{ route('reports.destroy', $report) }}" class="p-6">
                                 @csrf
                                 @method('DELETE')
-                                <h2 class="text-lg font-medium text-gray-900">Hapus laporan?</h2>
-                                <p class="mt-1 text-sm text-gray-600">Laporan "{{ $report->title }}" beserta file-nya akan dihapus permanen.</p>
+                                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Hapus laporan?</h2>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Laporan "{{ $report->title }}" beserta file-nya akan dihapus permanen.</p>
                                 <div class="mt-6 flex justify-end gap-3">
                                     <x-secondary-button x-on:click="$dispatch('close')">Batal</x-secondary-button>
                                     <x-danger-button>Hapus</x-danger-button>

@@ -216,7 +216,7 @@ new class extends Component
 ?>
 
 <div class="space-y-5">
-    <p class="text-sm text-gray-500">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
         Template <span class="font-semibold">{{ $template->name }}</span>
         ({{ strtoupper($template->output_format) }}, {{ count($template->fields_json ?? []) }} kolom)
         akan diterapkan ke file yang Anda pilih. Kolom yang tidak ada di file target dilewati otomatis.
@@ -224,13 +224,13 @@ new class extends Component
 
     {{-- Mode Toggle --}}
     @if (count($imports) >= 2)
-        <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit">
             <button type="button" wire:click="$set('isMergeMode', false)"
-                class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
+                class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 Single Import
             </button>
             <button type="button" wire:click="$set('isMergeMode', true)"
-                class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">
+                class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
                 Gabung Data
             </button>
         </div>
@@ -239,41 +239,41 @@ new class extends Component
     {{-- Single Import Mode --}}
     @if (! $this->isMergeMode)
         <div>
-            <label class="block text-sm font-medium text-gray-700">File target</label>
-            <select wire:model.live="importId" class="mt-1 border-gray-300 rounded-md text-sm w-full">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">File target</label>
+            <select wire:model.live="importId" class="mt-1 border-gray-300 dark:border-gray-600 rounded-md text-sm w-full">
                 <option value="">-- Pilih file import --</option>
                 @foreach ($imports as $import)
                     <option value="{{ $import['id'] }}">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)</option>
                 @endforeach
             </select>
-            @error('importId') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            @error('importId') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
         </div>
     @endif
 
     {{-- Merge Mode --}}
     @if ($this->isMergeMode)
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih file import (minimal 2)</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih file import (minimal 2)</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 @foreach ($imports as $import)
-                    <label class="flex items-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
-                        <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600" />
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400">
+                        <input type="checkbox" wire:model.live="mergeImportIds" value="{{ $import['id'] }}" class="rounded text-blue-600 dark:text-blue-400" />
                         {{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)
                     </label>
                 @endforeach
             </div>
-            @error('mergeImportIds') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            @error('mergeImportIds') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
         </div>
     @endif
 
     {{-- Filter Bulan/Tahun (print only) --}}
     @if ($template->output_format === 'print')
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Filter Akad/Pelaksanaan</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter Akad/Pelaksanaan</label>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Bulan</label>
-                    <select wire:model.live="filterMonth" class="border-gray-300 rounded-md text-sm w-full">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bulan</label>
+                    <select wire:model.live="filterMonth" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full">
                         <option value="">Semua Bulan</option>
                         <option value="1">Januari</option>
                         <option value="2">Februari</option>
@@ -290,8 +290,8 @@ new class extends Component
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Tahun</label>
-                    <select wire:model.live="filterYear" class="border-gray-300 rounded-md text-sm w-full">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tahun</label>
+                    <select wire:model.live="filterYear" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full">
                         <option value="">Semua Tahun</option>
                         @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
                             <option value="{{ $y }}">{{ $y }}</option>
@@ -304,14 +304,14 @@ new class extends Component
 
     {{-- Title --}}
     <div>
-        <label class="block text-sm font-medium text-gray-700">Judul laporan</label>
-        <input type="text" wire:model.live="title" class="mt-1 border-gray-300 rounded-md text-sm w-full" />
-        @error('title') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Judul laporan</label>
+        <input type="text" wire:model.live="title" class="mt-1 border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" />
+        @error('title') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
     </div>
 
     {{-- Actions --}}
     <div class="flex justify-end gap-3">
-        <a href="{{ route('reports.create') }}" class="px-4 py-2 bg-gray-100 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-200">Batal</a>
+        <a href="{{ route('reports.create') }}" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">Batal</a>
         <button type="button" wire:click="apply" class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700">Buat Laporan</button>
     </div>
 </div>
