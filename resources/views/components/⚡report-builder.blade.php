@@ -324,6 +324,10 @@ new class extends Component
             }
         }
 
+        if ($tanggalNikahField === null && in_array('Tanggal Nikah', $this->fields, true)) {
+            $tanggalNikahField = 'Tanggal Nikah';
+        }
+
         if (! $tanggalNikahField || ! in_array($tanggalNikahField, $this->fields, true)) {
             return;
         }
