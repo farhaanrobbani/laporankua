@@ -5,6 +5,8 @@ use Livewire\Component;
 
 new class extends Component
 {
+    public $templates = [];
+
     public function boot(): void
     {
         $this->templates = ReportTemplate::orderBy('name')->get();
