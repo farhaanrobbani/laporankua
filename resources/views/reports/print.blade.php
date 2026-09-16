@@ -159,78 +159,87 @@
                 $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
                 $bulanName = $dataset['bulan_override'] ?? ($lastDate ? $monthNames[$lastDate->month] : '-');
                 $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
+                $isL2Report = !empty($dataset['table_layout']['aggregation']);
             @endphp
 
             <div class="mb-0">
-                @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
-                    @if (! empty($dataset['logo_kantor']))
-                        <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td class="align-top pr-1" style="width: 80px;">
-                                    <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="margin-left: 64px; max-height: 80px; max-width: 80px;" />
-                                </td>
-                                <td class="text-center">
-                                    <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
-                                    @if (! empty($dataset['nama_kantor_kota']))
-                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
-                                    @endif
-                                    @if (! empty($dataset['nama_kantor']))
-                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
-                                    @endif
-                                    @if (! empty($dataset['alamat_kantor']))
-                                        <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
-                                    @endif
-                                    @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                        <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
-                                            @if (! empty($dataset['telepon_kantor']))
-                                                Telp: {{ $dataset['telepon_kantor'] }}
-                                            @endif
-                                            @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
-                                                |
-                                            @endif
-                                            @if (! empty($dataset['email_kantor']))
-                                                Email: {{ $dataset['email_kantor'] }}
-                                            @endif
-                                        </p>
-                                    @endif
-                                </td>
-                            </tr>
-                        </table>
-                    @else
-                        <div class="text-center mb-1">
-                            <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
-                            @if (! empty($dataset['nama_kantor_kota']))
-                                <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
-                            @endif
-                            @if (! empty($dataset['nama_kantor']))
-                                <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
-                            @endif
-                            @if (! empty($dataset['alamat_kantor']))
-                                <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
-                            @endif
-                            @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
-                                <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
-                                    @if (! empty($dataset['telepon_kantor']))
-                                        Telp: {{ $dataset['telepon_kantor'] }}
-                                    @endif
-                                    @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
-                                        |
-                                    @endif
-                                    @if (! empty($dataset['email_kantor']))
-                                        Email: {{ $dataset['email_kantor'] }}
-                                    @endif
-                                </p>
-                            @endif
-                        </div>
+                @if ($isL2Report)
+                    <div class="text-center mb-3">
+                        <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN PENDIDIKAN PENGANTIN</h1>
+                        <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                        <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                    </div>
+                @else
+                    @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
+                        @if (! empty($dataset['logo_kantor']))
+                            <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="align-top pr-1" style="width: 80px;">
+                                        <img src="{{ asset('storage/' . $dataset['logo_kantor']) }}" alt="Logo" style="margin-left: 64px; max-height: 80px; max-width: 80px;" />
+                                    </td>
+                                    <td class="text-center">
+                                        <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                                        @if (! empty($dataset['nama_kantor_kota']))
+                                            <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
+                                        @endif
+                                        @if (! empty($dataset['nama_kantor']))
+                                            <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
+                                        @endif
+                                        @if (! empty($dataset['alamat_kantor']))
+                                            <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
+                                        @endif
+                                        @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                                            <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
+                                                @if (! empty($dataset['telepon_kantor']))
+                                                    Telp: {{ $dataset['telepon_kantor'] }}
+                                                @endif
+                                                @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                                    |
+                                                @endif
+                                                @if (! empty($dataset['email_kantor']))
+                                                    Email: {{ $dataset['email_kantor'] }}
+                                                @endif
+                                            </p>
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                        @else
+                            <div class="text-center mb-1">
+                                <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kementerian'] ?? '12' }}px;">{{ $dataset['nama_kementerian'] ?? 'Kementerian Agama' }}</p>
+                                @if (! empty($dataset['nama_kantor_kota']))
+                                    <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor_kota'] ?? '12' }}px;">{{ $dataset['nama_kantor_kota'] }}</p>
+                                @endif
+                                @if (! empty($dataset['nama_kantor']))
+                                    <p class="font-bold uppercase" style="font-size: {{ $dataset['font_size_kop_kantor'] ?? '12' }}px;">{{ $dataset['nama_kantor'] }}</p>
+                                @endif
+                                @if (! empty($dataset['alamat_kantor']))
+                                    <p style="font-size: {{ $dataset['font_size_kop_alamat'] ?? '10' }}px;">{{ $dataset['alamat_kantor'] }}</p>
+                                @endif
+                                @if (! empty($dataset['telepon_kantor']) || ! empty($dataset['email_kantor']))
+                                    <p style="font-size: {{ $dataset['font_size_kop_kontak'] ?? '10' }}px;">
+                                        @if (! empty($dataset['telepon_kantor']))
+                                            Telp: {{ $dataset['telepon_kantor'] }}
+                                        @endif
+                                        @if (! empty($dataset['telepon_kantor']) && ! empty($dataset['email_kantor']))
+                                            |
+                                        @endif
+                                        @if (! empty($dataset['email_kantor']))
+                                            Email: {{ $dataset['email_kantor'] }}
+                                        @endif
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
+                        <hr class="border-t border-gray-900 mb-1">
                     @endif
-                    <hr class="border-t border-gray-900 mb-1">
-                @endif
 
-                <h1 class="font-bold text-center" style="font-size: 14px;">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
-                <div class="mt-2 mb-3" style="font-size: 12px;">
-                    <p><span style="display:inline-block; width:5.5ch; font-weight: bold;">Bulan</span> : {{ $bulanName }}</p>
-                    <p><span style="display:inline-block; width:5.5ch; font-weight: bold;">Tahun</span> : {{ $tahunName }}</p>
-                </div>
+                    <h1 class="font-bold text-center" style="font-size: 14px;">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
+                    <div class="mt-2 mb-3" style="font-size: 12px;">
+                        <p><span style="display:inline-block; width:5.5ch; font-weight: bold;">Bulan</span> : {{ $bulanName }}</p>
+                        <p><span style="display:inline-block; width:5.5ch; font-weight: bold;">Tahun</span> : {{ $tahunName }}</p>
+                    </div>
+                @endif
             </div>
 
             <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
@@ -342,22 +351,36 @@
                 </tbody>
             </table>
 
-            <div class="mt-4 leading-relaxed" style="font-size: 12px;">
-                <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
-                <p class="mt-2 ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
-                <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
-                <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Keseluruhan</span> : <strong>{{ $countAll }}</strong> N</p>
-
-                <div class="mt-6 flex justify-end">
-                    <div class="text-center">
-                        <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
-                        <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                        <div class="h-16"></div>
-                        <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                        <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+            @if ($isL2Report)
+                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                    <div class="flex justify-end">
+                        <div class="text-center">
+                            <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
+                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                            <div class="h-16"></div>
+                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @else
+                <div class="mt-4 leading-relaxed" style="font-size: 12px;">
+                    <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
+                    <p class="mt-2 ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
+                    <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
+                    <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Keseluruhan</span> : <strong>{{ $countAll }}</strong> N</p>
+
+                    <div class="mt-6 flex justify-end">
+                        <div class="text-center">
+                            <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
+                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                            <div class="h-16"></div>
+                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
         @else
             <div class="border-b-2 border-gray-900 pb-3 mb-4">
