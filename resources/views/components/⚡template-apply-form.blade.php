@@ -79,6 +79,13 @@ new class extends Component
             $fields = $available;
         }
 
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        if ($hasFilter && ! in_array('Tanggal Nikah', $fields, true)) {
+            if (in_array('Tanggal Nikah', $available, true)) {
+                $fields[] = 'Tanggal Nikah';
+            }
+        }
+
         $filters = $this->template->filters_json ?? [];
         $sorting = $this->template->sorting_json ?? [];
         $layout = $this->template->layout_json ?? [];
@@ -135,6 +142,13 @@ new class extends Component
 
         if ($fields === []) {
             $fields = $allColumns;
+        }
+
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        if ($hasFilter && ! in_array('Tanggal Nikah', $fields, true)) {
+            if (in_array('Tanggal Nikah', $allColumns, true)) {
+                $fields[] = 'Tanggal Nikah';
+            }
         }
 
         $filters = $this->template->filters_json ?? [];

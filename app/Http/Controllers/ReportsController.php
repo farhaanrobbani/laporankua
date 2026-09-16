@@ -78,12 +78,22 @@ class ReportsController extends Controller
         $sortColumn = $config['sort_column'] ?? $report->import?->default_sort_column;
         $sortDirection = $config['sort_direction'] ?? $report->import?->default_sort_direction ?? 'asc';
 
+        $filterMonth = $config['filter_month'] ?? null;
+        $filterYear = $config['filter_year'] ?? null;
+        $hasDateFilter = ($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '');
+
         if (! empty($config['is_merged']) && ! empty($config['merged_import_ids'])) {
             $mergeService = app(MergeService::class);
             $effectiveFields = $fields;
             if (! empty($config['table_layout'])) {
                 $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
                 $effectiveFields = array_values(array_unique(array_merge($fields, $allColumns)));
+            }
+            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+                $allCols = $mergeService->getAllColumns($config['merged_import_ids']);
+                if (in_array('Tanggal Nikah', $allCols, true)) {
+                    $effectiveFields[] = 'Tanggal Nikah';
+                }
             }
             $dataset = $mergeService->buildMergedDataset(
                 $config['merged_import_ids'],
@@ -97,9 +107,15 @@ class ReportsController extends Controller
         } elseif (! empty($config['merged_import_ids'])) {
             $mergeService = app(MergeService::class);
             $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
+            $effectiveFields = $fields === [] ? $allColumns : $fields;
+            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+                if (in_array('Tanggal Nikah', $allColumns, true)) {
+                    $effectiveFields[] = 'Tanggal Nikah';
+                }
+            }
             $dataset = $mergeService->buildConcatDataset(
                 $config['merged_import_ids'],
-                $fields === [] ? $allColumns : $fields,
+                $effectiveFields,
                 $config['search'] ?? null,
                 $config['filter_column'] ?? null,
                 $config['filter_value'] ?? null,
@@ -107,9 +123,16 @@ class ReportsController extends Controller
                 $sortDirection,
             );
         } else {
+            $effectiveFields = $fields === [] ? $report->import->availableColumns() : $fields;
+            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+                $available = $report->import->availableColumns();
+                if (in_array('Tanggal Nikah', $available, true)) {
+                    $effectiveFields[] = 'Tanggal Nikah';
+                }
+            }
             $dataset = $service->buildDataset(
                 $report->import,
-                $fields === [] ? $report->import->availableColumns() : $fields,
+                $effectiveFields,
                 $config['search'] ?? null,
                 $config['filter_column'] ?? null,
                 $config['filter_value'] ?? null,
@@ -120,10 +143,7 @@ class ReportsController extends Controller
         $dataset['title'] = $report->title;
         $dataset['table_layout'] = $config['table_layout'] ?? null;
 
-        $filterMonth = $config['filter_month'] ?? null;
-        $filterYear = $config['filter_year'] ?? null;
-
-        if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '')) {
+        if ($hasDateFilter) {
             $tableLayout = $config['table_layout'] ?? [];
             $layoutColumns = $tableLayout['columns'] ?? [];
             $tanggalNikahField = null;
@@ -142,7 +162,7 @@ class ReportsController extends Controller
                 }
             }
 
-            if ($tanggalNikahField === null && in_array('Tanggal Nikah', $fields, true)) {
+            if ($tanggalNikahField === null && in_array('Tanggal Nikah', $effectiveFields, true)) {
                 $tanggalNikahField = 'Tanggal Nikah';
             }
 

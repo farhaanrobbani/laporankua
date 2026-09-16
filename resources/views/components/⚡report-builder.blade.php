@@ -242,9 +242,18 @@ new class extends Component
             return;
         }
 
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        $effectiveFields = $this->fields;
+        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+            $import = Import::whereIn('id', $this->selectedImportIds)->first();
+            if ($import && in_array('Tanggal Nikah', $import->availableColumns(), true)) {
+                $effectiveFields[] = 'Tanggal Nikah';
+            }
+        }
+
         $dataset = app(MergeService::class)->buildConcatDataset(
             $this->selectedImportIds,
-            $this->fields,
+            $effectiveFields,
             $this->search ?: null,
             $this->filterColumn ?: null,
             $this->filterValue ?: null,
@@ -274,9 +283,18 @@ new class extends Component
             return;
         }
 
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        $effectiveFields = $this->fields;
+        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+            $allCols = app(MergeService::class)->getAllColumns($this->mergeImportIds);
+            if (in_array('Tanggal Nikah', $allCols, true)) {
+                $effectiveFields[] = 'Tanggal Nikah';
+            }
+        }
+
         $dataset = app(MergeService::class)->buildMergedDataset(
             $this->mergeImportIds,
-            $this->fields,
+            $effectiveFields,
             $this->search ?: null,
             $this->filterColumn ?: null,
             $this->filterValue ?: null,
@@ -304,21 +322,19 @@ new class extends Component
             return;
         }
 
-        if (! $this->tableLayout) {
-            return;
-        }
-
         $tanggalNikahField = null;
-        foreach ($this->tableLayout['columns'] ?? [] as $col) {
-            if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
-                $tanggalNikahField = $col['field'];
-                break;
-            }
-            if (($col['type'] ?? '') === 'group') {
-                foreach ($col['children'] ?? [] as $child) {
-                    if (($child['field'] ?? '') === 'Tanggal Nikah') {
-                        $tanggalNikahField = $child['field'];
-                        break 2;
+        if ($this->tableLayout) {
+            foreach ($this->tableLayout['columns'] ?? [] as $col) {
+                if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
+                    $tanggalNikahField = $col['field'];
+                    break;
+                }
+                if (($col['type'] ?? '') === 'group') {
+                    foreach ($col['children'] ?? [] as $child) {
+                        if (($child['field'] ?? '') === 'Tanggal Nikah') {
+                            $tanggalNikahField = $child['field'];
+                            break 2;
+                        }
                     }
                 }
             }
@@ -393,6 +409,13 @@ new class extends Component
             return;
         }
 
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        if ($hasFilter && ! in_array('Tanggal Nikah', $fields, true)) {
+            if (in_array('Tanggal Nikah', $import->availableColumns(), true)) {
+                $fields[] = 'Tanggal Nikah';
+            }
+        }
+
         $report = Report::create([
             'user_id' => auth()->id(),
             'import_id' => $import->id,
@@ -448,13 +471,22 @@ new class extends Component
             return;
         }
 
+        $effectiveFields = $this->fields;
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+            $allCols = app(MergeService::class)->getAllColumns($this->mergeImportIds);
+            if (in_array('Tanggal Nikah', $allCols, true)) {
+                $effectiveFields[] = 'Tanggal Nikah';
+            }
+        }
+
         $report = Report::create([
             'user_id' => auth()->id(),
             'import_id' => $firstImport->id,
             'title' => $this->title,
             'output_format' => $this->format,
             'config_json' => array_merge($this->getUserConfig(), [
-                'fields' => $this->fields,
+                'fields' => $effectiveFields,
                 'search' => $this->search ?: null,
                 'filter_column' => $this->filterColumn ?: null,
                 'filter_value' => $this->filterValue ?: null,
