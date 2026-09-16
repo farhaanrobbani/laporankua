@@ -58,7 +58,7 @@
                     $aggCols = $collectAggCols($columns);
 
                     // Build aggregated rows
-                    $staticValues = $layout['aggregation']['static_values'] ?? null;
+                    $staticValues = $dataset['daftar_desa'] ?? $layout['aggregation']['static_values'] ?? null;
                     $groupNames = $staticValues ?? array_keys($grouped);
                     sort($groupNames);
 

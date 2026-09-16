@@ -54,7 +54,6 @@ class TemplateController extends Controller
             'sort_direction' => 'nullable|in:asc,desc',
             'orientation' => 'nullable|in:portrait,landscape',
             'table_layout' => 'nullable|string',
-            'static_values' => 'nullable|string',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -64,15 +63,6 @@ class TemplateController extends Controller
             if (is_array($decoded)) {
                 $tableLayout = $decoded;
             }
-        }
-
-        $staticValues = null;
-        if (! empty($validated['static_values'])) {
-            $staticValues = array_values(array_filter(array_map('trim', explode("\n", $validated['static_values']))));
-        }
-
-        if ($staticValues && $tableLayout && isset($tableLayout['aggregation'])) {
-            $tableLayout['aggregation']['static_values'] = $staticValues;
         }
 
         $template = DB::transaction(function () use ($validated, $tableLayout) {
@@ -134,7 +124,6 @@ class TemplateController extends Controller
             'sort_direction' => 'nullable|in:asc,desc',
             'orientation' => 'nullable|in:portrait,landscape',
             'table_layout' => 'nullable|string',
-            'static_values' => 'nullable|string',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -144,15 +133,6 @@ class TemplateController extends Controller
             if (is_array($decoded)) {
                 $tableLayout = $decoded;
             }
-        }
-
-        $staticValues = null;
-        if (! empty($validated['static_values'])) {
-            $staticValues = array_values(array_filter(array_map('trim', explode("\n", $validated['static_values']))));
-        }
-
-        if ($staticValues && $tableLayout && isset($tableLayout['aggregation'])) {
-            $tableLayout['aggregation']['static_values'] = $staticValues;
         }
 
         DB::transaction(function () use ($template, $validated, $tableLayout) {

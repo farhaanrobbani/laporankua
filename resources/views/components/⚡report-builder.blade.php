@@ -500,6 +500,7 @@ new class extends Component
             'telepon_kantor' => $user->telepon_kantor ?? null,
             'email_kantor' => $user->email_kantor ?? null,
             'logo_kantor' => $user->logo_kantor ?? null,
+            'daftar_desa' => $user->daftar_desa ?? null,
             'font_size_kop_kementerian' => $user->font_size_kop_kementerian ?? null,
             'font_size_kop_kantor_kota' => $user->font_size_kop_kantor_kota ?? null,
             'font_size_kop_kantor' => $user->font_size_kop_kantor ?? null,

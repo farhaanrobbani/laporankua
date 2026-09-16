@@ -183,6 +183,7 @@ class ReportsController extends Controller
         $dataset['telepon_kantor'] = $config['telepon_kantor'] ?? null;
         $dataset['email_kantor'] = $config['email_kantor'] ?? null;
         $dataset['logo_kantor'] = $config['logo_kantor'] ?? null;
+        $dataset['daftar_desa'] = $config['daftar_desa'] ?? null;
         $dataset['font_size_kop_kementerian'] = $config['font_size_kop_kementerian'] ?? null;
         $dataset['font_size_kop_kantor_kota'] = $config['font_size_kop_kantor_kota'] ?? null;
         $dataset['font_size_kop_kantor'] = $config['font_size_kop_kantor'] ?? null;

@@ -147,6 +147,13 @@
             <x-input-error class="mt-2" :messages="$errors->get('logo_kantor')" />
         </div>
 
+        <div>
+            <x-input-label for="daftar_desa" :value="__('Daftar Desa (satu per baris, untuk laporan agregasi)')" />
+            <textarea id="daftar_desa" name="daftar_desa" rows="6" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm font-mono text-xs">{{ is_array($user->daftar_desa) ? implode("\n", $user->daftar_desa) : '' }}</textarea>
+            <p class="text-xs text-gray-500 mt-1">Daftar desa yang selalu tampil di laporan agregasi (misal: L2 Pendidikan), meskipun tidak ada data pernikahan di bulan tersebut.</p>
+            <x-input-error class="mt-2" :messages="$errors->get('daftar_desa')" />
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

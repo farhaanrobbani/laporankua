@@ -39,6 +39,13 @@ class ProfileController extends Controller
             unset($validated['logo_kantor']);
         }
 
+        if (isset($validated['daftar_desa'])) {
+            $validated['daftar_desa'] = array_values(array_filter(array_map('trim', explode("\n", $validated['daftar_desa']))));
+            if (empty($validated['daftar_desa'])) {
+                $validated['daftar_desa'] = null;
+            }
+        }
+
         $request->user()->fill($validated);
 
         if ($request->user()->isDirty('email')) {
