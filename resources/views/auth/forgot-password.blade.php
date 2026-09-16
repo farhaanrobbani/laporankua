@@ -16,6 +16,17 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
+        <!-- Turnstile -->
+        <div class="mt-4">
+            <div class="cf-turnstile"
+                 data-sitekey="{{ config('services.turnstile.sitekey') }}"
+                 data-theme="{{ app()->environment('local') ? 'dark' : 'auto' }}">
+            </div>
+            @error('cf-turnstile-response')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
         <div class="flex items-center justify-end mt-4">
             <x-primary-button>
                 {{ __('Kirim Tautan Reset') }}

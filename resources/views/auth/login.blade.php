@@ -28,8 +28,19 @@
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">
                 <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+                <span class="ms-2 text-sm text-gray-600">{{ __('Ingat saya') }}</span>
             </label>
+        </div>
+
+        <!-- Turnstile -->
+        <div class="mt-4">
+            <div class="cf-turnstile"
+                 data-sitekey="{{ config('services.turnstile.sitekey') }}"
+                 data-theme="{{ app()->environment('local') ? 'dark' : 'auto' }}">
+            </div>
+            @error('cf-turnstile-response')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
         </div>
 
         <div class="flex items-center justify-end mt-4">

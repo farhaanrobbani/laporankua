@@ -6,6 +6,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -27,10 +28,26 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
+
+        if (config('services.turnstile.secret')) {
+            $rules['cf-turnstile-response'] = ['required', function ($attribute, $value, $fail) {
+                $response = Http::timeout(5)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => config('services.turnstile.secret'),
+                    'response' => $value,
+                    'remoteip' => request()->ip(),
+                ]);
+
+                if (! ($response->json('success') ?? false)) {
+                    $fail('Verifikasi captcha gagal. Silakan coba lagi.');
+                }
+            }];
+        }
+
+        return $rules;
     }
 
     /**
