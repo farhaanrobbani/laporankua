@@ -46,7 +46,7 @@
                     $collectAggCols = function ($cols, $parentLabel = null) use (&$collectAggCols) {
                         $result = [];
                         foreach ($cols as $col) {
-                            if ($col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_total') {
+                            if ($col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_range') {
                                 $compositeKey = $parentLabel ? $parentLabel . '|' . ($col['label'] ?? '') : ($col['label'] ?? '');
                                 $result[] = array_merge($col, ['_key' => $compositeKey, '_parent' => $parentLabel]);
                             }
@@ -84,6 +84,22 @@
                                             break;
                                         }
                                     }
+                                }
+                                $aggRow[$key] = $count;
+                            } elseif ($col['type'] === 'aggregate_range') {
+                                $count = 0;
+                                $field = $col['field'] ?? '';
+                                $min = $col['min'] ?? null;
+                                $max = $col['max'] ?? null;
+                                foreach ($rows as $row) {
+                                    $val = (int) ($row[$field] ?? 0);
+                                    if ($min !== null && $val < $min) {
+                                        continue;
+                                    }
+                                    if ($max !== null && $val >= $max) {
+                                        continue;
+                                    }
+                                    $count++;
                                 }
                                 $aggRow[$key] = $count;
                             }
@@ -178,7 +194,7 @@
                     <div class="flex items-start mb-3">
                         <span style="font-size: 21px; font-weight: bold;">L2</span>
                         <div class="text-center flex-1">
-                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN PENDIDIKAN PENGANTIN</h1>
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">{{ strtoupper($dataset['title'] ?? 'LAPORAN') }}</h1>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
@@ -264,7 +280,7 @@
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
                         @elseif ($col['type'] === 'group')
                             <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
-                        @elseif ($col['type'] === 'field' || $col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count')
+                        @elseif ($col['type'] === 'field' || $col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_range')
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
                         @endif
                     @endforeach
@@ -328,7 +344,7 @@
                                                 @endphp
                                                 <td @if(!empty($grandchild['width']))style="max-width:{{ $grandchild['width'] }};width:{{ $grandchild['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                             @endforeach
-                                        @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total')
+                                        @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total' || $child['type'] === 'aggregate_range')
                                             @php
                                                 $value = $row[$child['label']] ?? '';
                                             @endphp
@@ -353,7 +369,7 @@
                                         }
                                     @endphp
                                     <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
-                                @elseif ($col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count')
+                                @elseif ($col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_range')
                                     @php
                                         $value = $row[$col['label']] ?? '';
                                     @endphp
@@ -377,7 +393,7 @@
                                                 @endphp
                                                 <td @if(!empty($grandchild['width']))style="max-width:{{ $grandchild['width'] }};width:{{ $grandchild['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                             @endforeach
-                                        @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total')
+                                        @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total' || $child['type'] === 'aggregate_range')
                                             @php
                                                 $value = $totalRow[$child['label']] ?? 0;
                                             @endphp
@@ -388,7 +404,7 @@
                                     @endforeach
                                 @elseif ($col['type'] === 'field')
                                     <td @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
-                                @elseif ($col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count')
+                                @elseif ($col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_range')
                                     @php
                                         $value = $totalRow[$col['label']] ?? 0;
                                     @endphp
