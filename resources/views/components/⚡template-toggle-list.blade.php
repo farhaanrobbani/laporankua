@@ -65,12 +65,12 @@ new class extends Component
                                 <button
                                     wire:click="toggleActive({{ $template->id }})"
                                     type="button"
-                                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 {{ $template->is_active ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500' }}"
+                                    class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 {{ $template->is_active ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500' }}"
                                     role="switch"
                                     aria-checked="{{ $template->is_active ? 'true' : 'false' }}"
                                 >
                                     <span
-                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $template->is_active ? 'translate-x-5' : 'translate-x-0' }}"
+                                        class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-1 ring-gray-200/50 transition duration-200 ease-in-out {{ $template->is_active ? 'translate-x-7' : 'translate-x-0' }}"
                                     />
                                 </button>
                                 <span class="text-xs font-medium {{ $template->is_active ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500' }}">
