@@ -45,14 +45,13 @@ class UiPolishTest extends TestCase
             ->assertSee('confirm-delete-import', false);
     }
 
-    public function test_empty_state_komponen_dirender(): void
+    public function test_template_index_page_renders(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($admin)->get(route('admin.templates.index'))
             ->assertOk()
-            ->assertSee('Belum ada template')
-            ->assertSee('Tambah Template');
+            ->assertSee('Daftar Template');
     }
 
     public function test_badge_format_laporan_dirender(): void

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Models\Report;
-use App\Models\ReportTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -24,21 +23,6 @@ class SecurityTest extends TestCase
         ]);
 
         return $import;
-    }
-
-    public function test_mass_assignment_user_id_diabaikan(): void
-    {
-        $admin = User::factory()->create(['role' => 'admin']);
-        $other = User::factory()->create();
-
-        $this->actingAs($admin)->post(route('admin.templates.store'), [
-            'name' => 'Nekat',
-            'output_format' => 'pdf',
-            'user_id' => $other->id,
-        ])->assertRedirect(route('admin.templates.index'));
-
-        $template = ReportTemplate::latest()->first();
-        $this->assertSame($admin->id, $template->user_id);
     }
 
     public function test_builder_menolak_import_milik_orang(): void

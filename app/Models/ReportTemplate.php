@@ -22,6 +22,7 @@ class ReportTemplate extends Model
         'layout_json',
         'is_default',
         'is_global',
+        'is_active',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class ReportTemplate extends Model
             'layout_json' => 'array',
             'is_default' => 'boolean',
             'is_global' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 

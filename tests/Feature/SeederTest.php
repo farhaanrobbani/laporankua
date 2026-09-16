@@ -18,24 +18,14 @@ class SeederTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
     }
 
-    public function test_seeder_membuat_admin_dari_env(): void
+    public function test_seeder_membuat_system_user(): void
     {
-        putenv('SEED_ADMIN_EMAIL=admin@contoh.test');
-        putenv('SEED_ADMIN_NAME=Admin Uji');
-        putenv('SEED_ADMIN_PASSWORD=rahasia123');
+        $this->seed(DatabaseSeeder::class);
 
-        try {
-            $this->seed(DatabaseSeeder::class);
-        } finally {
-            putenv('SEED_ADMIN_EMAIL');
-            putenv('SEED_ADMIN_NAME');
-            putenv('SEED_ADMIN_PASSWORD');
-        }
+        $system = User::where('email', 'system@laporanku.id')->first();
 
-        $admin = User::where('email', 'admin@contoh.test')->first();
-
-        $this->assertNotNull($admin);
-        $this->assertSame('Admin Uji', $admin->name);
-        $this->assertNotNull($admin->email_verified_at);
+        $this->assertNotNull($system);
+        $this->assertSame('admin', $system->role);
+        $this->assertNotNull($system->email_verified_at);
     }
 }

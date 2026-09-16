@@ -81,6 +81,7 @@ new class extends Component
             ->all();
 
         $this->globalTemplates = ReportTemplate::where('is_global', true)
+            ->where('is_active', true)
             ->latest()
             ->get()
             ->map(fn ($t) => [
@@ -96,6 +97,7 @@ new class extends Component
             ->all();
 
         $this->hasDefaultTemplate = ReportTemplate::where('is_global', true)
+            ->where('is_active', true)
             ->where('is_default', true)
             ->exists();
     }
@@ -135,6 +137,7 @@ new class extends Component
     public function loadDefaultTemplate(): void
     {
         $template = ReportTemplate::where('is_global', true)
+            ->where('is_active', true)
             ->where('is_default', true)
             ->first();
 
@@ -152,6 +155,7 @@ new class extends Component
         }
 
         $template = ReportTemplate::where('is_global', true)
+            ->where('is_active', true)
             ->find($this->selectedTemplateId);
 
         if (! $template) {

@@ -3,44 +3,34 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     public function run(): void
     {
-        if (app()->environment('production')) {
-            $this->command?->warn('DatabaseSeeder dilewati di environment production.');
+        // 1. Seed system user (untuk ownership template)
+        User::firstOrCreate(
+            ['email' => 'system@laporanku.id'],
+            [
+                'name' => 'System',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
 
-            return;
+        // 2. Seed templates
+        $this->call(TemplateSeeder::class);
+
+        // 3. Seed test user (hanya non-production)
+        if (! app()->environment('production')) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
         }
-
-        $email = env('SEED_ADMIN_EMAIL');
-
-        if ($email) {
-            User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'name' => env('SEED_ADMIN_NAME', 'Admin'),
-                    'password' => Hash::make(env('SEED_ADMIN_PASSWORD', 'password')),
-                    'role' => 'admin',
-                    'status' => 'active',
-                    'email_verified_at' => now(),
-                ]
-            );
-
-            $this->command?->info("Admin {$email} seeded.");
-
-            return;
-        }
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
     }
 }

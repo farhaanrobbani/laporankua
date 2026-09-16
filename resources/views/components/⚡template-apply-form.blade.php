@@ -33,6 +33,12 @@ new class extends Component
 
     public function mount(ReportTemplate $template): void
     {
+        if (! $template->is_active) {
+            $this->dispatch('show-toast', message: 'Template tidak aktif.', type: 'error');
+
+            return;
+        }
+
         $this->template = $template;
         $this->title = $template->name;
 
