@@ -61,17 +61,22 @@ new class extends Component
                             {{ count($template->fields_json ?? []) }} kolom
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <button
-                                wire:click="toggleActive({{ $template->id }})"
-                                type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 {{ $template->is_active ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600' }}"
-                                role="switch"
-                                aria-checked="{{ $template->is_active ? 'true' : 'false' }}"
-                            >
-                                <span
-                                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $template->is_active ? 'translate-x-5' : 'translate-x-0' }}"
-                                />
-                            </button>
+                            <div class="inline-flex items-center gap-2">
+                                <button
+                                    wire:click="toggleActive({{ $template->id }})"
+                                    type="button"
+                                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 {{ $template->is_active ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500' }}"
+                                    role="switch"
+                                    aria-checked="{{ $template->is_active ? 'true' : 'false' }}"
+                                >
+                                    <span
+                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $template->is_active ? 'translate-x-5' : 'translate-x-0' }}"
+                                    />
+                                </button>
+                                <span class="text-xs font-medium {{ $template->is_active ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500' }}">
+                                    {{ $template->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {{ $template->created_at->format('d M Y') }}
