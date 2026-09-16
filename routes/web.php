@@ -40,8 +40,15 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/reports/{report}/cetak-nb/{record}', [ReportsController::class, 'cetakNb'])->name('reports.cetak-nb');
     Route::delete('/reports/{report}', [ReportsController::class, 'destroy'])->name('reports.destroy');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.edit');
+    Route::get('/profile/info', [ProfileController::class, 'info'])->name('profile.info');
+    Route::get('/profile/kop-surat', [ProfileController::class, 'kopSurat'])->name('profile.kop-surat');
+    Route::get('/profile/daftar-desa', [ProfileController::class, 'daftarDesa'])->name('profile.daftar-desa');
+    Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+    Route::get('/profile/delete', [ProfileController::class, 'delete'])->name('profile.delete');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/kop-surat', [ProfileController::class, 'updateKop'])->name('profile.update-kop');
+    Route::patch('/profile/daftar-desa', [ProfileController::class, 'updateDesa'])->name('profile.update-desa');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

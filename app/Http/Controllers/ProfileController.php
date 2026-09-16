@@ -12,22 +12,77 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    public function index(): RedirectResponse
     {
-        return view('profile.edit', [
+        return Redirect::route('profile.info');
+    }
+
+    public function info(Request $request): View
+    {
+        return view('profile.info', [
             'user' => $request->user(),
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
+    public function kopSurat(Request $request): View
+    {
+        return view('profile.kop-surat', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    public function daftarDesa(Request $request): View
+    {
+        return view('profile.daftar-desa', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    public function password(Request $request): View
+    {
+        return view('profile.password', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    public function delete(Request $request): View
+    {
+        return view('profile.delete', [
+            'user' => $request->user(),
+        ]);
+    }
+
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
+        $validated = $request->only(['name', 'email', 'kecamatan', 'nama_kepala_kua', 'nip_kepala']);
+
+        $request->user()->fill($validated);
+
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
+        }
+
+        $request->user()->save();
+
+        return Redirect::route('profile.info')->with('status', 'profile-updated');
+    }
+
+    public function updateKop(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nama_kementerian' => ['nullable', 'string', 'max:255'],
+            'nama_kantor_kota' => ['nullable', 'string', 'max:255'],
+            'nama_kantor' => ['nullable', 'string', 'max:255'],
+            'alamat_kantor' => ['nullable', 'string', 'max:255'],
+            'telepon_kantor' => ['nullable', 'string', 'max:255'],
+            'email_kantor' => ['nullable', 'string', 'max:255'],
+            'logo_kantor' => ['nullable', 'image', 'max:2048'],
+            'font_size_kop_kementerian' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kantor_kota' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kantor' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_alamat' => ['nullable', 'numeric', 'min:8', 'max:20'],
+            'font_size_kop_kontak' => ['nullable', 'numeric', 'min:8', 'max:20'],
+        ]);
 
         if ($request->hasFile('logo_kantor')) {
             $oldLogo = $request->user()->logo_kantor;
@@ -39,27 +94,26 @@ class ProfileController extends Controller
             unset($validated['logo_kantor']);
         }
 
-        if (isset($validated['daftar_desa'])) {
-            $validated['daftar_desa'] = array_values(array_filter(array_map('trim', explode("\n", $validated['daftar_desa']))));
-            if (empty($validated['daftar_desa'])) {
-                $validated['daftar_desa'] = null;
-            }
-        }
+        $request->user()->fill($validated)->save();
 
-        $request->user()->fill($validated);
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.kop-surat')->with('status', 'profile-kop-updated');
     }
 
-    /**
-     * Delete the user's account.
-     */
+    public function updateDesa(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'daftar_desa' => ['nullable', 'string'],
+        ]);
+
+        $desa = array_values(array_filter(array_map('trim', explode("\n", $validated['daftar_desa']))));
+
+        $request->user()->fill([
+            'daftar_desa' => empty($desa) ? null : $desa,
+        ])->save();
+
+        return Redirect::route('profile.daftar-desa')->with('status', 'profile-desa-updated');
+    }
+
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
