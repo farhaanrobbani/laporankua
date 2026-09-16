@@ -8,7 +8,7 @@
         </div>
 
         <div class="p-6">
-            <livewire:⚡template-toggle-list />
+            <livewire:template-toggle-list />
         </div>
     </div>
 </x-admin.layout>
