@@ -42,15 +42,17 @@
                         $grouped[$key][] = $row;
                     }
 
-                    // Collect aggregate columns from layout (recursively)
-                    $collectAggCols = function ($cols) use (&$collectAggCols) {
+                    // Collect aggregate columns from layout (recursively, with parent group label)
+                    $collectAggCols = function ($cols, $parentLabel = null) use (&$collectAggCols) {
                         $result = [];
                         foreach ($cols as $col) {
                             if ($col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_total') {
-                                $result[] = $col;
+                                $compositeKey = $parentLabel ? $parentLabel . '|' . ($col['label'] ?? '') : ($col['label'] ?? '');
+                                $result[] = array_merge($col, ['_key' => $compositeKey, '_parent' => $parentLabel]);
                             }
                             if (isset($col['children'])) {
-                                $result = array_merge($result, $collectAggCols($col['children']));
+                                $childParent = $col['label'] ?? $parentLabel;
+                                $result = array_merge($result, $collectAggCols($col['children'], $childParent));
                             }
                         }
                         return $result;
@@ -67,8 +69,9 @@
                         $rows = $grouped[$groupName] ?? [];
                         $aggRow = [$groupBy => $groupName];
                         foreach ($aggCols as $col) {
+                            $key = $col['_key'];
                             if ($col['type'] === 'aggregate_total') {
-                                $aggRow[$col['label']] = count($rows);
+                                $aggRow[$key] = count($rows);
                             } elseif ($col['type'] === 'aggregate_count') {
                                 $count = 0;
                                 $field = $col['field'] ?? '';
@@ -82,7 +85,7 @@
                                         }
                                     }
                                 }
-                                $aggRow[$col['label']] = $count;
+                                $aggRow[$key] = $count;
                             }
                         }
                         $aggRows[] = $aggRow;
@@ -297,7 +300,8 @@
                                         @if ($child['type'] === 'group')
                                             @foreach ($child['children'] ?? [] as $grandchild)
                                                 @php
-                                                    $value = $row[$grandchild['label']] ?? $row[$grandchild['field'] ?? ''] ?? '';
+                                                    $compositeKey = ($child['label'] ?? '') . '|' . ($grandchild['label'] ?? '');
+                                                    $value = $row[$compositeKey] ?? $row[$grandchild['label']] ?? $row[$grandchild['field'] ?? ''] ?? '';
                                                 @endphp
                                                 <td @if(!empty($grandchild['width']))style="max-width:{{ $grandchild['width'] }};width:{{ $grandchild['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                             @endforeach
