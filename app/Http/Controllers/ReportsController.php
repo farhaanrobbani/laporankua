@@ -166,6 +166,13 @@ class ReportsController extends Controller
                 $tanggalNikahField = 'Tanggal Nikah';
             }
 
+            if ($tanggalNikahField === null) {
+                $dateFilterField = $tableLayout['aggregation']['date_filter_field'] ?? null;
+                if ($dateFilterField && in_array($dateFilterField, $effectiveFields, true)) {
+                    $tanggalNikahField = $dateFilterField;
+                }
+            }
+
             if ($tanggalNikahField !== null) {
                 $dataset['rows'] = array_values(array_filter($dataset['rows'], function ($row) use ($tanggalNikahField, $filterMonth, $filterYear) {
                     $dateVal = $row[$tanggalNikahField] ?? null;
