@@ -348,6 +348,13 @@ new class extends Component
             $tanggalNikahField = 'Tanggal Nikah';
         }
 
+        if ($tanggalNikahField === null && $this->tableLayout) {
+            $dateFilterField = $this->tableLayout['aggregation']['date_filter_field'] ?? null;
+            if ($dateFilterField && in_array($dateFilterField, $this->preview['headings'] ?? [], true)) {
+                $tanggalNikahField = $dateFilterField;
+            }
+        }
+
         if (! $tanggalNikahField || ! in_array($tanggalNikahField, $this->preview['headings'] ?? [], true)) {
             return;
         }
