@@ -210,7 +210,7 @@ class ExcelImportService
 
                     if ($existing !== null) {
                         $existing->update([
-                            'row_data' => json_encode($record, JSON_UNESCAPED_UNICODE),
+                            'row_data' => $record,
                             'import_id' => $import->id,
                             'dedup_key_value' => $dedupKeyValue,
                             'updated_at' => $now,
@@ -475,7 +475,7 @@ class ExcelImportService
             }
 
             $row->update([
-                'row_data' => json_encode($newData, JSON_UNESCAPED_UNICODE),
+                'row_data' => $newData,
                 'updated_at' => $now,
             ]);
         }
