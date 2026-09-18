@@ -16,8 +16,8 @@
             </div>
         @endif
 
-        <div class="flex gap-6">
-            <aside class="w-48 shrink-0">
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <aside class="w-full sm:w-48 shrink-0">
                 <nav class="space-y-1">
                     @php
                         $isActiveDashboard = request()->routeIs('admin.index');

@@ -19,7 +19,7 @@
             .no-print {
                 position: fixed; top: 0; left: 0; right: 0; z-index: 10;
                 background: #fff; border-bottom: 1px solid #d1d5db;
-                padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+                padding: 10px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
             }
             .no-print a, .no-print button {
                 padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none;
@@ -39,7 +39,8 @@
         }
 
         @media screen and (max-width: 800px) {
-            .page { margin: 60px 10px 20px; min-height: auto; padding: 10mm; }
+            .page { margin: 60px 10px 20px; min-height: auto; padding: 10mm; overflow-x: auto; }
+            .no-print .nav-btn, .no-print .print-btn, .no-print .close-btn { padding: 6px 10px; font-size: 12px; }
         }
 
         .field { position: absolute; }

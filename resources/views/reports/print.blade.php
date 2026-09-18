@@ -24,7 +24,7 @@
         <button onclick="window.location='{{ route('reports.show', $report) }}'" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-md hover:bg-gray-300">Tutup</button>
     </div>
 
-    <div class="print-sheet">
+    <div class="print-sheet overflow-x-auto">
         @if (! empty($dataset['table_layout']))
             @php
                 $layout = $dataset['table_layout'];

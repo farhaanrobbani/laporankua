@@ -26,7 +26,7 @@
 <body class="font-sans antialiased bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
 
     {{-- Header --}}
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-700">
+    <header x-data="{ mobileOpen: false }" class="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="/" class="flex items-center gap-2">
@@ -57,7 +57,19 @@
                             </a>
                         @endif
                     @endauth
+
+                    <button @click="mobileOpen = !mobileOpen" class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                        <svg x-show="!mobileOpen" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                        <svg x-show="mobileOpen" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <div @click.away="mobileOpen = false" x-show="mobileOpen" x-cloak x-transition class="md:hidden border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="px-4 py-3 space-y-1">
+                <a href="#fitur" @click="mobileOpen = false" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Fitur</a>
+                <a href="#cara-kerja" @click="mobileOpen = false" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Cara Kerja</a>
             </div>
         </div>
     </header>
