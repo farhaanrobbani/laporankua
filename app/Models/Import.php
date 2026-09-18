@@ -60,7 +60,7 @@ class Import extends Model
     public static function parseTableName(string $filename): string
     {
         $name = pathinfo($filename, PATHINFO_FILENAME);
-        $name = preg_replace('/[0-9]+/', '', $name);
+        $name = preg_replace('/(-\d+)+$/', '', $name);
         $name = str_replace('-', ' ', $name);
         $name = preg_replace('/\s+/', ' ', trim($name));
 
