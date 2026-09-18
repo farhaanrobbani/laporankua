@@ -68,6 +68,32 @@ class Import extends Model
     }
 
     /**
+     * Parse tanggal dari nama file (format: *-MM-YYYY.*).
+     * Contoh: "laporan-model-l3-08-2026.xlsx" → ['month' => 8, 'year' => 2026, 'date' => '2026-08-01']
+     *
+     * @return array{month: int, year: int, date: string}|null
+     */
+    public static function parseFileDate(string $filename): ?array
+    {
+        $name = pathinfo($filename, PATHINFO_FILENAME);
+
+        if (preg_match('/-(\d{1,2})-(\d{4})$/', $name, $m)) {
+            $month = (int) $m[1];
+            $year = (int) $m[2];
+
+            if ($month >= 1 && $month <= 12) {
+                return [
+                    'month' => $month,
+                    'year' => $year,
+                    'date' => sprintf('%04d-%02d-01', $year, $month),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Daftar kolom gabungan dari baris data (maks 1000 baris pertama).
      *
      * @return string[]

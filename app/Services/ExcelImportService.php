@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Import;
 use App\Models\ImportData;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -248,6 +249,10 @@ class ExcelImportService
                 'error_log' => $errors === [] ? null : $errors,
             ]);
         });
+
+        if ($import->status === 'success' || $import->status === 'appended') {
+            $this->postProcessModelL3($import);
+        }
     }
 
     private function markFailed(Import $import, int $total, int $imported, array $errors): void
@@ -379,5 +384,100 @@ class ExcelImportService
         }
 
         return $hasValue ? $record : null;
+    }
+
+    /**
+     * Post-process untuk laporan model L3: tambah kolom "Tanggal Cetak" dan "Keterangan".
+     *
+     * - Parse nama file untuk dapat bulan/tahun acuan
+     * - Baris dengan Tanggal Akad sesuai bulan/tahun acuan → Tanggal Cetak = Tanggal Akad, Keterangan = "Bukan Duplikat"
+     * - Baris dengan Tanggal Akad tidak sesuai → Tanggal Cetak =Tanggal Cetak baris sebelumnya (atau tanggal dari file), Keterangan = "Duplikat"
+     */
+    private function postProcessModelL3(Import $import): void
+    {
+        if ($import->table_name !== 'laporan model l3') {
+            return;
+        }
+
+        $fileDate = Import::parseFileDate($import->file_name);
+
+        if ($fileDate === null) {
+            return;
+        }
+
+        $rows = $import->importData()->orderBy('row_number')->get();
+
+        if ($rows->isEmpty()) {
+            return;
+        }
+
+        $hasTanggalAkad = false;
+
+        foreach ($rows as $row) {
+            $data = is_string($row->row_data) ? json_decode($row->row_data, true) : $row->row_data;
+            if (is_array($data) && array_key_exists('Tanggal Akad', $data)) {
+                $hasTanggalAkad = true;
+                break;
+            }
+        }
+
+        if (! $hasTanggalAkad) {
+            return;
+        }
+
+        $refDate = Carbon::createFromDate($fileDate['year'], $fileDate['month'], 1);
+        $refMonth = $fileDate['month'];
+        $refYear = $fileDate['year'];
+        $prevTanggalCetak = $refDate->toDateString();
+        $now = now()->toDateTimeString();
+
+        foreach ($rows as $row) {
+            $data = is_string($row->row_data) ? json_decode($row->row_data, true) : $row->row_data;
+
+            if (! is_array($data) || ! array_key_exists('Tanggal Akad', $data)) {
+                continue;
+            }
+
+            $tanggalAkad = $data['Tanggal Akad'];
+            $isOutlier = true;
+
+            if ($tanggalAkad !== null && $tanggalAkad !== '') {
+                try {
+                    $date = Carbon::parse($tanggalAkad);
+                    if ($date->month === $refMonth && $date->year === $refYear) {
+                        $isOutlier = false;
+                    }
+                } catch (\Throwable) {
+                    // tanggal tidak bisa di-parse → anggap outlier
+                }
+            }
+
+            $newData = [];
+
+            foreach ($data as $key => $value) {
+                $newData[$key] = $value;
+
+                if ($key === 'Tanggal Akad') {
+                    if ($isOutlier) {
+                        $newData['Tanggal Cetak'] = $prevTanggalCetak;
+                        $newData['Keterangan'] = 'Duplikat';
+                    } else {
+                        $newData['Tanggal Cetak'] = $tanggalAkad;
+                        $newData['Keterangan'] = 'Bukan Duplikat';
+                        $prevTanggalCetak = $tanggalAkad;
+                    }
+                }
+            }
+
+            if (! array_key_exists('Tanggal Cetak', $newData)) {
+                $newData['Tanggal Cetak'] = $prevTanggalCetak;
+                $newData['Keterangan'] = $isOutlier ? 'Duplikat' : 'Bukan Duplikat';
+            }
+
+            $row->update([
+                'row_data' => json_encode($newData, JSON_UNESCAPED_UNICODE),
+                'updated_at' => $now,
+            ]);
+        }
     }
 }
