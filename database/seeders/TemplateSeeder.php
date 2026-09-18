@@ -152,5 +152,38 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+
+        // Laporan L4 Simponi
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan L4 Simponi'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'output_format' => 'print',
+                'description' => 'Laporan rekapitulasi setoran simponi berdasarkan desa',
+                'fields_json' => ['Nama Kelurahan', 'Tanggal dan Jam Setor', 'Nominal Setor', 'Tanggal Akad', 'Nama Suami'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Nama Kelurahan', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'portrait',
+                    'table_layout' => [
+                        'type' => 'grouped_detail',
+                        'aggregation' => [
+                            'group_by' => 'Nama Kelurahan',
+                        ],
+                        'columns' => [
+                            ['type' => 'row_number', 'label' => 'No'],
+                            ['type' => 'field', 'field' => 'Nama Kelurahan', 'label' => 'Desa'],
+                            ['type' => 'aggregate_total', 'label' => 'Jumlah Perkawinan'],
+                            ['type' => 'field', 'field' => 'Tanggal dan Jam Setor', 'label' => 'Tanggal Setor'],
+                            ['type' => 'static', 'value' => '600000', 'label' => 'Jumlah Setor'],
+                            ['type' => 'field', 'field' => 'Tanggal Akad', 'label' => 'Tanggal Perkawinan'],
+                            ['type' => 'field', 'field' => 'Nama Suami', 'label' => 'Penyetor'],
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 }
