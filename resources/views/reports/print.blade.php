@@ -407,6 +407,12 @@
                                             @else
                                                 @php
                                                     $value = $row[$col['field']] ?? '';
+                                                    if (($col['format'] ?? '') === 'date_id' && $value !== '' && $value !== null) {
+                                                        try {
+                                                            $d = \Carbon\Carbon::parse($value);
+                                                            $value = $d->format('d-m-Y');
+                                                        } catch (\Exception $e) {}
+                                                    }
                                                 @endphp
                                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                             @endif
