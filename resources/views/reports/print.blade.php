@@ -31,7 +31,7 @@
                 $columns = $layout['columns'] ?? [];
 
                 // Aggregation: group data if configured
-                if (! empty($layout['aggregation'])) {
+                if (! empty($layout['aggregation']) && ($layout['type'] ?? '') !== 'grouped_detail') {
                     $groupBy = $layout['aggregation']['group_by'];
                     $grouped = [];
                     foreach ($dataset['rows'] as $row) {
@@ -238,20 +238,6 @@
                         }
                     }
 
-                    $staticValues = $dataset['daftar_desa'] ?? $layout['aggregation']['static_values'] ?? null;
-                    if ($staticValues) {
-                        $existingNames = array_column($l4Groups, 'name');
-                        foreach ($staticValues as $sv) {
-                            if (! in_array($sv, $existingNames, true)) {
-                                $l4Groups[] = [
-                                    'name' => $sv,
-                                    'count' => 0,
-                                    'rows' => [],
-                                    'startRowNum' => $rowNum,
-                                ];
-                            }
-                        }
-                    }
                 }
             @endphp
 
