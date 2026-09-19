@@ -98,7 +98,7 @@
             </div>
 
             <div class="field" style="top: 30mm; right: 20mm;">
-                <span class="field-value">{{ $rd['No Porforasi Suami'] ?? '-' }} & {{ $rd['No Porforasi Istri'] ?? '-' }}</span>
+                <span class="field-value">JT {{ $rd['No Porforasi Suami'] ?? '-' }} & {{ $rd['No Porforasi Istri'] ?? '-' }}</span>
             </div>
         </div>
     @endforeach
