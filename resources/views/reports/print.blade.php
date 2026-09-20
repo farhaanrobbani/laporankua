@@ -448,6 +448,30 @@
                                 </tr>
                             @endif
                         @endforeach
+                        @php
+                            $l4TotalPerkawinan = 0;
+                            foreach ($l4Groups as $g) {
+                                $l4TotalPerkawinan += $g['count'];
+                            }
+                            $l4TotalSetor = $l4TotalPerkawinan * 600000;
+                        @endphp
+                        <tr style="font-weight: bold;">
+                            @foreach ($columns as $col)
+                                @if ($col['type'] === 'row_number')
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                @elseif ($col['type'] === 'field')
+                                    @if (($col['field'] ?? '') === ($layout['aggregation']['group_by'] ?? ''))
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
+                                    @else
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    @endif
+                                @elseif ($col['type'] === 'aggregate_total')
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4TotalPerkawinan }}</td>
+                                @elseif ($col['type'] === 'static')
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ number_format($l4TotalSetor, 0, ',', '.') }}</td>
+                                @endif
+                            @endforeach
+                        </tr>
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
                             <tr>
