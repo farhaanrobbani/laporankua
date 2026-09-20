@@ -60,13 +60,6 @@
                     $aggCols = $collectAggCols($columns);
 
                     $l2Title = 'LAPORAN';
-                    $isL5Report = false;
-                    foreach ($columns as $col) {
-                        if (($col['type'] ?? '') === 'group' && ($col['label'] ?? '') === 'Memiliki Sertifikat Suscatin') {
-                            $isL5Report = true;
-                            break;
-                        }
-                    }
                     foreach ($aggCols as $col) {
                         $field = $col['field'] ?? '';
                         if (str_contains($field, 'Pendidikan')) {
@@ -77,9 +70,6 @@
                             $l2Title = 'LAPORAN USIA PENGANTIN';
                             break;
                         }
-                    }
-                    if ($isL5Report) {
-                        $l2Title = 'LAPORAN SERTIFIKAT SUSCATIN';
                     }
 
                     // Build aggregated rows
@@ -211,6 +201,13 @@
                 $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
                 $isL2Report = !empty($dataset['table_layout']['aggregation']) && ($layout['type'] ?? '') !== 'grouped_detail';
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
+                $isL5Report = false;
+                foreach ($columns as $col) {
+                    if (($col['type'] ?? '') === 'group' && ($col['label'] ?? '') === 'Memiliki Sertifikat Suscatin') {
+                        $isL5Report = true;
+                        break;
+                    }
+                }
 
                 $l4Groups = [];
                 if ($isL4Report) {
@@ -265,7 +262,8 @@
                     <div class="flex items-start mb-3">
                         <span style="font-size: 21px; font-weight: bold;">L5</span>
                         <div class="text-center flex-1">
-                            <h1 class="font-bold uppercase" style="font-size: 14px;">{{ $l2Title }}</h1>
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
+                            <h2 class="font-bold uppercase" style="font-size: 13px;">KURSUS CALON PENGANTIN</h2>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
