@@ -220,9 +220,11 @@ new class extends Component
         foreach ($this->naVersions as $i => $ver) {
             $baseRows[] = array_merge($empty, [
                 'formulir' => $ver['label'],
+                'masuk_jumlah' => (string) $ver['masuk_jumlah'],
                 'keluar_jumlah' => (string) $ver['keluar_jumlah'],
                 'keluar_seri_awal' => $ver['min_porp'],
                 'keluar_seri_akhir' => $ver['max_porp'],
+                'sisa_jumlah' => (string) ($ver['masuk_jumlah'] - $ver['keluar_jumlah']),
             ]);
         }
 
@@ -304,6 +306,7 @@ new class extends Component
             $versions[] = [
                 'prefix' => $prefix,
                 'label' => 'Model NA ('.$prefix.')',
+                'masuk_jumlah' => $max - $min + 1,
                 'keluar_jumlah' => $data['count'],
                 'min_porp' => $min,
                 'max_porp' => $max,
