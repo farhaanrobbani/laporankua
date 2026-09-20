@@ -235,13 +235,14 @@ new class extends Component
 
     private function detectNaVersions(): array
     {
-        if (! $this->importId) {
+        $importIds = $this->isMergeMode ? $this->mergeImportIds : $this->selectedImportIds;
+        if (empty($importIds)) {
             return [];
         }
 
         $prefixLength = $this->tableLayout['na_version_prefix_length'] ?? 6;
 
-        $allRows = \App\Models\ImportData::where('import_id', $this->importId)
+        $allRows = \App\Models\ImportData::whereIn('import_id', $importIds)
             ->select('row_data')
             ->get()
             ->pluck('row_data')
@@ -553,15 +554,27 @@ new class extends Component
             }
         }
 
-        $dataset = app(MergeService::class)->buildMergedDataset(
-            $this->mergeImportIds,
-            $effectiveFields,
-            $this->search ?: null,
-            $this->filterColumn ?: null,
-            $this->filterValue ?: null,
-            $this->sortColumn ?: null,
-            $this->sortDirection,
-        );
+        if (($this->tableLayout['type'] ?? '') === 'formulir') {
+            $dataset = app(MergeService::class)->buildConcatDataset(
+                $this->mergeImportIds,
+                $effectiveFields,
+                $this->search ?: null,
+                $this->filterColumn ?: null,
+                $this->filterValue ?: null,
+                $this->sortColumn ?: null,
+                $this->sortDirection,
+            );
+        } else {
+            $dataset = app(MergeService::class)->buildMergedDataset(
+                $this->mergeImportIds,
+                $effectiveFields,
+                $this->search ?: null,
+                $this->filterColumn ?: null,
+                $this->filterValue ?: null,
+                $this->sortColumn ?: null,
+                $this->sortDirection,
+            );
+        }
 
         $this->preview = [
             'headings' => $dataset['headings'],
