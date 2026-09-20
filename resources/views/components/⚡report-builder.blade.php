@@ -258,7 +258,7 @@ new class extends Component
             }
             $prefix = substr($nomor, 0, $prefixLength);
             if (! isset($groups[$prefix])) {
-                $groups[$prefix] = ['porporasi' => [], 'count' => 0];
+                $groups[$prefix] = ['porporasi' => [], 'filtered_porp' => [], 'count' => 0];
             }
             $groups[$prefix]['porporasi'][] = (int) $nomor;
         }
@@ -292,24 +292,25 @@ new class extends Component
 
             if (isset($groups[$prefix])) {
                 $groups[$prefix]['count']++;
+                $groups[$prefix]['filtered_porp'][] = (int) $nomor;
             }
         }
 
         ksort($groups);
 
         $versions = [];
-        $i = 1;
         foreach ($groups as $prefix => $data) {
-            $min = (string) min($data['porporasi']);
-            $max = (string) max($data['porporasi']);
+            if ($data['count'] === 0) {
+                continue;
+            }
+            $filteredPorp = $data['filtered_porp'];
             $versions[] = [
                 'prefix' => $prefix,
                 'label' => 'Model NA ('.$prefix.')',
                 'keluar_jumlah' => $data['count'],
-                'min_porp' => $min,
-                'max_porp' => $max,
+                'min_porp' => (string) min($filteredPorp),
+                'max_porp' => (string) max($filteredPorp),
             ];
-            $i++;
         }
 
         return $versions;
