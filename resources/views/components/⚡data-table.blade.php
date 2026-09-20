@@ -217,6 +217,10 @@ new class extends Component
                     return $val === null || mb_strpos(mb_strtolower((string) $val), $lowerFilter) === false;
                 }
 
+                if ($filterMode === 'exact') {
+                    return mb_strtolower((string) $val) === $lowerFilter;
+                }
+
                 return $val !== null && mb_strpos(mb_strtolower((string) $val), $lowerFilter) !== false;
             });
         }

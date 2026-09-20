@@ -33,7 +33,7 @@
                             :import-ids="$importIds"
                             :filter-column="'Keterangan'"
                             :filter-value="'Duplikat'"
-                            :filter-mode="'contains'"
+                            :filter-mode="'exact'"
                             :key="'duplikat'"
                         />
                     @endif
