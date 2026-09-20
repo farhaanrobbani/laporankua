@@ -252,11 +252,14 @@
                         </div>
                     </div>
                 @elseif ($isL4Report)
-                    <div class="text-center mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
-                        <h2 class="font-bold uppercase" style="font-size: 13px;">PNPB NIKAH ATAU RUJUK</h2>
-                        <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
-                        <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                    <div class="flex items-start mb-3">
+                        <span style="font-size: 21px; font-weight: bold;">L4</span>
+                        <div class="text-center flex-1">
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
+                            <h2 class="font-bold uppercase" style="font-size: 13px;">PNPB NIKAH ATAU RUJUK</h2>
+                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                        </div>
                     </div>
                 @else
                     @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
@@ -389,14 +392,13 @@
                 </thead>
                 <tbody style="font-size: 11px;">
                     @if ($isL4Report)
+                        @php $l4RowNum = 1; @endphp
                         @foreach ($l4Groups as $group)
                             @foreach ($group['rows'] as $i => $row)
                                 <tr>
                                     @foreach ($columns as $col)
                                         @if ($col['type'] === 'row_number')
-                                            @if ($i === 0)
-                                                <td rowspan="{{ $group['count'] }}" class="border border-gray-700 px-1 py-0.5 text-center">{{ $group['startRowNum'] }}</td>
-                                            @endif
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4RowNum++ }}</td>
                                         @elseif ($col['type'] === 'field')
                                             @if (($col['field'] ?? '') === ($layout['aggregation']['group_by'] ?? ''))
                                                 @if ($i === 0)
@@ -428,7 +430,7 @@
                                 <tr>
                                     @foreach ($columns as $col)
                                         @if ($col['type'] === 'row_number')
-                                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4RowNum++ }}</td>
                                         @elseif ($col['type'] === 'field')
                                             @if (($col['field'] ?? '') === ($layout['aggregation']['group_by'] ?? ''))
                                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $group['name'] }}</td>
