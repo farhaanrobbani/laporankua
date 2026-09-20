@@ -589,6 +589,10 @@ new class extends Component
         if (! $hasFilter && count($this->preview['rows']) > 10) {
             $this->preview['rows'] = array_slice($this->preview['rows'], 0, 10);
         }
+
+        if (($this->tableLayout['type'] ?? '') === 'formulir') {
+            $this->initManualData();
+        }
     }
 
     private function applyPreviewFilter(): void
