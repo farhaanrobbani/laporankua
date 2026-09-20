@@ -220,11 +220,9 @@ new class extends Component
         foreach ($this->naVersions as $i => $ver) {
             $baseRows[] = array_merge($empty, [
                 'formulir' => $ver['label'],
-                'masuk_jumlah' => (string) $ver['masuk_jumlah'],
                 'keluar_jumlah' => (string) $ver['keluar_jumlah'],
                 'keluar_seri_awal' => $ver['min_porp'],
                 'keluar_seri_akhir' => $ver['max_porp'],
-                'sisa_jumlah' => (string) ($ver['masuk_jumlah'] - $ver['keluar_jumlah']),
             ]);
         }
 
@@ -306,7 +304,6 @@ new class extends Component
             $versions[] = [
                 'prefix' => $prefix,
                 'label' => 'Model NA ('.$prefix.')',
-                'masuk_jumlah' => $max - $min + 1,
                 'keluar_jumlah' => $data['count'],
                 'min_porp' => $min,
                 'max_porp' => $max,
@@ -319,7 +316,31 @@ new class extends Component
 
     public function updatedManualData(): void
     {
+        $this->computeMasukJumlah();
         $this->recalculateSisa();
+    }
+
+    private function computeMasukJumlah(): void
+    {
+        $naCount = count($this->naVersions);
+        if ($naCount === 0) {
+            return;
+        }
+
+        for ($i = 0; $i < $naCount; $i++) {
+            $idx = $i + 1;
+            if (! isset($this->manualData[$idx])) {
+                continue;
+            }
+            $awal = (int) ($this->manualData[$idx]['masuk_seri_awal'] ?? 0);
+            $akhir = (int) ($this->manualData[$idx]['masuk_seri_akhir'] ?? 0);
+
+            if ($awal > 0 && $akhir >= $awal) {
+                $this->manualData[$idx]['masuk_jumlah'] = (string) ($akhir - $awal + 1);
+            } else {
+                $this->manualData[$idx]['masuk_jumlah'] = '';
+            }
+        }
     }
 
     private function recalculateSisa(): void
