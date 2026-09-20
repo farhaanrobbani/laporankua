@@ -201,6 +201,7 @@
                 $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
                 $isL2Report = !empty($dataset['table_layout']['aggregation']) && ($layout['type'] ?? '') !== 'grouped_detail';
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
+                $isL3Report = ($layout['type'] ?? '') === 'formulir';
                 $isL5Report = false;
                 foreach ($columns as $col) {
                     if (($col['type'] ?? '') === 'group' && ($col['label'] ?? '') === 'Memiliki Sertifikat Suscatin') {
@@ -264,6 +265,16 @@
                         <div class="text-center flex-1">
                             <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
                             <h2 class="font-bold uppercase" style="font-size: 13px;">KURSUS CALON PENGANTIN</h2>
+                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                        </div>
+                    </div>
+                @elseif ($isL3Report)
+                    <div class="flex items-start mb-3">
+                        <span style="font-size: 21px; font-weight: bold;">L3</span>
+                        <div class="text-center flex-1">
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
+                            <h2 class="font-bold uppercase" style="font-size: 13px;">FORMULIR PERKAWINAN ATAU RUJUK</h2>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
@@ -489,6 +500,48 @@
                                 @endif
                             @endforeach
                         </tr>
+                    @elseif ($isL3Report)
+                        @php
+                            $rows = $dataset['rows'] ?? [];
+                            $stokMasuk = (int) ($rows[0]['Stok Masuk'] ?? 0);
+                            $stokKeluar = (int) ($rows[0]['Stok Keluar'] ?? 0);
+                            $stokSisa = $stokMasuk - $stokKeluar;
+
+                            $porporasiNumbers = [];
+                            foreach ($rows as $row) {
+                                if (!empty($row['Nomor Perforasi'])) {
+                                    $porporasiNumbers[] = (int) $row['Nomor Perforasi'];
+                                }
+                            }
+                            $min = !empty($porporasiNumbers) ? min($porporasiNumbers) : null;
+                            $max = !empty($porporasiNumbers) ? max($porporasiNumbers) : null;
+                            $porporasiRange = ($min !== null && $max !== null)
+                                ? ($min === $max ? 'JT '.$min : 'JT '.$min.' - '.$max)
+                                : '';
+                        @endphp
+                        @foreach ($layout['static_rows'] as $sr)
+                            <tr>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sr['row_num'] }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $sr['formulir'] }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                @if ($sr['dynamic'])
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $stokKeluar }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $porporasiRange }}</td>
+                                @else
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                @endif
+                                @if ($sr['dynamic'])
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $stokSisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                @else
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                @endif
+                                <td class="border border-gray-700 px-1 py-0.5"></td>
+                            </tr>
+                        @endforeach
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
                             <tr>
@@ -541,7 +594,7 @@
                             </tr>
                         @endforeach
                     @endif
-                    @if ($isL2Report)
+            @if ($isL2Report)
                         <tr style="font-weight: bold;">
                             @foreach ($columns as $col)
                                 @if ($col['type'] === 'row_number')

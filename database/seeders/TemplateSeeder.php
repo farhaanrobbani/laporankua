@@ -223,5 +223,48 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+        // Laporan L3
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan L3'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'output_format' => 'print',
+                'description' => 'Laporan Formulir Perkawinan atau Rujuk',
+                'fields_json' => ['Tanggal Cetak', 'Keterangan', 'Status', 'Nama Catin'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Tanggal Cetak', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'landscape',
+                    'table_layout' => [
+                        'type' => 'formulir',
+                        'static_rows' => [
+                            ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
+                            ['formulir' => 'Model NA', 'row_num' => 2, 'dynamic' => true],
+                            ['formulir' => 'Model DN', 'row_num' => 3, 'dynamic' => false],
+                            ['formulir' => 'Model NB', 'row_num' => 4, 'dynamic' => false],
+                        ],
+                        'columns' => [
+                            ['type' => 'row_number', 'label' => 'No'],
+                            ['type' => 'static_value', 'field' => 'formulir', 'label' => 'Nama Formulir'],
+                            ['type' => 'group', 'label' => 'Masuk', 'colspan' => 2, 'children' => [
+                                ['type' => 'manual', 'label' => 'Jumlah'],
+                                ['type' => 'manual', 'label' => 'Seri Porporasi'],
+                            ]],
+                            ['type' => 'group', 'label' => 'Keluar', 'colspan' => 2, 'children' => [
+                                ['type' => 'stok_keluar', 'label' => 'Jumlah'],
+                                ['type' => 'porporasi_range', 'label' => 'Seri Porporasi'],
+                            ]],
+                            ['type' => 'group', 'label' => 'Sisa', 'colspan' => 2, 'children' => [
+                                ['type' => 'stok_sisa', 'label' => 'Jumlah'],
+                                ['type' => 'manual', 'label' => 'Seri Porporasi'],
+                            ]],
+                            ['type' => 'manual', 'label' => 'Keterangan'],
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 }
