@@ -318,6 +318,7 @@ new class extends Component
     {
         $this->computeMasukJumlah();
         $this->recalculateSisa();
+        $this->computeSisaSeri();
     }
 
     private function computeMasukJumlah(): void
@@ -358,6 +359,31 @@ new class extends Component
             $masuk = (int) ($this->manualData[$idx]['masuk_jumlah'] ?? 0);
             $keluar = (int) ($this->manualData[$idx]['keluar_jumlah'] ?? 0);
             $this->manualData[$idx]['sisa_jumlah'] = $masuk > 0 ? (string) ($masuk - $keluar) : '';
+        }
+    }
+
+    private function computeSisaSeri(): void
+    {
+        $naCount = count($this->naVersions);
+        if ($naCount === 0) {
+            return;
+        }
+
+        for ($i = 0; $i < $naCount; $i++) {
+            $idx = $i + 1;
+            if (! isset($this->manualData[$idx])) {
+                continue;
+            }
+            $keluarAkhir = (int) ($this->manualData[$idx]['keluar_seri_akhir'] ?? 0);
+            $masukAkhir = (int) ($this->manualData[$idx]['masuk_seri_akhir'] ?? 0);
+
+            if ($keluarAkhir > 0 && $masukAkhir >= $keluarAkhir) {
+                $this->manualData[$idx]['sisa_seri_awal'] = (string) ($keluarAkhir + 1);
+                $this->manualData[$idx]['sisa_seri_akhir'] = (string) $masukAkhir;
+            } else {
+                $this->manualData[$idx]['sisa_seri_awal'] = '';
+                $this->manualData[$idx]['sisa_seri_akhir'] = '';
+            }
         }
     }
 
@@ -1011,10 +1037,17 @@ new class extends Component
                                         @endif
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <div class="flex gap-1">
-                                            <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
-                                            <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
-                                        </div>
+                                        @if ($isNaVersion)
+                                            <div class="flex gap-1">
+                                                <span class="w-1/2 text-xs text-gray-700 dark:text-gray-300 truncate">{{ $this->manualData[$i]['sisa_seri_awal'] ?? '' }}</span>
+                                                <span class="w-1/2 text-xs text-gray-700 dark:text-gray-300 truncate">{{ $this->manualData[$i]['sisa_seri_akhir'] ?? '' }}</span>
+                                            </div>
+                                        @else
+                                            <div class="flex gap-1">
+                                                <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
+                                                <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
+                                            </div>
+                                        @endif
                                     </td>
                                     {{-- Keterangan --}}
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
