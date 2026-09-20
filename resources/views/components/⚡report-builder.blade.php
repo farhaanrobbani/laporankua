@@ -376,8 +376,12 @@ new class extends Component
             }
             $keluarAkhir = (int) ($this->manualData[$idx]['keluar_seri_akhir'] ?? 0);
             $masukAkhir = (int) ($this->manualData[$idx]['masuk_seri_akhir'] ?? 0);
+            $sisaJumlah = (int) ($this->manualData[$idx]['sisa_jumlah'] ?? 0);
 
-            if ($keluarAkhir > 0 && $masukAkhir >= $keluarAkhir) {
+            if ($sisaJumlah <= 0) {
+                $this->manualData[$idx]['sisa_seri_awal'] = '';
+                $this->manualData[$idx]['sisa_seri_akhir'] = '';
+            } elseif ($keluarAkhir > 0 && $masukAkhir >= $keluarAkhir) {
                 $this->manualData[$idx]['sisa_seri_awal'] = (string) ($keluarAkhir + 1);
                 $this->manualData[$idx]['sisa_seri_akhir'] = (string) $masukAkhir;
             } else {
