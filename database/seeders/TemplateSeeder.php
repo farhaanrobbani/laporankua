@@ -246,8 +246,8 @@ class TemplateSeeder extends Seeder
                             ['formulir' => 'Model NB', 'row_num' => 4, 'dynamic' => false],
                         ],
                         'columns' => [
-                            ['type' => 'row_number', 'label' => 'No'],
-                            ['type' => 'static_value', 'field' => 'formulir', 'label' => 'Nama Formulir'],
+                            ['type' => 'row_number', 'label' => 'No', 'rowspan' => 2],
+                            ['type' => 'static_value', 'field' => 'formulir', 'label' => 'Nama Formulir', 'rowspan' => 2],
                             ['type' => 'group', 'label' => 'Masuk', 'colspan' => 2, 'children' => [
                                 ['type' => 'manual', 'label' => 'Jumlah'],
                                 ['type' => 'manual', 'label' => 'Seri Porporasi'],
@@ -260,7 +260,7 @@ class TemplateSeeder extends Seeder
                                 ['type' => 'stok_sisa', 'label' => 'Jumlah'],
                                 ['type' => 'manual', 'label' => 'Seri Porporasi'],
                             ]],
-                            ['type' => 'manual', 'label' => 'Keterangan'],
+                            ['type' => 'manual', 'label' => 'Keterangan', 'rowspan' => 2],
                         ],
                     ],
                 ],
