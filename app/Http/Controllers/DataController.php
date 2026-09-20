@@ -63,6 +63,16 @@ class DataController extends Controller
         return view('data.pelaksanaan-luar-kantor', compact('importIds'));
     }
 
+    public function duplikat(): View
+    {
+        $importIds = Import::where('user_id', auth()->id())
+            ->where('table_name', 'laporan model l3')
+            ->pluck('id')
+            ->toArray();
+
+        return view('data.duplikat', compact('importIds'));
+    }
+
     public function show(ImportData $record): View
     {
         $this->authorize('view', $record->import);

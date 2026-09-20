@@ -27,15 +27,14 @@
                     </div>
 
                     @if (empty($importIds))
-                        <x-empty-state title="Belum ada data" message="Upload laporan peristiwa nikah dan pendaftaran nikah terlebih dahulu." :action-url="route('imports.create')" action-label="Upload Excel" />
+                        <x-empty-state title="Belum ada data" message="Upload laporan model L3 terlebih dahulu." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <livewire:data-table
                             :import-ids="$importIds"
-                            :join-column="'Nomor Daftar'"
-                            :filter-column="'Nikah Di'"
-                            :filter-value="'BEDOL'"
+                            :filter-column="'Keterangan'"
+                            :filter-value="'Duplikat'"
                             :filter-mode="'contains'"
-                            :key="'pelaksanaan-luar-kantor'"
+                            :key="'duplikat'"
                         />
                     @endif
                 </div>
