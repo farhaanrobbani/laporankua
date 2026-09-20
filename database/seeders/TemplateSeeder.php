@@ -186,5 +186,42 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+
+        // Laporan L5
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan L5'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'output_format' => 'print',
+                'description' => 'Laporan rekapitulasi sertifikat suscatin berdasarkan desa',
+                'fields_json' => ['Kelurahan'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Kelurahan', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'portrait',
+                    'table_layout' => [
+                        'aggregation' => [
+                            'group_by' => 'Kelurahan',
+                            'static_values' => [
+                                'ARGOYUWONO', 'LEBAKHARJO', 'MULYOASRI', 'PURWOHARJO',
+                                'SIDORENGGO', 'SIMOJAYAN', 'SONOWANGI', 'TAMANASRI',
+                                'TAMANSARI', 'TAWANGAGUNG', 'TIRTOMARTO', 'TIRTOMOYO', 'WIROTAMAN',
+                            ],
+                        ],
+                        'columns' => [
+                            ['type' => 'row_number', 'label' => 'No', 'rowspan' => 3],
+                            ['type' => 'field', 'field' => 'Kelurahan', 'label' => 'Desa', 'rowspan' => 3],
+                            ['type' => 'aggregate_total', 'label' => 'Jumlah Perkawinan', 'rowspan' => 3],
+                            ['type' => 'group', 'label' => 'Memiliki Sertifikat Suscatin', 'colspan' => 2, 'children' => [
+                                ['type' => 'aggregate_total', 'label' => 'Laki-laki'],
+                                ['type' => 'aggregate_total', 'label' => 'Perempuan'],
+                            ]],
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 }
