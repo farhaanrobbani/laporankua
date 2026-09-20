@@ -502,59 +502,27 @@
                         </tr>
                     @elseif ($isL3Report)
                         @php
-                            $manualData = $dataset['config_json']['manual_data'] ?? null;
-                            $rows = $dataset['rows'] ?? [];
-                            $stokMasuk = (int) ($rows[0]['Stok Masuk'] ?? 0);
-                            $stokKeluar = (int) ($rows[0]['Stok Keluar'] ?? 0);
-                            $stokSisa = $stokMasuk - $stokKeluar;
-
-                            $porporasiNumbers = [];
-                            foreach ($rows as $row) {
-                                if (!empty($row['Nomor Perforasi'])) {
-                                    $porporasiNumbers[] = (int) $row['Nomor Perforasi'];
-                                }
-                            }
-                            $min = !empty($porporasiNumbers) ? min($porporasiNumbers) : null;
-                            $max = !empty($porporasiNumbers) ? max($porporasiNumbers) : null;
-                            $porporasiRange = ($min !== null && $max !== null)
-                                ? ($min === $max ? 'JT '.$min : 'JT '.$min.' - '.$max)
-                                : '';
+                            $manualRaw = $dataset['config_json']['manual_data'] ?? null;
+                            $manualData = is_array($manualRaw) && isset($manualRaw['rows']) ? $manualRaw['rows'] : $manualRaw;
+                            $staticRows = $dataset['config_json']['table_layout']['static_rows'] ?? $layout['static_rows'] ?? [];
                         @endphp
-                        @foreach ($layout['static_rows'] as $sr)
+                        @foreach ($staticRows as $sr)
                             @php
                                 $idx = $sr['row_num'] - 1;
-                                $md = $manualData[$idx] ?? null;
+                                $md = is_array($manualData) ? ($manualData[$idx] ?? null) : null;
                             @endphp
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sr['row_num'] }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5">{{ $sr['formulir'] }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $md['formulir'] ?? $sr['formulir'] ?? '' }}</td>
                                 {{-- Masuk --}}
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['masuk_jumlah'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['masuk_seri'] ?? '' }}</td>
                                 {{-- Keluar --}}
-                                @if ($sr['dynamic'])
-                                    @php
-                                        $keluarJumlah = !empty($md['keluar_jumlah']) ? $md['keluar_jumlah'] : $stokKeluar;
-                                        $keluarSeri = !empty($md['keluar_seri']) ? $md['keluar_seri'] : $porporasiRange;
-                                    @endphp
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $keluarJumlah }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $keluarSeri }}</td>
-                                @else
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_jumlah'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_seri'] ?? '' }}</td>
-                                @endif
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_jumlah'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_seri'] ?? '' }}</td>
                                 {{-- Sisa --}}
-                                @if ($sr['dynamic'])
-                                    @php
-                                        $sisaJumlah = !empty($md['sisa_jumlah']) ? $md['sisa_jumlah'] : $stokSisa;
-                                        $sisaSeri = !empty($md['sisa_seri']) ? $md['sisa_seri'] : '';
-                                    @endphp
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sisaJumlah }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sisaSeri }}</td>
-                                @else
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_jumlah'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_seri'] ?? '' }}</td>
-                                @endif
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_jumlah'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_seri'] ?? '' }}</td>
                                 {{-- Keterangan --}}
                                 <td class="border border-gray-700 px-1 py-0.5">{{ $md['keterangan'] ?? '' }}</td>
                             </tr>

@@ -239,12 +239,13 @@ class TemplateSeeder extends Seeder
                     'orientation' => 'landscape',
                     'table_layout' => [
                         'type' => 'formulir',
+                        'na_version_prefix_length' => 6,
                         'aggregation' => [
                             'date_filter_field' => 'Tanggal Cetak',
                         ],
                         'static_rows' => [
                             ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
-                            ['formulir' => 'Model NA', 'row_num' => 2, 'dynamic' => true],
+                            ['formulir' => 'Model NA', 'row_num' => 2, 'dynamic' => true, 'dynamic_type' => 'na_version'],
                             ['formulir' => 'Model DN', 'row_num' => 3, 'dynamic' => false],
                             ['formulir' => 'Model NB', 'row_num' => 4, 'dynamic' => false],
                         ],

@@ -64,6 +64,9 @@ new class extends Component
 
     public ?array $tableLayout = null;
 
+    /** @var array<int, array{prefix: string, label: string, keluar_jumlah: int, min_porp: string, max_porp: string}> */
+    public array $naVersions = [];
+
     /** @var array<int, array{masuk_jumlah: string, masuk_seri: string, keluar_jumlah: string, keluar_seri: string, sisa_jumlah: string, sisa_seri: string, keterangan: string}> */
     public array $manualData = [];
 
@@ -207,39 +210,159 @@ new class extends Component
 
     private function initManualData(): void
     {
-        $empty = ['masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
-        $this->manualData = [$empty, $empty, $empty, $empty];
+        $empty = ['formulir' => '', 'masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
+        $this->naVersions = $this->detectNaVersions();
 
-        if (! $this->preview || $this->preview['rows'] === []) {
+        $baseRows = [
+            array_merge($empty, ['formulir' => 'Model N']),
+        ];
+
+        foreach ($this->naVersions as $i => $ver) {
+            $baseRows[] = array_merge($empty, [
+                'formulir' => $ver['label'],
+                'keluar_jumlah' => (string) $ver['keluar_jumlah'],
+                'keluar_seri_awal' => $ver['min_porp'],
+                'keluar_seri_akhir' => $ver['max_porp'],
+            ]);
+        }
+
+        $baseRows[] = array_merge($empty, ['formulir' => 'Model DN']);
+        $baseRows[] = array_merge($empty, ['formulir' => 'Model NB']);
+
+        $this->manualData = $baseRows;
+        $this->rebuildStaticRows();
+    }
+
+    private function detectNaVersions(): array
+    {
+        if (! $this->importId) {
+            return [];
+        }
+
+        $prefixLength = $this->tableLayout['na_version_prefix_length'] ?? 6;
+
+        $allRows = \App\Models\ImportData::where('import_id', $this->importId)
+            ->select('row_data')
+            ->get()
+            ->pluck('row_data')
+            ->toArray();
+
+        $groups = [];
+        foreach ($allRows as $row) {
+            $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
+            $nomor = preg_replace('/^JT\s*/i', '', $nomor);
+            $nomor = preg_replace('/\s*-\s*\d+$/', '', $nomor);
+            if ($nomor === '' || ! preg_match('/^\d+$/', $nomor)) {
+                continue;
+            }
+            $prefix = substr($nomor, 0, $prefixLength);
+            if (! isset($groups[$prefix])) {
+                $groups[$prefix] = ['porporasi' => [], 'count' => 0];
+            }
+            $groups[$prefix]['porporasi'][] = (int) $nomor;
+        }
+
+        $filterMonth = $this->filterMonth !== '' ? (int) $this->filterMonth : null;
+        $filterYear = $this->filterYear !== '' ? (int) $this->filterYear : null;
+
+        foreach ($allRows as $row) {
+            $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
+            $nomor = preg_replace('/^JT\s*/i', '', $nomor);
+            $nomor = preg_replace('/\s*-\s*\d+$/', '', $nomor);
+            if ($nomor === '' || ! preg_match('/^\d+$/', $nomor)) {
+                continue;
+            }
+            $prefix = substr($nomor, 0, $prefixLength);
+
+            $tanggalCetak = $row['Tanggal Cetak'] ?? null;
+            if ($tanggalCetak !== null && $tanggalCetak !== '') {
+                try {
+                    $date = \Carbon\Carbon::parse($tanggalCetak);
+                    if ($filterMonth !== null && (int) $date->month !== $filterMonth) {
+                        continue;
+                    }
+                    if ($filterYear !== null && (int) $date->year !== $filterYear) {
+                        continue;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+
+            if (isset($groups[$prefix])) {
+                $groups[$prefix]['count']++;
+            }
+        }
+
+        ksort($groups);
+
+        $versions = [];
+        $i = 1;
+        foreach ($groups as $prefix => $data) {
+            $min = (string) min($data['porporasi']);
+            $max = (string) max($data['porporasi']);
+            $versions[] = [
+                'prefix' => $prefix,
+                'label' => 'Model NA ('.$prefix.')',
+                'keluar_jumlah' => $data['count'],
+                'min_porp' => $min,
+                'max_porp' => $max,
+            ];
+            $i++;
+        }
+
+        return $versions;
+    }
+
+    public function updatedManualData(): void
+    {
+        $this->recalculateSisa();
+    }
+
+    private function recalculateSisa(): void
+    {
+        $naCount = count($this->naVersions);
+        if ($naCount === 0) {
             return;
         }
 
-        $rows = $this->preview['rows'];
-        $stokMasuk = (int) ($rows[0]['Stok Masuk'] ?? 0);
-        $stokKeluar = (int) ($rows[0]['Stok Keluar'] ?? 0);
-        $stokSisa = $stokMasuk - $stokKeluar;
-
-        $porporasiNumbers = [];
-        foreach ($rows as $row) {
-            if (! empty($row['Nomor Perforasi'])) {
-                $porporasiNumbers[] = (int) $row['Nomor Perforasi'];
+        for ($i = 0; $i < $naCount; $i++) {
+            $idx = $i + 1;
+            if (! isset($this->manualData[$idx])) {
+                continue;
             }
+            $masuk = (int) ($this->manualData[$idx]['masuk_jumlah'] ?? 0);
+            $keluar = (int) ($this->manualData[$idx]['keluar_jumlah'] ?? 0);
+            $this->manualData[$idx]['sisa_jumlah'] = $masuk > 0 ? (string) ($masuk - $keluar) : '';
         }
-        $min = ! empty($porporasiNumbers) ? (string) min($porporasiNumbers) : '';
-        $max = ! empty($porporasiNumbers) ? (string) max($porporasiNumbers) : '';
+    }
 
-        $this->manualData[1] = [
-            'masuk_jumlah' => '',
-            'masuk_seri_awal' => '',
-            'masuk_seri_akhir' => '',
-            'keluar_jumlah' => (string) $stokKeluar,
-            'keluar_seri_awal' => $min,
-            'keluar_seri_akhir' => $max,
-            'sisa_jumlah' => (string) $stokSisa,
-            'sisa_seri_awal' => '',
-            'sisa_seri_akhir' => '',
-            'keterangan' => '',
+    private function rebuildStaticRows(): void
+    {
+        if (! $this->tableLayout) {
+            return;
+        }
+
+        $staticRows = [
+            ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
         ];
+
+        $rowNum = 2;
+        foreach ($this->naVersions as $ver) {
+            $staticRows[] = [
+                'formulir' => $ver['label'],
+                'row_num' => $rowNum,
+                'dynamic' => true,
+                'dynamic_type' => 'na_version',
+            ];
+            $rowNum++;
+        }
+
+        $staticRows[] = ['formulir' => 'Model DN', 'row_num' => $rowNum, 'dynamic' => false];
+        $rowNum++;
+        $staticRows[] = ['formulir' => 'Model NB', 'row_num' => $rowNum, 'dynamic' => false];
+
+        $this->tableLayout['static_rows'] = $staticRows;
     }
 
     private function buildSeriRange(string $awal, string $akhir): string
@@ -259,13 +382,19 @@ new class extends Component
 
     private function buildManualDataForSave(): array
     {
-        return array_map(function ($row) {
+        $data = array_map(function ($row) {
             $row['masuk_seri'] = $this->buildSeriRange($row['masuk_seri_awal'] ?? '', $row['masuk_seri_akhir'] ?? '');
             $row['keluar_seri'] = $this->buildSeriRange($row['keluar_seri_awal'] ?? '', $row['keluar_seri_akhir'] ?? '');
             $row['sisa_seri'] = $this->buildSeriRange($row['sisa_seri_awal'] ?? '', $row['sisa_seri_akhir'] ?? '');
 
             return $row;
         }, $this->manualData);
+
+        return [
+            'rows' => $data,
+            'na_versions' => $this->naVersions,
+            'static_rows' => $this->tableLayout['static_rows'] ?? [],
+        ];
     }
 
     public function updatedImportId(): void
@@ -792,7 +921,7 @@ new class extends Component
         @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'formulir')
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Formulir</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi kolom manual untuk tabel L3. Kolom yang sudah ada nilai otomatis (Model NA) tidak perlu diisi ulang.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi kolom manual. Keluar Jumlah dan Sisa Jumlah dihitung otomatis.</p>
                 <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
                     <table class="min-w-full text-sm border-collapse">
                         <thead>
@@ -814,12 +943,17 @@ new class extends Component
                             </tr>
                         </thead>
                         <tbody>
-                            @php $formNames = ['Model N', 'Model NA', 'Model DN', 'Model NB']; @endphp
-                            @foreach ($formNames as $i => $name)
-                                @php $isDynamic = ($i === 1); @endphp
+                            @foreach ($this->manualData as $i => $row)
+                                @php $isNaVersion = (($row['formulir'] ?? '') !== 'Model N' && ($row['formulir'] ?? '') !== 'Model DN' && ($row['formulir'] ?? '') !== 'Model NB'); @endphp
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 font-medium">{{ $name }}</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isNaVersion)
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.formulir" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 font-medium" />
+                                        @else
+                                            <span class="text-xs font-medium px-1">{{ $row['formulir'] }}</span>
+                                        @endif
+                                    </td>
                                     {{-- Masuk --}}
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="text" wire:model.live="manualData.{{ $i }}.masuk_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
@@ -832,25 +966,21 @@ new class extends Component
                                     </td>
                                     {{-- Keluar --}}
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        @if ($isDynamic)
+                                        @if ($isNaVersion)
                                             <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar_jumlah'] ?? '' }}</span>
                                         @else
                                             <input type="text" wire:model.live="manualData.{{ $i }}.keluar_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
                                         @endif
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        @if ($isDynamic)
-                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar_seri_awal'] ?? '' }}{{ ($this->manualData[$i]['keluar_seri_akhir'] ?? '') !== '' && ($this->manualData[$i]['keluar_seri_awal'] ?? '') !== '' ? ' - ' : '' }}{{ $this->manualData[$i]['keluar_seri_akhir'] ?? '' }}</span>
-                                        @else
-                                            <div class="flex gap-1">
-                                                <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
-                                                <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
-                                            </div>
-                                        @endif
+                                        <div class="flex gap-1">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
+                                        </div>
                                     </td>
                                     {{-- Sisa --}}
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        @if ($isDynamic)
+                                        @if ($isNaVersion)
                                             <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['sisa_jumlah'] ?? '' }}</span>
                                         @else
                                             <input type="text" wire:model.live="manualData.{{ $i }}.sisa_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
