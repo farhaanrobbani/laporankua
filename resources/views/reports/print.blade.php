@@ -370,7 +370,7 @@
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
                         @elseif ($col['type'] === 'group')
                             <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
-                        @elseif ($col['type'] === 'field' || $col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_range' || $col['type'] === 'static')
+                        @elseif ($col['type'] === 'field' || $col['type'] === 'aggregate_total' || $col['type'] === 'aggregate_count' || $col['type'] === 'aggregate_range' || $col['type'] === 'static' || $col['type'] === 'static_value' || $col['type'] === 'manual')
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? $col['field'] ?? '' }}</th>
                         @endif
                     @endforeach
