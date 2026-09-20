@@ -29,6 +29,7 @@
             @php
                 $layout = $dataset['table_layout'];
                 $columns = $layout['columns'] ?? [];
+                $l2Title = 'LAPORAN';
 
                 // Aggregation: group data if configured
                 if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail') {
@@ -59,7 +60,6 @@
                     };
                     $aggCols = $collectAggCols($columns);
 
-                    $l2Title = 'LAPORAN';
                     foreach ($aggCols as $col) {
                         $field = $col['field'] ?? '';
                         if (str_contains($field, 'Pendidikan')) {
