@@ -392,13 +392,15 @@
                 </thead>
                 <tbody style="font-size: 11px;">
                     @if ($isL4Report)
-                        @php $l4RowNum = 1; @endphp
+                        @php $l4GroupNum = 1; @endphp
                         @foreach ($l4Groups as $group)
                             @foreach ($group['rows'] as $i => $row)
                                 <tr>
                                     @foreach ($columns as $col)
                                         @if ($col['type'] === 'row_number')
-                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4RowNum++ }}</td>
+                                            @if ($i === 0)
+                                                <td rowspan="{{ $group['count'] }}" class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4GroupNum++ }}</td>
+                                            @endif
                                         @elseif ($col['type'] === 'field')
                                             @if (($col['field'] ?? '') === ($layout['aggregation']['group_by'] ?? ''))
                                                 @if ($i === 0)
@@ -430,7 +432,7 @@
                                 <tr>
                                     @foreach ($columns as $col)
                                         @if ($col['type'] === 'row_number')
-                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4RowNum++ }}</td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l4GroupNum++ }}</td>
                                         @elseif ($col['type'] === 'field')
                                             @if (($col['field'] ?? '') === ($layout['aggregation']['group_by'] ?? ''))
                                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $group['name'] }}</td>
