@@ -502,6 +502,7 @@
                         </tr>
                     @elseif ($isL3Report)
                         @php
+                            $manualData = $dataset['config_json']['manual_data'] ?? null;
                             $rows = $dataset['rows'] ?? [];
                             $stokMasuk = (int) ($rows[0]['Stok Masuk'] ?? 0);
                             $stokKeluar = (int) ($rows[0]['Stok Keluar'] ?? 0);
@@ -520,26 +521,40 @@
                                 : '';
                         @endphp
                         @foreach ($layout['static_rows'] as $sr)
+                            @php
+                                $idx = $sr['row_num'] - 1;
+                                $md = $manualData[$idx] ?? null;
+                            @endphp
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sr['row_num'] }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5">{{ $sr['formulir'] }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
-                                @if ($sr['dynamic'])
+                                {{-- Masuk --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['masuk_jumlah'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['masuk_seri'] ?? '' }}</td>
+                                {{-- Keluar --}}
+                                @if ($sr['dynamic'] && $md && ($md['keluar_jumlah'] ?? '') !== '')
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_jumlah'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_seri'] ?? '' }}</td>
+                                @elseif ($sr['dynamic'])
                                     <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $stokKeluar }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $porporasiRange }}</td>
                                 @else
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_jumlah'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['keluar_seri'] ?? '' }}</td>
                                 @endif
-                                @if ($sr['dynamic'])
+                                {{-- Sisa --}}
+                                @if ($sr['dynamic'] && $md && ($md['sisa_jumlah'] ?? '') !== '')
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_jumlah'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_seri'] ?? '' }}</td>
+                                @elseif ($sr['dynamic'])
                                     <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $stokSisa }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_seri'] ?? '' }}</td>
                                 @else
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_jumlah'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['sisa_seri'] ?? '' }}</td>
                                 @endif
-                                <td class="border border-gray-700 px-1 py-0.5"></td>
+                                {{-- Keterangan --}}
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $md['keterangan'] ?? '' }}</td>
                             </tr>
                         @endforeach
                     @else

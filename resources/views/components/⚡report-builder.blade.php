@@ -64,6 +64,9 @@ new class extends Component
 
     public ?array $tableLayout = null;
 
+    /** @var array<int, array{masuk_jumlah: string, masuk_seri: string, keluar_jumlah: string, keluar_seri: string, sisa_jumlah: string, sisa_seri: string, keterangan: string}> */
+    public array $manualData = [];
+
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
@@ -196,6 +199,47 @@ new class extends Component
                 $this->loadPreview();
             }
         }
+
+        if (($this->tableLayout['type'] ?? '') === 'formulir') {
+            $this->initManualData();
+        }
+    }
+
+    private function initManualData(): void
+    {
+        $empty = ['masuk_jumlah' => '', 'masuk_seri' => '', 'keluar_jumlah' => '', 'keluar_seri' => '', 'sisa_jumlah' => '', 'sisa_seri' => '', 'keterangan' => ''];
+        $this->manualData = [$empty, $empty, $empty, $empty];
+
+        if (! $this->preview || $this->preview['rows'] === []) {
+            return;
+        }
+
+        $rows = $this->preview['rows'];
+        $stokMasuk = (int) ($rows[0]['Stok Masuk'] ?? 0);
+        $stokKeluar = (int) ($rows[0]['Stok Keluar'] ?? 0);
+        $stokSisa = $stokMasuk - $stokKeluar;
+
+        $porporasiNumbers = [];
+        foreach ($rows as $row) {
+            if (! empty($row['Nomor Perforasi'])) {
+                $porporasiNumbers[] = (int) $row['Nomor Perforasi'];
+            }
+        }
+        $min = ! empty($porporasiNumbers) ? min($porporasiNumbers) : null;
+        $max = ! empty($porporasiNumbers) ? max($porporasiNumbers) : null;
+        $porporasiRange = ($min !== null && $max !== null)
+            ? ($min === $max ? 'JT '.$min : 'JT '.$min.' - '.$max)
+            : '';
+
+        $this->manualData[1] = [
+            'masuk_jumlah' => '',
+            'masuk_seri' => '',
+            'keluar_jumlah' => (string) $stokKeluar,
+            'keluar_seri' => $porporasiRange,
+            'sisa_jumlah' => (string) $stokSisa,
+            'sisa_seri' => '',
+            'keterangan' => '',
+        ];
     }
 
     public function updatedImportId(): void
@@ -276,6 +320,10 @@ new class extends Component
         $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
         if (! $hasFilter && count($this->preview['rows']) > 10) {
             $this->preview['rows'] = array_slice($this->preview['rows'], 0, 10);
+        }
+
+        if (($this->tableLayout['type'] ?? '') === 'formulir') {
+            $this->initManualData();
         }
     }
 
@@ -443,6 +491,7 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
+                'manual_data' => ($this->tableLayout['type'] ?? '') === 'formulir' ? $this->manualData : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -713,9 +762,86 @@ new class extends Component
             </div>
         @endif
 
-        {{-- 3. Judul & Format Output --}}
+        {{-- 3. Isi Formulir (L3 only) --}}
+        @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'formulir')
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Formulir</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi kolom manual untuk tabel L3. Kolom yang sudah ada nilai otomatis (Model NA) tidak perlu diisi ulang.</p>
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    <table class="min-w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-700">
+                                <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">No</th>
+                                <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Nama Formulir</th>
+                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Masuk</th>
+                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Keluar</th>
+                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Sisa</th>
+                                <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Keterangan</th>
+                            </tr>
+                            <tr class="bg-gray-50 dark:bg-gray-700/50">
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Jumlah</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Jumlah</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Jumlah</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $formNames = ['Model N', 'Model NA', 'Model DN', 'Model NB']; @endphp
+                            @foreach ($formNames as $i => $name)
+                                @php $isDynamic = ($i === 1); @endphp
+                                <tr>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 font-medium">{{ $name }}</td>
+                                    {{-- Masuk --}}
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.masuk_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.masuk_seri" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="JT ..." />
+                                    </td>
+                                    {{-- Keluar --}}
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isDynamic)
+                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar_jumlah'] ?? '' }}</span>
+                                        @else
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.keluar_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isDynamic)
+                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar_seri'] ?? '' }}</span>
+                                        @else
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="JT ..." />
+                                        @endif
+                                    </td>
+                                    {{-- Sisa --}}
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isDynamic)
+                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['sisa_jumlah'] ?? '' }}</span>
+                                        @else
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.sisa_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="JT ..." />
+                                    </td>
+                                    {{-- Keterangan --}}
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.keterangan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Keterangan" />
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- 4. Judul & Format Output --}}
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">3. Judul &amp; Format Output</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{{ ($this->tableLayout['type'] ?? '') === 'formulir' ? '4' : '3' }}. Judul &amp; Format Output</h3>
             <input type="text" wire:model="title" placeholder="Judul laporan" class="mt-3 border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" />
             @error('title') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
 

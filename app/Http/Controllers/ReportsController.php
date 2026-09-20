@@ -220,6 +220,7 @@ class ReportsController extends Controller
         $dataset['font_size_kop_kantor'] = $config['font_size_kop_kantor'] ?? null;
         $dataset['font_size_kop_alamat'] = $config['font_size_kop_alamat'] ?? null;
         $dataset['font_size_kop_kontak'] = $config['font_size_kop_kontak'] ?? null;
+        $dataset['config_json'] = $config;
 
         return view('reports.print', compact('dataset', 'report'));
     }
