@@ -239,6 +239,9 @@ class TemplateSeeder extends Seeder
                     'orientation' => 'landscape',
                     'table_layout' => [
                         'type' => 'formulir',
+                        'aggregation' => [
+                            'date_filter_field' => 'Tanggal Cetak',
+                        ],
                         'static_rows' => [
                             ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
                             ['formulir' => 'Model NA', 'row_num' => 2, 'dynamic' => true],
