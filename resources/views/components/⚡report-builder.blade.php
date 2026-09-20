@@ -207,7 +207,7 @@ new class extends Component
 
     private function initManualData(): void
     {
-        $empty = ['masuk_jumlah' => '', 'masuk_seri' => '', 'keluar_jumlah' => '', 'keluar_seri' => '', 'sisa_jumlah' => '', 'sisa_seri' => '', 'keterangan' => ''];
+        $empty = ['masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
         $this->manualData = [$empty, $empty, $empty, $empty];
 
         if (! $this->preview || $this->preview['rows'] === []) {
@@ -225,21 +225,47 @@ new class extends Component
                 $porporasiNumbers[] = (int) $row['Nomor Perforasi'];
             }
         }
-        $min = ! empty($porporasiNumbers) ? min($porporasiNumbers) : null;
-        $max = ! empty($porporasiNumbers) ? max($porporasiNumbers) : null;
-        $porporasiRange = ($min !== null && $max !== null)
-            ? ($min === $max ? 'JT '.$min : 'JT '.$min.' - '.$max)
-            : '';
+        $min = ! empty($porporasiNumbers) ? (string) min($porporasiNumbers) : '';
+        $max = ! empty($porporasiNumbers) ? (string) max($porporasiNumbers) : '';
 
         $this->manualData[1] = [
             'masuk_jumlah' => '',
-            'masuk_seri' => '',
+            'masuk_seri_awal' => '',
+            'masuk_seri_akhir' => '',
             'keluar_jumlah' => (string) $stokKeluar,
-            'keluar_seri' => $porporasiRange,
+            'keluar_seri_awal' => $min,
+            'keluar_seri_akhir' => $max,
             'sisa_jumlah' => (string) $stokSisa,
-            'sisa_seri' => '',
+            'sisa_seri_awal' => '',
+            'sisa_seri_akhir' => '',
             'keterangan' => '',
         ];
+    }
+
+    private function buildSeriRange(string $awal, string $akhir): string
+    {
+        if ($awal === '' && $akhir === '') {
+            return '';
+        }
+        if ($awal === $akhir || $akhir === '') {
+            return 'JT '.$awal;
+        }
+        if ($awal === '') {
+            return 'JT '.$akhir;
+        }
+
+        return 'JT '.$awal.' - '.$akhir;
+    }
+
+    private function buildManualDataForSave(): array
+    {
+        return array_map(function ($row) {
+            $row['masuk_seri'] = $this->buildSeriRange($row['masuk_seri_awal'] ?? '', $row['masuk_seri_akhir'] ?? '');
+            $row['keluar_seri'] = $this->buildSeriRange($row['keluar_seri_awal'] ?? '', $row['keluar_seri_akhir'] ?? '');
+            $row['sisa_seri'] = $this->buildSeriRange($row['sisa_seri_awal'] ?? '', $row['sisa_seri_akhir'] ?? '');
+
+            return $row;
+        }, $this->manualData);
     }
 
     public function updatedImportId(): void
@@ -491,7 +517,7 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
-                'manual_data' => ($this->tableLayout['type'] ?? '') === 'formulir' ? $this->manualData : null,
+                'manual_data' => ($this->tableLayout['type'] ?? '') === 'formulir' ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -780,11 +806,11 @@ new class extends Component
                             </tr>
                             <tr class="bg-gray-50 dark:bg-gray-700/50">
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Jumlah</th>
-                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri (dari - sampai)</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Jumlah</th>
-                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri (dari - sampai)</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Jumlah</th>
-                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri (dari - sampai)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -799,7 +825,10 @@ new class extends Component
                                         <input type="text" wire:model.live="manualData.{{ $i }}.masuk_jumlah" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.masuk_seri" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="JT ..." />
+                                        <div class="flex gap-1">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.masuk_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.masuk_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
+                                        </div>
                                     </td>
                                     {{-- Keluar --}}
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
@@ -811,9 +840,12 @@ new class extends Component
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         @if ($isDynamic)
-                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar_seri'] ?? '' }}</span>
+                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar_seri_awal'] ?? '' }}{{ ($this->manualData[$i]['keluar_seri_akhir'] ?? '') !== '' && ($this->manualData[$i]['keluar_seri_awal'] ?? '') !== '' ? ' - ' : '' }}{{ $this->manualData[$i]['keluar_seri_akhir'] ?? '' }}</span>
                                         @else
-                                            <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="JT ..." />
+                                            <div class="flex gap-1">
+                                                <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
+                                                <input type="text" wire:model.live="manualData.{{ $i }}.keluar_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
+                                            </div>
                                         @endif
                                     </td>
                                     {{-- Sisa --}}
@@ -825,7 +857,10 @@ new class extends Component
                                         @endif
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="JT ..." />
+                                        <div class="flex gap-1">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri_awal" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dari" />
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.sisa_seri_akhir" class="w-1/2 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="sampai" />
+                                        </div>
                                     </td>
                                     {{-- Keterangan --}}
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
