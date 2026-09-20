@@ -509,7 +509,8 @@
                                                 @endforeach
                                             @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total' || $child['type'] === 'aggregate_range')
                                                 @php
-                                                    $value = $row[$child['label']] ?? '';
+                                                    $compositeKey = ($col['label'] ?? '') . '|' . ($child['label'] ?? '');
+                                                    $value = $row[$compositeKey] ?? $row[$child['label']] ?? '';
                                                 @endphp
                                                 <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                             @else
@@ -559,7 +560,8 @@
                                             @endforeach
                                         @elseif ($child['type'] === 'aggregate_count' || $child['type'] === 'aggregate_total' || $child['type'] === 'aggregate_range')
                                             @php
-                                                $value = $totalRow[$child['label']] ?? 0;
+                                                $compositeKey = ($col['label'] ?? '') . '|' . ($child['label'] ?? '');
+                                                $value = $totalRow[$compositeKey] ?? 0;
                                             @endphp
                                             <td @if(!empty($child['width']))style="max-width:{{ $child['width'] }};width:{{ $child['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center">{{ $value }}</td>
                                         @else
