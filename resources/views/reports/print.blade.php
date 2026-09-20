@@ -252,13 +252,11 @@
                         </div>
                     </div>
                 @elseif ($isL4Report)
-                    <div class="flex items-start mb-3">
-                        <span style="font-size: 21px; font-weight: bold;">L4</span>
-                        <div class="text-center flex-1">
-                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN REKAPITULASI SETORAN SIMPONI</h1>
-                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
-                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
-                        </div>
+                    <div class="text-center mb-3">
+                        <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
+                        <h2 class="font-bold uppercase" style="font-size: 13px;">PNPB NIKAH ATAU RUJUK</h2>
+                        <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                        <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                     </div>
                 @else
                     @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
