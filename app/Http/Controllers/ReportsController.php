@@ -360,22 +360,17 @@ class ReportsController extends Controller
         }
 
         $rows = [];
+        $naIndex = 0;
         foreach ($savedRows as $saved) {
             $row = $saved;
+            $formulir = $saved['formulir'] ?? '';
+            $isNaRow = str_starts_with($formulir, 'Model NA');
+            $ver = null;
 
-            $prefix = null;
-            if (preg_match('/Model NA \((\d+)\)/', $saved['formulir'] ?? '', $m)) {
-                $prefix = $m[1];
-            }
+            if ($isNaRow) {
+                $ver = $naVersions[$naIndex] ?? null;
+                $naIndex++;
 
-            if ($prefix !== null) {
-                $ver = null;
-                foreach ($naVersions as $v) {
-                    if ($v['prefix'] === $prefix) {
-                        $ver = $v;
-                        break;
-                    }
-                }
                 if ($ver) {
                     $row['keluar_jumlah'] = (string) $ver['keluar_jumlah'];
                     $row['keluar_seri_awal'] = $ver['min_porp'];
@@ -410,7 +405,7 @@ class ReportsController extends Controller
                     $sisaSeri .= ' - '.$masukAkhir;
                 }
                 $row['sisa_seri'] = $sisaSeri;
-            } elseif ($prefix !== null && $ver === null) {
+            } elseif ($isNaRow && $ver === null) {
                 $row['sisa_jumlah'] = (string) $masuk;
                 $row['sisa_seri'] = $row['masuk_seri'] ?? '';
                 $row['sisa_seri_awal'] = $row['masuk_seri_awal'] ?? '';

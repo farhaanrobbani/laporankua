@@ -215,18 +215,15 @@ new class extends Component
         $this->naVersions = $hasFilter ? $this->detectNaVersions() : [];
 
         $customRows = [];
+        $naCount = count($this->naVersions);
+        $naSeen = 0;
         if ($this->manualData) {
             foreach ($this->manualData as $row) {
                 $formulir = $row['formulir'] ?? '';
                 if (str_starts_with($formulir, 'Model NA')) {
-                    $isDetected = false;
-                    foreach ($this->naVersions as $ver) {
-                        if ($ver['label'] === $formulir) {
-                            $isDetected = true;
-                            break;
-                        }
-                    }
-                    if (! $isDetected) {
+                    if ($naSeen < $naCount) {
+                        $naSeen++;
+                    } else {
                         $row['keluar_jumlah'] = '0';
                         $row['keluar_seri_awal'] = $row['masuk_seri_awal'] ?? '';
                         $row['keluar_seri_akhir'] = $row['masuk_seri_akhir'] ?? '';
