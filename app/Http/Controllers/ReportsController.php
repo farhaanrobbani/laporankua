@@ -387,8 +387,8 @@ class ReportsController extends Controller
                     $row['keluar_seri'] = $keluarSeri;
                 } else {
                     $row['keluar_jumlah'] = '0';
-                    $row['keluar_seri_awal'] = $row['masuk_seri_awal'] ?? '';
-                    $row['keluar_seri_akhir'] = $row['masuk_seri_akhir'] ?? '';
+                    $row['keluar_seri_awal'] = '';
+                    $row['keluar_seri_akhir'] = '';
                     $row['keluar_seri'] = $row['masuk_seri'] ?? '';
                 }
             }
