@@ -270,5 +270,46 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+        // Laporan NA
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan NA'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'output_format' => 'print',
+                'description' => 'Laporan stok formulir NA/RA/DN',
+                'fields_json' => ['Tanggal Nikah', 'Keterangan', 'Nama Catin', 'Nomor Perforasi'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Tanggal Nikah', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'landscape',
+                    'table_layout' => [
+                        'type' => 'laporan_na',
+                        'aggregation' => [
+                            'group_by' => 'Tanggal Nikah',
+                        ],
+                        'columns' => [
+                            ['type' => 'field', 'field' => 'Tanggal Nikah', 'label' => 'Tanggal', 'rowspan' => 2, 'format' => 'date_id'],
+                            ['type' => 'field', 'field' => 'Uraian', 'label' => 'Uraian', 'rowspan' => 2],
+                            ['type' => 'group', 'label' => 'Banyaknya', 'colspan' => 3, 'children' => [
+                                ['type' => 'manual', 'label' => 'Masuk'],
+                                ['type' => 'aggregate_total', 'label' => 'Keluar'],
+                                ['type' => 'stok_sisa', 'label' => 'Sisa'],
+                            ]],
+                            ['type' => 'group', 'label' => 'NA, RA, atau DN', 'colspan' => 2, 'children' => [
+                                ['type' => 'na_model', 'label' => 'Model'],
+                                ['type' => 'field', 'field' => 'Nomor Perforasi', 'label' => 'Seri/Nomor'],
+                            ]],
+                            ['type' => 'static', 'value' => 'Buku', 'label' => 'Satuan', 'rowspan' => 2],
+                            ['type' => 'group', 'label' => 'Nomor Bukti', 'colspan' => 2, 'children' => [
+                                ['type' => 'manual', 'label' => 'Penerimaan'],
+                                ['type' => 'manual', 'label' => 'Pengeluaran'],
+                            ]],
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 }

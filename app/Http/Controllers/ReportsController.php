@@ -95,7 +95,7 @@ class ReportsController extends Controller
                     $effectiveFields[] = 'Tanggal Nikah';
                 }
             }
-            if (($config['table_layout']['type'] ?? '') === 'formulir') {
+            if (in_array(($config['table_layout']['type'] ?? ''), ['formulir', 'laporan_na'], true)) {
                 $dataset = $mergeService->buildConcatDataset(
                     $config['merged_import_ids'],
                     $effectiveFields,
@@ -236,6 +236,9 @@ class ReportsController extends Controller
 
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
             $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
+        }
+        if (($config['table_layout']['type'] ?? '') === 'laporan_na') {
+            $dataset['config_json']['manual_data'] = $this->buildLaporanNaData($config);
         }
 
         return view('reports.print', compact('dataset', 'report'));
@@ -439,6 +442,22 @@ class ReportsController extends Controller
             'rows' => $rows,
             'na_versions' => $naVersions,
             'static_rows' => $staticRows,
+        ];
+    }
+
+    private function buildLaporanNaData(array $config): array
+    {
+        $saved = $config['manual_data'] ?? null;
+        if (! is_array($saved) || ! isset($saved['rows'])) {
+            return ['rows' => [], 'meta' => ['masuk_total' => 0]];
+        }
+
+        $rows = $saved['rows'];
+        $masukTotal = array_sum(array_map(fn ($r) => (int) ($r['masuk'] ?? 0), $rows));
+
+        return [
+            'rows' => $rows,
+            'meta' => ['masuk_total' => $masukTotal],
         ];
     }
 

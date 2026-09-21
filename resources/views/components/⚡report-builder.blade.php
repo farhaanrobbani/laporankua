@@ -206,6 +206,9 @@ new class extends Component
         if (($this->tableLayout['type'] ?? '') === 'formulir') {
             $this->initManualData();
         }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            $this->initLaporanNaData();
+        }
     }
 
     private function initManualData(): void
@@ -453,6 +456,32 @@ new class extends Component
         }
     }
 
+    public function addLaporanNaRow(): void
+    {
+        $empty = ['uraian' => '', 'masuk' => '', 'keluar' => 0, 'model' => '', 'seri_nomor' => '', 'penerimaan' => '', 'pengeluaran' => ''];
+        $this->manualData[] = $empty;
+    }
+
+    public function removeLaporanNaRow(int $index): void
+    {
+        if (isset($this->manualData[$index])) {
+            array_splice($this->manualData, $index, 1);
+        }
+    }
+
+    private function initLaporanNaData(): void
+    {
+        $existingData = [];
+        if ($this->manualData) {
+            foreach ($this->manualData as $row) {
+                if (isset($row['uraian']) || isset($row['masuk'])) {
+                    $existingData[] = $row;
+                }
+            }
+        }
+        $this->manualData = $existingData ?: [['uraian' => '', 'masuk' => '', 'keluar' => 0, 'model' => '', 'seri_nomor' => '', 'penerimaan' => '', 'pengeluaran' => '']];
+    }
+
     private function buildSeriRange(string $awal, string $akhir): string
     {
         if ($awal === '' && $akhir === '') {
@@ -470,6 +499,13 @@ new class extends Component
 
     private function buildManualDataForSave(): array
     {
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            return [
+                'rows' => $this->manualData,
+                'meta' => ['masuk_total' => array_sum(array_map(fn($r) => (int) ($r['masuk'] ?? 0), $this->manualData))],
+            ];
+        }
+
         $data = array_map(function ($row) {
             $row['masuk_seri'] = $this->buildSeriRange($row['masuk_seri_awal'] ?? '', $row['masuk_seri_akhir'] ?? '');
             $row['keluar_seri'] = $this->buildSeriRange($row['keluar_seri_awal'] ?? '', $row['keluar_seri_akhir'] ?? '');
@@ -568,6 +604,9 @@ new class extends Component
         if (($this->tableLayout['type'] ?? '') === 'formulir') {
             $this->initManualData();
         }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            $this->initLaporanNaData();
+        }
     }
 
     private function loadMergePreview(): void
@@ -624,6 +663,9 @@ new class extends Component
 
         if (($this->tableLayout['type'] ?? '') === 'formulir') {
             $this->initManualData();
+        }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            $this->initLaporanNaData();
         }
     }
 
@@ -1125,6 +1167,75 @@ new class extends Component
                             <tr>
                                 <td colspan="9" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
                                     <button wire:click="addNaRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Baris
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- 3b. Laporan NA Form --}}
+        @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'laporan_na')
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Formulir</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi kolom Masuk. Keluar dihitung otomatis dari jumlah Duplikat. Sisa = Masuk - Keluar.</p>
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    <table class="min-w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-700">
+                                <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">No</th>
+                                <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Uraian</th>
+                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Banyaknya</th>
+                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">NA, RA, atau DN</th>
+                                <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Satuan</th>
+                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Nomor Bukti</th>
+                            </tr>
+                            <tr class="bg-gray-50 dark:bg-gray-700/50">
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Masuk</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Keluar</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Model</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri/Nomor</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Penerimaan</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Pengeluaran</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($this->manualData as $i => $row)
+                                <tr>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                        <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar'] ?? 0 }}</span>
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.model" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="NA XXXXXX" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.seri_nomor" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Seri/Nomor" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                        <span class="text-xs">Buku</span>
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.penerimaan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Penerimaan" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.pengeluaran" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Pengeluaran" />
+                                    </td>
+                                </tr>
+                            @endforeach
+                            <tr>
+                                <td colspan="9" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                    <button wire:click="addLaporanNaRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                         Tambah Baris
                                     </button>

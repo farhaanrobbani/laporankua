@@ -202,6 +202,7 @@
                 $isL2Report = !empty($dataset['table_layout']['aggregation']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'formulir';
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
                 $isL3Report = ($layout['type'] ?? '') === 'formulir';
+                $isLaporanNA = ($layout['type'] ?? '') === 'laporan_na';
                 $isL5Report = false;
                 foreach ($columns as $col) {
                     if (($col['type'] ?? '') === 'group' && ($col['label'] ?? '') === 'Memiliki Sertifikat Suscatin') {
@@ -275,6 +276,16 @@
                         <div class="text-center flex-1">
                             <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
                             <h2 class="font-bold uppercase" style="font-size: 13px;">FORMULIR PERKAWINAN ATAU RUJUK</h2>
+                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                        </div>
+                    </div>
+                @elseif ($isLaporanNA)
+                    <div class="flex items-start mb-3">
+                        <span style="font-size: 21px; font-weight: bold;">NA</span>
+                        <div class="text-center flex-1">
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
+                            <h2 class="font-bold uppercase" style="font-size: 13px;">STOK FORMULIR NA/RA/DN</h2>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
@@ -527,6 +538,88 @@
                                 <td class="border border-gray-700 px-1 py-0.5">{{ $md['keterangan'] ?? '' }}</td>
                             </tr>
                         @endforeach
+                    @elseif ($isLaporanNA)
+                        @php
+                            $manualRaw = $dataset['config_json']['manual_data'] ?? null;
+                            $manualData = is_array($manualRaw) && isset($manualRaw['rows']) ? $manualRaw['rows'] : $manualRaw;
+                            $manualMeta = is_array($manualRaw) ? ($manualRaw['meta'] ?? []) : [];
+                            $masukTotal = (int) ($manualMeta['masuk_total'] ?? 0);
+                            $rows = $dataset['rows'] ?? [];
+                            $groupBy = $layout['aggregation']['group_by'] ?? null;
+                            $grouped = [];
+                            foreach ($rows as $row) {
+                                $key = $row[$groupBy] ?? 'Lainnya';
+                                if (! isset($grouped[$key])) {
+                                    $grouped[$key] = [];
+                                }
+                                $grouped[$key][] = $row;
+                            }
+                            ksort($grouped);
+                            $runningSisa = $masukTotal;
+                        @endphp
+                        {{-- Masuk total row --}}
+                        <tr>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">MASUK</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $masukTotal }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                        </tr>
+                        @php $rowNum = 1; @endphp
+                        @foreach ($grouped as $dateKey => $dateRows)
+                            @php
+                                $keluarCount = count($dateRows);
+                                $sisa = $runningSisa - $keluarCount;
+                                $dateDisplay = $dateKey;
+                                try { $dateDisplay = \Carbon\Carbon::parse($dateKey)->format('d/m/Y'); } catch (\Exception $e) {}
+                                $first = true;
+                                $rowspan = $keluarCount;
+                            @endphp
+                            @foreach ($dateRows as $dr)
+                                @php
+                                    $keterangan = $dr['Keterangan'] ?? '';
+                                    $isDuplikat = mb_strtolower($keterangan) === 'duplikat';
+                                    $uraian = $isDuplikat ? 'Duplikat' : ($dr['Nama Catin'] ?? '');
+                                    $nomorPerforasi = $dr['Nomor Perforasi'] ?? '';
+                                    $nomorPerforasi = preg_replace('/^JT\s*/i', '', $nomorPerforasi);
+                                    $nomorPerforasi = preg_replace('/\s*-\s*\d+$/', '', $nomorPerforasi);
+                                    $prefixLength = $layout['na_version_prefix_length'] ?? 6;
+                                    $model = '';
+                                    if (strlen($nomorPerforasi) >= $prefixLength) {
+                                        $model = 'NA ' . substr($nomorPerforasi, 0, $prefixLength);
+                                    }
+                                @endphp
+                                <tr>
+                                    @if ($first)
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $rowNum }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $dateDisplay }}</td>
+                                    @endif
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $uraian }}</td>
+                                    @if ($first)
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}"></td>
+                                    @endif
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">1</td>
+                                    @if ($first)
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;" rowspan="{{ $rowspan }}">{{ $sisa < 0 ? 0 : $sisa }}</td>
+                                    @endif
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $model }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dr['Nomor Perforasi'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dr['Nomor Perforasi'] ?? '' }}</td>
+                                </tr>
+                                @php $first = false; @endphp
+                            @endforeach
+                            @php
+                                $runningSisa = $sisa;
+                                $rowNum++;
+                            @endphp
+                        @endforeach
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
                             <tr>
@@ -643,6 +736,18 @@
                     </div>
                 </div>
             @elseif ($isL3Report)
+                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                    <div class="flex justify-end">
+                        <div class="text-center">
+                            <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
+                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                            <div class="h-16"></div>
+                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            @elseif ($isLaporanNA)
                 <div class="mt-6 leading-relaxed" style="font-size: 12px;">
                     <div class="flex justify-end">
                         <div class="text-center">
