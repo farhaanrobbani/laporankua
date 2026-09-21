@@ -448,16 +448,16 @@ class ReportsController extends Controller
     private function buildLaporanNaData(array $config): array
     {
         $saved = $config['manual_data'] ?? null;
-        if (! is_array($saved) || ! isset($saved['rows'])) {
-            return ['rows' => [], 'meta' => ['masuk_total' => 0]];
+        if (! is_array($saved)) {
+            return ['sisa_bulan_lalu' => [], 'rows' => []];
         }
 
-        $rows = $saved['rows'];
-        $masukTotal = array_sum(array_map(fn ($r) => (int) ($r['masuk'] ?? 0), $rows));
+        $sisaBL = $saved['sisa_bulan_lalu'] ?? [];
+        $rows = $saved['rows'] ?? [];
 
         return [
+            'sisa_bulan_lalu' => $sisaBL,
             'rows' => $rows,
-            'meta' => ['masuk_total' => $masukTotal],
         ];
     }
 

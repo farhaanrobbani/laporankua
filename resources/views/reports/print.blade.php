@@ -544,8 +544,7 @@
                         @php
                             $manualRaw = $dataset['config_json']['manual_data'] ?? null;
                             $manualData = is_array($manualRaw) && isset($manualRaw['rows']) ? $manualRaw['rows'] : $manualRaw;
-                            $manualMeta = is_array($manualRaw) ? ($manualRaw['meta'] ?? []) : [];
-                            $masukTotal = (int) ($manualMeta['masuk_total'] ?? 0);
+                            $sisaBL = is_array($manualRaw) ? ($manualRaw['sisa_bulan_lalu'] ?? []) : [];
                             $rows = $dataset['rows'] ?? [];
                             $groupBy = $layout['aggregation']['group_by'] ?? null;
                             $grouped = [];
@@ -557,20 +556,20 @@
                                 $grouped[$key][] = $row;
                             }
                             ksort($grouped);
-                            $runningSisa = $masukTotal;
+                            $runningSisa = (int) ($sisaBL['sisa'] ?? 0);
                         @endphp
-                        {{-- Masuk total row --}}
+                        {{-- Sisa Bulan Lalu row --}}
                         <tr>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">MASUK</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $masukTotal }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">1</td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['masuk'] ?? '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['keluar'] ?? '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['sisa'] ?? '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['seri_nomor'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['penerimaan'] ?? '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['pengeluaran'] ?? '' }}</td>
                         </tr>
                         @php $rowNum = 1; @endphp
                         @foreach ($grouped as $dateKey => $dateRows)

@@ -464,22 +464,28 @@ new class extends Component
 
     public function removeLaporanNaRow(int $index): void
     {
-        if (isset($this->manualData[$index])) {
+        if (isset($this->manualData[$index]) && empty($this->manualData[$index]['is_sisa_bulan_lalu'])) {
             array_splice($this->manualData, $index, 1);
         }
     }
 
     private function initLaporanNaData(): void
     {
-        $existingData = [];
+        $existingSisaBL = null;
+        $existingRows = [];
         if ($this->manualData) {
             foreach ($this->manualData as $row) {
-                if (isset($row['uraian']) || isset($row['masuk'])) {
-                    $existingData[] = $row;
+                if (! empty($row['is_sisa_bulan_lalu'])) {
+                    $existingSisaBL = $row;
+                } else {
+                    $existingRows[] = $row;
                 }
             }
         }
-        $this->manualData = $existingData ?: [['uraian' => '', 'masuk' => '', 'keluar' => 0, 'model' => '', 'seri_nomor' => '', 'penerimaan' => '', 'pengeluaran' => '']];
+        if ($existingSisaBL === null) {
+            $existingSisaBL = ['is_sisa_bulan_lalu' => true, 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'keluar' => '', 'sisa' => '', 'model' => 'NA', 'seri_nomor' => '', 'penerimaan' => '', 'pengeluaran' => ''];
+        }
+        $this->manualData = array_values(array_merge([$existingSisaBL], $existingRows));
     }
 
     private function buildSeriRange(string $awal, string $akhir): string
@@ -500,9 +506,19 @@ new class extends Component
     private function buildManualDataForSave(): array
     {
         if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            $sisaBL = null;
+            $rows = [];
+            foreach ($this->manualData as $row) {
+                if (! empty($row['is_sisa_bulan_lalu'])) {
+                    $sisaBL = $row;
+                } else {
+                    $rows[] = $row;
+                }
+            }
+
             return [
-                'rows' => $this->manualData,
-                'meta' => ['masuk_total' => array_sum(array_map(fn($r) => (int) ($r['masuk'] ?? 0), $this->manualData))],
+                'sisa_bulan_lalu' => $sisaBL,
+                'rows' => $rows,
             ];
         }
 
@@ -792,7 +808,7 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
-                'manual_data' => ($this->tableLayout['type'] ?? '') === 'formulir' ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -858,7 +874,7 @@ new class extends Component
                 'merged_import_ids' => $this->mergeImportIds,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
-                'manual_data' => ($this->tableLayout['type'] ?? '') === 'formulir' ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1182,7 +1198,7 @@ new class extends Component
         @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'laporan_na')
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Formulir</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi kolom Masuk. Keluar dihitung otomatis dari jumlah Duplikat. Sisa = Masuk - Keluar.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Baris pertama adalah Sisa Bulan Lalu. Baris selanjutnya dari data import.</p>
                 <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
                     <table class="min-w-full text-sm border-collapse">
                         <thead>
@@ -1205,30 +1221,47 @@ new class extends Component
                         </thead>
                         <tbody>
                             @foreach ($this->manualData as $i => $row)
+                                @php $isSisaBL = !empty($row['is_sisa_bulan_lalu']); @endphp
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
-                                    </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                    @if ($isSisaBL)
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium bg-blue-50 dark:bg-blue-900/20">Sisa bulan lalu</td>
+                                    @else
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
+                                        </td>
+                                    @endif
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="text" wire:model.live="manualData.{{ $i }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
                                     </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
-                                        <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar'] ?? 0 }}</span>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isSisaBL)
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.keluar" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="0" />
+                                        @else
+                                            <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar'] ?? 0 }}</span>
+                                        @endif
                                     </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.model" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="NA XXXXXX" />
-                                    </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                    @if ($isSisaBL)
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20">NA</td>
+                                    @else
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.model" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="NA XXXXXX" />
+                                        </td>
+                                    @endif
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="text" wire:model.live="manualData.{{ $i }}.seri_nomor" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Seri/Nomor" />
                                     </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
-                                        <span class="text-xs">Buku</span>
-                                    </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                    @if ($isSisaBL)
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20">Buku</td>
+                                    @else
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                            <span class="text-xs">Buku</span>
+                                        </td>
+                                    @endif
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="text" wire:model.live="manualData.{{ $i }}.penerimaan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Penerimaan" />
                                     </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1">
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="text" wire:model.live="manualData.{{ $i }}.pengeluaran" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Pengeluaran" />
                                     </td>
                                 </tr>
