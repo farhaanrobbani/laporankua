@@ -386,10 +386,10 @@ class ReportsController extends Controller
                     }
                     $row['keluar_seri'] = $keluarSeri;
                 } else {
-                    $row['keluar_jumlah'] = '';
-                    $row['keluar_seri_awal'] = '';
-                    $row['keluar_seri_akhir'] = '';
-                    $row['keluar_seri'] = '';
+                    $row['keluar_jumlah'] = '0';
+                    $row['keluar_seri_awal'] = $row['masuk_seri_awal'] ?? '';
+                    $row['keluar_seri_akhir'] = $row['masuk_seri_akhir'] ?? '';
+                    $row['keluar_seri'] = $row['masuk_seri'] ?? '';
                 }
             }
 
@@ -410,6 +410,11 @@ class ReportsController extends Controller
                     $sisaSeri .= ' - '.$masukAkhir;
                 }
                 $row['sisa_seri'] = $sisaSeri;
+            } elseif ($prefix !== null && $ver === null) {
+                $row['sisa_jumlah'] = (string) $masuk;
+                $row['sisa_seri'] = $row['masuk_seri'] ?? '';
+                $row['sisa_seri_awal'] = $row['masuk_seri_awal'] ?? '';
+                $row['sisa_seri_akhir'] = $row['masuk_seri_akhir'] ?? '';
             }
 
             $rows[] = $row;
@@ -419,14 +424,17 @@ class ReportsController extends Controller
             ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
         ];
         $rowNum = 2;
-        foreach ($naVersions as $ver) {
-            $staticRows[] = [
-                'formulir' => $ver['label'],
-                'row_num' => $rowNum,
-                'dynamic' => true,
-                'dynamic_type' => 'na_version',
-            ];
-            $rowNum++;
+        foreach ($rows as $r) {
+            $formulir = $r['formulir'] ?? '';
+            if (preg_match('/^Model NA/', $formulir)) {
+                $staticRows[] = [
+                    'formulir' => $formulir,
+                    'row_num' => $rowNum,
+                    'dynamic' => true,
+                    'dynamic_type' => 'na_version',
+                ];
+                $rowNum++;
+            }
         }
         $staticRows[] = ['formulir' => 'Model DN', 'row_num' => $rowNum, 'dynamic' => false];
         $rowNum++;

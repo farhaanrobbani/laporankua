@@ -213,6 +213,29 @@ new class extends Component
         $empty = ['formulir' => '', 'masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
         $this->naVersions = $this->detectNaVersions();
 
+        $customRows = [];
+        if ($this->manualData) {
+            foreach ($this->manualData as $row) {
+                $formulir = $row['formulir'] ?? '';
+                if (str_starts_with($formulir, 'Model NA')) {
+                    $isDetected = false;
+                    foreach ($this->naVersions as $ver) {
+                        if ($ver['label'] === $formulir) {
+                            $isDetected = true;
+                            break;
+                        }
+                    }
+                    if (! $isDetected) {
+                        $row['keluar_jumlah'] = '0';
+                        $row['keluar_seri_awal'] = $row['masuk_seri_awal'] ?? '';
+                        $row['keluar_seri_akhir'] = $row['masuk_seri_akhir'] ?? '';
+                        $row['keluar_seri'] = $this->buildSeriRange($row['masuk_seri_awal'] ?? '', $row['masuk_seri_akhir'] ?? '');
+                        $customRows[] = $row;
+                    }
+                }
+            }
+        }
+
         $baseRows = [
             array_merge($empty, ['formulir' => 'Model N']),
         ];
@@ -224,6 +247,10 @@ new class extends Component
                 'keluar_seri_awal' => $ver['min_porp'],
                 'keluar_seri_akhir' => $ver['max_porp'],
             ]);
+        }
+
+        foreach ($customRows as $customRow) {
+            $baseRows[] = $customRow;
         }
 
         $baseRows[] = array_merge($empty, ['formulir' => 'Model DN']);
@@ -325,70 +352,73 @@ new class extends Component
 
     private function computeMasukJumlah(): void
     {
-        $naCount = count($this->naVersions);
-        if ($naCount === 0) {
-            return;
-        }
-
-        for ($i = 0; $i < $naCount; $i++) {
-            $idx = $i + 1;
-            if (! isset($this->manualData[$idx])) {
+        foreach ($this->manualData as $i => $row) {
+            if ($i === 0) {
                 continue;
             }
-            $awal = (int) ($this->manualData[$idx]['masuk_seri_awal'] ?? 0);
-            $akhir = (int) ($this->manualData[$idx]['masuk_seri_akhir'] ?? 0);
+            $formulir = $row['formulir'] ?? '';
+            if (! str_starts_with($formulir, 'Model NA')) {
+                continue;
+            }
+
+            $awal = (int) ($row['masuk_seri_awal'] ?? 0);
+            $akhir = (int) ($row['masuk_seri_akhir'] ?? 0);
 
             if ($awal > 0 && $akhir >= $awal) {
-                $this->manualData[$idx]['masuk_jumlah'] = (string) ($akhir - $awal + 1);
+                $this->manualData[$i]['masuk_jumlah'] = (string) ($akhir - $awal + 1);
             } else {
-                $this->manualData[$idx]['masuk_jumlah'] = '';
+                $this->manualData[$i]['masuk_jumlah'] = '';
             }
         }
     }
 
     private function recalculateSisa(): void
     {
-        $naCount = count($this->naVersions);
-        if ($naCount === 0) {
-            return;
-        }
-
-        for ($i = 0; $i < $naCount; $i++) {
-            $idx = $i + 1;
-            if (! isset($this->manualData[$idx])) {
+        foreach ($this->manualData as $i => $row) {
+            if ($i === 0) {
                 continue;
             }
-            $masuk = (int) ($this->manualData[$idx]['masuk_jumlah'] ?? 0);
-            $keluar = (int) ($this->manualData[$idx]['keluar_jumlah'] ?? 0);
-            $this->manualData[$idx]['sisa_jumlah'] = $masuk > 0 ? (string) ($masuk - $keluar) : '';
+            $formulir = $row['formulir'] ?? '';
+            if (! str_starts_with($formulir, 'Model NA')) {
+                continue;
+            }
+
+            $masuk = (int) ($row['masuk_jumlah'] ?? 0);
+            $keluar = (int) ($row['keluar_jumlah'] ?? 0);
+            $this->manualData[$i]['sisa_jumlah'] = $masuk > 0 ? (string) ($masuk - $keluar) : '';
         }
     }
 
     private function computeSisaSeri(): void
     {
-        $naCount = count($this->naVersions);
-        if ($naCount === 0) {
-            return;
-        }
-
-        for ($i = 0; $i < $naCount; $i++) {
-            $idx = $i + 1;
-            if (! isset($this->manualData[$idx])) {
+        foreach ($this->manualData as $i => $row) {
+            if ($i === 0) {
                 continue;
             }
-            $keluarAkhir = (int) ($this->manualData[$idx]['keluar_seri_akhir'] ?? 0);
-            $masukAkhir = (int) ($this->manualData[$idx]['masuk_seri_akhir'] ?? 0);
-            $sisaJumlah = (int) ($this->manualData[$idx]['sisa_jumlah'] ?? 0);
+            $formulir = $row['formulir'] ?? '';
+            if (! str_starts_with($formulir, 'Model NA')) {
+                continue;
+            }
+
+            $keluarAkhir = (int) ($row['keluar_seri_akhir'] ?? 0);
+            $masukAkhir = (int) ($row['masuk_seri_akhir'] ?? 0);
+            $sisaJumlah = (int) ($row['sisa_jumlah'] ?? 0);
 
             if ($sisaJumlah <= 0) {
-                $this->manualData[$idx]['sisa_seri_awal'] = '';
-                $this->manualData[$idx]['sisa_seri_akhir'] = '';
+                $this->manualData[$i]['sisa_seri_awal'] = '';
+                $this->manualData[$i]['sisa_seri_akhir'] = '';
             } elseif ($keluarAkhir > 0 && $masukAkhir >= $keluarAkhir) {
-                $this->manualData[$idx]['sisa_seri_awal'] = (string) ($keluarAkhir + 1);
-                $this->manualData[$idx]['sisa_seri_akhir'] = (string) $masukAkhir;
+                $this->manualData[$i]['sisa_seri_awal'] = (string) ($keluarAkhir + 1);
+                $this->manualData[$i]['sisa_seri_akhir'] = (string) $masukAkhir;
             } else {
-                $this->manualData[$idx]['sisa_seri_awal'] = '';
-                $this->manualData[$idx]['sisa_seri_akhir'] = '';
+                $masukAwal = (int) ($row['masuk_seri_awal'] ?? 0);
+                if ($sisaJumlah > 0 && $masukAwal > 0) {
+                    $this->manualData[$i]['sisa_seri_awal'] = (string) $masukAwal;
+                    $this->manualData[$i]['sisa_seri_akhir'] = (string) $masukAkhir;
+                } else {
+                    $this->manualData[$i]['sisa_seri_awal'] = '';
+                    $this->manualData[$i]['sisa_seri_akhir'] = '';
+                }
             }
         }
     }
@@ -404,9 +434,16 @@ new class extends Component
         ];
 
         $rowNum = 2;
-        foreach ($this->naVersions as $ver) {
+        foreach ($this->manualData as $i => $row) {
+            if ($i === 0) {
+                continue;
+            }
+            $formulir = $row['formulir'] ?? '';
+            if (! str_starts_with($formulir, 'Model NA')) {
+                break;
+            }
             $staticRows[] = [
-                'formulir' => $ver['label'],
+                'formulir' => $formulir,
                 'row_num' => $rowNum,
                 'dynamic' => true,
                 'dynamic_type' => 'na_version',
@@ -419,6 +456,29 @@ new class extends Component
         $staticRows[] = ['formulir' => 'Model NB', 'row_num' => $rowNum, 'dynamic' => false];
 
         $this->tableLayout['static_rows'] = $staticRows;
+    }
+
+    public function addNaRow(): void
+    {
+        $empty = ['formulir' => '', 'masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '0', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
+
+        $count = count($this->manualData);
+        $insertIdx = max(1, $count - 2);
+        array_splice($this->manualData, $insertIdx, 0, [array_merge($empty, ['formulir' => 'Model NA ()'])]);
+
+        $this->rebuildStaticRows();
+    }
+
+    public function removeNaRow(int $index): void
+    {
+        if (! isset($this->manualData[$index])) {
+            return;
+        }
+        $formulir = $this->manualData[$index]['formulir'] ?? '';
+        if (str_starts_with($formulir, 'Model NA') && $index > 0) {
+            array_splice($this->manualData, $index, 1);
+            $this->rebuildStaticRows();
+        }
     }
 
     private function buildSeriRange(string $awal, string $akhir): string
@@ -1022,7 +1082,12 @@ new class extends Component
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         @if ($isNaVersion)
-                                            <input type="text" wire:model.live="manualData.{{ $i }}.formulir" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 font-medium" />
+                                            <div class="flex items-center gap-1">
+                                                <input type="text" wire:model.live="manualData.{{ $i }}.formulir" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 font-medium" />
+                                                <button wire:click="removeNaRow({{ $i }})" type="button" class="text-red-400 hover:text-red-600 shrink-0" title="Hapus baris">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
                                         @else
                                             <span class="text-xs font-medium px-1">{{ $row['formulir'] }}</span>
                                         @endif
@@ -1085,6 +1150,14 @@ new class extends Component
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr>
+                                <td colspan="9" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                    <button wire:click="addNaRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Baris
+                                    </button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
