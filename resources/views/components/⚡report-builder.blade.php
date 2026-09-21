@@ -351,21 +351,11 @@ new class extends Component
     private function computeMasukJumlah(): void
     {
         foreach ($this->manualData as $i => $row) {
-            if ($i === 0) {
-                continue;
-            }
-            $formulir = $row['formulir'] ?? '';
-            if (! str_starts_with($formulir, 'Model NA')) {
-                continue;
-            }
-
             $awal = (int) ($row['masuk_seri_awal'] ?? 0);
             $akhir = (int) ($row['masuk_seri_akhir'] ?? 0);
 
             if ($awal > 0 && $akhir >= $awal) {
                 $this->manualData[$i]['masuk_jumlah'] = (string) ($akhir - $awal + 1);
-            } else {
-                $this->manualData[$i]['masuk_jumlah'] = '';
             }
         }
     }
@@ -373,14 +363,6 @@ new class extends Component
     private function recalculateSisa(): void
     {
         foreach ($this->manualData as $i => $row) {
-            if ($i === 0) {
-                continue;
-            }
-            $formulir = $row['formulir'] ?? '';
-            if (! str_starts_with($formulir, 'Model NA')) {
-                continue;
-            }
-
             $masuk = (int) ($row['masuk_jumlah'] ?? 0);
             $keluar = (int) ($row['keluar_jumlah'] ?? 0);
             $this->manualData[$i]['sisa_jumlah'] = $masuk > 0 ? (string) ($masuk - $keluar) : '';
@@ -390,14 +372,6 @@ new class extends Component
     private function computeSisaSeri(): void
     {
         foreach ($this->manualData as $i => $row) {
-            if ($i === 0) {
-                continue;
-            }
-            $formulir = $row['formulir'] ?? '';
-            if (! str_starts_with($formulir, 'Model NA')) {
-                continue;
-            }
-
             $keluarAkhir = (int) ($row['keluar_seri_akhir'] ?? 0);
             $masukAkhir = (int) ($row['masuk_seri_akhir'] ?? 0);
             $sisaJumlah = (int) ($row['sisa_jumlah'] ?? 0);
