@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Import;
 use App\Models\ImportData;
 use App\Models\Report;
 use App\Services\MergeService;
@@ -454,6 +455,35 @@ class ReportsController extends Controller
 
         $sisaBL = $saved['sisa_bulan_lalu'] ?? [];
         $rows = $saved['rows'] ?? [];
+
+        $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')->pluck('id');
+        $aktaMap = [];
+        if ($pnImports->isNotEmpty()) {
+            $pnData = ImportData::whereIn('import_id', $pnImports)
+                ->select('row_data')
+                ->get()
+                ->pluck('row_data');
+            foreach ($pnData as $pn) {
+                $nomorAkta = $pn['Nomor Akta Nikah'] ?? '';
+                $suamiPorforasi = trim((string) ($pn['No Porforasi Suami'] ?? ''));
+                $istriPorforasi = trim((string) ($pn['No Porforasi Istri'] ?? ''));
+                if ($suamiPorforasi !== '') {
+                    $aktaMap[$suamiPorforasi] = $nomorAkta;
+                }
+                if ($istriPorforasi !== '') {
+                    $aktaMap[$istriPorforasi] = $nomorAkta;
+                }
+            }
+        }
+
+        foreach ($rows as &$row) {
+            $namaCatin = $row['Nama Catin'] ?? '';
+            $parts = explode(' - ', $namaCatin, 2);
+            $row['_nama_suami'] = trim($parts[0] ?? $namaCatin);
+            $porforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
+            $row['_nomor_akta'] = $aktaMap[$porforasi] ?? null;
+        }
+        unset($row);
 
         return [
             'sisa_bulan_lalu' => $sisaBL,
