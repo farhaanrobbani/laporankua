@@ -1205,7 +1205,7 @@ new class extends Component
                             <tr class="bg-gray-100 dark:bg-gray-700">
                                 <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">No</th>
                                 <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Uraian</th>
-                                <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Banyaknya</th>
+                                <th colspan="3" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Banyaknya</th>
                                 <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">NA, RA, atau DN</th>
                                 <th rowspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Satuan</th>
                                 <th colspan="2" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Nomor Bukti</th>
@@ -1213,6 +1213,7 @@ new class extends Component
                             <tr class="bg-gray-50 dark:bg-gray-700/50">
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Masuk</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Keluar</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Sisa</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Model</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Seri/Nomor</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs">Penerimaan</th>
@@ -1240,6 +1241,14 @@ new class extends Component
                                         @else
                                             <span class="text-xs text-gray-700 dark:text-gray-300">{{ $this->manualData[$i]['keluar'] ?? 0 }}</span>
                                         @endif
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5 text-center">
+                                        @php
+                                            $masukVal = (int) ($this->manualData[$i]['masuk'] ?? 0);
+                                            $keluarVal = (int) ($this->manualData[$i]['keluar'] ?? 0);
+                                            $sisaVal = $masukVal - $keluarVal;
+                                        @endphp
+                                        <span class="text-xs text-gray-700 dark:text-gray-300">{{ $sisaVal < 0 ? 0 : $sisaVal }}</span>
                                     </td>
                                     @if ($isSisaBL)
                                         <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20">NA</td>

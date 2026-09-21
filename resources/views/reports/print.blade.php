@@ -556,15 +556,20 @@
                                 $grouped[$key][] = $row;
                             }
                             ksort($grouped);
-                            $runningSisa = (int) ($sisaBL['sisa'] ?? 0);
+                            $runningSisa = $sisaBLSisa;
                         @endphp
                         {{-- Sisa Bulan Lalu row --}}
+                        @php
+                            $sisaBLMasuk = (int) ($sisaBL['masuk'] ?? 0);
+                            $sisaBLKeluar = (int) ($sisaBL['keluar'] ?? 0);
+                            $sisaBLSisa = max(0, $sisaBLMasuk - $sisaBLKeluar);
+                        @endphp
                         <tr>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">1</td>
                             <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['masuk'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['keluar'] ?? '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['sisa'] ?? '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBLSisa }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['seri_nomor'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
