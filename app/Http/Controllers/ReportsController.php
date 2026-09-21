@@ -96,6 +96,9 @@ class ReportsController extends Controller
                     $effectiveFields[] = 'Tanggal Nikah';
                 }
             }
+            if (($config['table_layout']['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
+                $effectiveFields[] = 'Tanggal Cetak';
+            }
             if (in_array(($config['table_layout']['type'] ?? ''), ['formulir', 'laporan_na'], true)) {
                 $dataset = $mergeService->buildConcatDataset(
                     $config['merged_import_ids'],
@@ -155,6 +158,36 @@ class ReportsController extends Controller
         }
         $dataset['title'] = $report->title;
         $dataset['table_layout'] = $config['table_layout'] ?? null;
+
+        if (($config['table_layout']['type'] ?? '') === 'laporan_na') {
+            $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')->pluck('id');
+            $aktaMap = [];
+            if ($pnImports->isNotEmpty()) {
+                $pnData = ImportData::whereIn('import_id', $pnImports)
+                    ->select('row_data')
+                    ->get()
+                    ->pluck('row_data');
+                foreach ($pnData as $pn) {
+                    $nomorAkta = $pn['Nomor Akta Nikah'] ?? '';
+                    $suami = trim((string) ($pn['No Porforasi Suami'] ?? ''));
+                    $istri = trim((string) ($pn['No Porforasi Istri'] ?? ''));
+                    if ($suami !== '') {
+                        $aktaMap[$suami] = $nomorAkta;
+                    }
+                    if ($istri !== '') {
+                        $aktaMap[$istri] = $nomorAkta;
+                    }
+                }
+            }
+            foreach ($dataset['rows'] as &$row) {
+                $namaCatin = $row['Nama Catin'] ?? '';
+                $parts = explode(' - ', $namaCatin, 2);
+                $row['_nama_suami'] = trim($parts[0] ?? $namaCatin);
+                $porforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
+                $row['_nomor_akta'] = $aktaMap[$porforasi] ?? null;
+            }
+            unset($row);
+        }
 
         if ($hasDateFilter) {
             $tableLayout = $config['table_layout'] ?? [];
@@ -450,45 +483,10 @@ class ReportsController extends Controller
     {
         $saved = $config['manual_data'] ?? null;
         if (! is_array($saved)) {
-            return ['sisa_bulan_lalu' => [], 'rows' => []];
+            return ['sisa_bulan_lalu' => []];
         }
 
-        $sisaBL = $saved['sisa_bulan_lalu'] ?? [];
-        $rows = $saved['rows'] ?? [];
-
-        $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')->pluck('id');
-        $aktaMap = [];
-        if ($pnImports->isNotEmpty()) {
-            $pnData = ImportData::whereIn('import_id', $pnImports)
-                ->select('row_data')
-                ->get()
-                ->pluck('row_data');
-            foreach ($pnData as $pn) {
-                $nomorAkta = $pn['Nomor Akta Nikah'] ?? '';
-                $suamiPorforasi = trim((string) ($pn['No Porforasi Suami'] ?? ''));
-                $istriPorforasi = trim((string) ($pn['No Porforasi Istri'] ?? ''));
-                if ($suamiPorforasi !== '') {
-                    $aktaMap[$suamiPorforasi] = $nomorAkta;
-                }
-                if ($istriPorforasi !== '') {
-                    $aktaMap[$istriPorforasi] = $nomorAkta;
-                }
-            }
-        }
-
-        foreach ($rows as &$row) {
-            $namaCatin = $row['Nama Catin'] ?? '';
-            $parts = explode(' - ', $namaCatin, 2);
-            $row['_nama_suami'] = trim($parts[0] ?? $namaCatin);
-            $porforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
-            $row['_nomor_akta'] = $aktaMap[$porforasi] ?? null;
-        }
-        unset($row);
-
-        return [
-            'sisa_bulan_lalu' => $sisaBL,
-            'rows' => $rows,
-        ];
+        return ['sisa_bulan_lalu' => $saved['sisa_bulan_lalu'] ?? []];
     }
 
     public function destroy(Report $report): RedirectResponse
