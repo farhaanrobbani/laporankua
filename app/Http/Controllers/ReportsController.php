@@ -351,7 +351,7 @@ class ReportsController extends Controller
             }
             $filteredPorp = $data['filtered_porp'];
             $naVersions[] = [
-                'prefix' => $prefix,
+                'prefix' => (string) $prefix,
                 'label' => 'Model NA ('.$prefix.')',
                 'keluar_jumlah' => $data['count'],
                 'min_porp' => (string) min($filteredPorp),

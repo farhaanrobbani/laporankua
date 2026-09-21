@@ -305,7 +305,7 @@ new class extends Component
             }
             $filteredPorp = $data['filtered_porp'];
             $versions[] = [
-                'prefix' => $prefix,
+                'prefix' => (string) $prefix,
                 'label' => 'Model NA ('.$prefix.')',
                 'keluar_jumlah' => $data['count'],
                 'min_porp' => (string) min($filteredPorp),
