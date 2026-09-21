@@ -359,11 +359,16 @@ class ReportsController extends Controller
                 'max_porp' => (string) max($filteredPorp),
             ];
             $naVersions[] = $ver;
+            $keluarSeri = 'JT '.$ver['min_porp'];
+            if ($ver['min_porp'] !== $ver['max_porp']) {
+                $keluarSeri .= ' - '.$ver['max_porp'];
+            }
             $rows[] = array_merge($empty, [
                 'formulir' => $ver['label'],
                 'keluar_jumlah' => (string) $ver['keluar_jumlah'],
                 'keluar_seri_awal' => $ver['min_porp'],
                 'keluar_seri_akhir' => $ver['max_porp'],
+                'keluar_seri' => $keluarSeri,
             ]);
         }
 
