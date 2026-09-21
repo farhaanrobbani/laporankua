@@ -187,10 +187,12 @@
                         }
                     }
                     if ($tanggalNikahField !== null && ! empty($row[$tanggalNikahField])) {
-                        $date = \Carbon\Carbon::parse($row[$tanggalNikahField]);
-                        if ($lastDate === null || $date->gt($lastDate)) {
-                            $lastDate = $date;
-                        }
+                        try {
+                            $date = \Carbon\Carbon::parse($row[$tanggalNikahField]);
+                            if ($lastDate === null || $date->gt($lastDate)) {
+                                $lastDate = $date;
+                            }
+                        } catch (\Exception $e) {}
                     }
                 }
 
