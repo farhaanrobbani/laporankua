@@ -211,7 +211,8 @@ new class extends Component
     private function initManualData(): void
     {
         $empty = ['formulir' => '', 'masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
-        $this->naVersions = $this->detectNaVersions();
+        $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
+        $this->naVersions = $hasFilter ? $this->detectNaVersions() : [];
 
         $customRows = [];
         if ($this->manualData) {
