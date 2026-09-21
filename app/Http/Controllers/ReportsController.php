@@ -280,8 +280,14 @@ class ReportsController extends Controller
     private function buildL3ManualData(array $config): array
     {
         $importIds = $config['merged_import_ids'] ?? [];
-        if ($importIds === []) {
-            return ['rows' => [], 'na_versions' => [], 'static_rows' => $config['table_layout']['static_rows'] ?? []];
+        $savedRows = $config['manual_data']['rows'] ?? [];
+
+        if ($importIds === [] || $savedRows === []) {
+            return [
+                'rows' => $savedRows,
+                'na_versions' => $config['manual_data']['na_versions'] ?? [],
+                'static_rows' => $config['table_layout']['static_rows'] ?? $config['manual_data']['static_rows'] ?? [],
+            ];
         }
 
         $prefixLength = $config['table_layout']['na_version_prefix_length'] ?? 6;
@@ -304,9 +310,8 @@ class ReportsController extends Controller
             }
             $prefix = substr($nomor, 0, $prefixLength);
             if (! isset($groups[$prefix])) {
-                $groups[$prefix] = ['porporasi' => [], 'filtered_porp' => [], 'count' => 0];
+                $groups[$prefix] = ['filtered_porp' => [], 'count' => 0];
             }
-            $groups[$prefix]['porporasi'][] = (int) $nomor;
         }
 
         foreach ($allRows as $row) {
@@ -339,41 +344,76 @@ class ReportsController extends Controller
             }
         }
 
-        ksort($groups);
-
-        $empty = ['formulir' => '', 'masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
-
-        $rows = [array_merge($empty, ['formulir' => 'Model N'])];
-
         $naVersions = [];
         foreach ($groups as $prefix => $data) {
             if ($data['count'] === 0) {
                 continue;
             }
             $filteredPorp = $data['filtered_porp'];
-            $ver = [
+            $naVersions[] = [
                 'prefix' => $prefix,
                 'label' => 'Model NA ('.$prefix.')',
                 'keluar_jumlah' => $data['count'],
                 'min_porp' => (string) min($filteredPorp),
                 'max_porp' => (string) max($filteredPorp),
             ];
-            $naVersions[] = $ver;
-            $keluarSeri = 'JT '.$ver['min_porp'];
-            if ($ver['min_porp'] !== $ver['max_porp']) {
-                $keluarSeri .= ' - '.$ver['max_porp'];
-            }
-            $rows[] = array_merge($empty, [
-                'formulir' => $ver['label'],
-                'keluar_jumlah' => (string) $ver['keluar_jumlah'],
-                'keluar_seri_awal' => $ver['min_porp'],
-                'keluar_seri_akhir' => $ver['max_porp'],
-                'keluar_seri' => $keluarSeri,
-            ]);
         }
 
-        $rows[] = array_merge($empty, ['formulir' => 'Model DN']);
-        $rows[] = array_merge($empty, ['formulir' => 'Model NB']);
+        $rows = [];
+        foreach ($savedRows as $saved) {
+            $row = $saved;
+
+            $prefix = null;
+            if (preg_match('/Model NA \((\d+)\)/', $saved['formulir'] ?? '', $m)) {
+                $prefix = $m[1];
+            }
+
+            if ($prefix !== null) {
+                $ver = null;
+                foreach ($naVersions as $v) {
+                    if ($v['prefix'] === $prefix) {
+                        $ver = $v;
+                        break;
+                    }
+                }
+                if ($ver) {
+                    $row['keluar_jumlah'] = (string) $ver['keluar_jumlah'];
+                    $row['keluar_seri_awal'] = $ver['min_porp'];
+                    $row['keluar_seri_akhir'] = $ver['max_porp'];
+                    $keluarSeri = 'JT '.$ver['min_porp'];
+                    if ($ver['min_porp'] !== $ver['max_porp']) {
+                        $keluarSeri .= ' - '.$ver['max_porp'];
+                    }
+                    $row['keluar_seri'] = $keluarSeri;
+                } else {
+                    $row['keluar_jumlah'] = '';
+                    $row['keluar_seri_awal'] = '';
+                    $row['keluar_seri_akhir'] = '';
+                    $row['keluar_seri'] = '';
+                }
+            }
+
+            $masuk = (int) ($row['masuk_jumlah'] ?? 0);
+            $keluar = (int) ($row['keluar_jumlah'] ?? 0);
+            if ($masuk > 0) {
+                $row['sisa_jumlah'] = (string) ($masuk - $keluar);
+            }
+
+            $masukAkhir = (int) ($row['masuk_seri_akhir'] ?? 0);
+            $keluarAkhir = (int) ($row['keluar_seri_akhir'] ?? 0);
+            $sisaJumlah = (int) ($row['sisa_jumlah'] ?? 0);
+            if ($sisaJumlah > 0 && $keluarAkhir > 0 && $masukAkhir >= $keluarAkhir) {
+                $row['sisa_seri_awal'] = (string) ($keluarAkhir + 1);
+                $row['sisa_seri_akhir'] = (string) $masukAkhir;
+                $sisaSeri = 'JT '.($keluarAkhir + 1);
+                if (($keluarAkhir + 1) !== $masukAkhir) {
+                    $sisaSeri .= ' - '.$masukAkhir;
+                }
+                $row['sisa_seri'] = $sisaSeri;
+            }
+
+            $rows[] = $row;
+        }
 
         $staticRows = [
             ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
