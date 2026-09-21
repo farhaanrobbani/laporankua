@@ -95,15 +95,27 @@ class ReportsController extends Controller
                     $effectiveFields[] = 'Tanggal Nikah';
                 }
             }
-            $dataset = $mergeService->buildMergedDataset(
-                $config['merged_import_ids'],
-                $effectiveFields,
-                $config['search'] ?? null,
-                $config['filter_column'] ?? null,
-                $config['filter_value'] ?? null,
-                $sortColumn,
-                $sortDirection,
-            );
+            if (($config['table_layout']['type'] ?? '') === 'formulir') {
+                $dataset = $mergeService->buildConcatDataset(
+                    $config['merged_import_ids'],
+                    $effectiveFields,
+                    $config['search'] ?? null,
+                    $config['filter_column'] ?? null,
+                    $config['filter_value'] ?? null,
+                    $sortColumn,
+                    $sortDirection,
+                );
+            } else {
+                $dataset = $mergeService->buildMergedDataset(
+                    $config['merged_import_ids'],
+                    $effectiveFields,
+                    $config['search'] ?? null,
+                    $config['filter_column'] ?? null,
+                    $config['filter_value'] ?? null,
+                    $sortColumn,
+                    $sortDirection,
+                );
+            }
         } elseif (! empty($config['merged_import_ids'])) {
             $mergeService = app(MergeService::class);
             $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
@@ -222,6 +234,10 @@ class ReportsController extends Controller
         $dataset['font_size_kop_kontak'] = $config['font_size_kop_kontak'] ?? null;
         $dataset['config_json'] = $config;
 
+        if (($config['table_layout']['type'] ?? '') === 'formulir') {
+            $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
+        }
+
         return view('reports.print', compact('dataset', 'report'));
     }
 
@@ -259,6 +275,123 @@ class ReportsController extends Controller
             'multiMode' => false,
             'showNav' => true,
         ]);
+    }
+
+    private function buildL3ManualData(array $config): array
+    {
+        $importIds = $config['merged_import_ids'] ?? [];
+        if ($importIds === []) {
+            return ['rows' => [], 'na_versions' => [], 'static_rows' => $config['table_layout']['static_rows'] ?? []];
+        }
+
+        $prefixLength = $config['table_layout']['na_version_prefix_length'] ?? 6;
+        $filterMonth = $config['filter_month'] ?? null;
+        $filterYear = $config['filter_year'] ?? null;
+
+        $allRows = ImportData::whereIn('import_id', $importIds)
+            ->select('row_data')
+            ->get()
+            ->pluck('row_data')
+            ->toArray();
+
+        $groups = [];
+        foreach ($allRows as $row) {
+            $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
+            $nomor = preg_replace('/^JT\s*/i', '', $nomor);
+            $nomor = preg_replace('/\s*-\s*\d+$/', '', $nomor);
+            if ($nomor === '' || ! preg_match('/^\d+$/', $nomor)) {
+                continue;
+            }
+            $prefix = substr($nomor, 0, $prefixLength);
+            if (! isset($groups[$prefix])) {
+                $groups[$prefix] = ['porporasi' => [], 'filtered_porp' => [], 'count' => 0];
+            }
+            $groups[$prefix]['porporasi'][] = (int) $nomor;
+        }
+
+        foreach ($allRows as $row) {
+            $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
+            $nomor = preg_replace('/^JT\s*/i', '', $nomor);
+            $nomor = preg_replace('/\s*-\s*\d+$/', '', $nomor);
+            if ($nomor === '' || ! preg_match('/^\d+$/', $nomor)) {
+                continue;
+            }
+            $prefix = substr($nomor, 0, $prefixLength);
+
+            $tanggalCetak = $row['Tanggal Cetak'] ?? null;
+            if ($tanggalCetak !== null && $tanggalCetak !== '') {
+                try {
+                    $date = Carbon::parse($tanggalCetak);
+                    if ($filterMonth !== null && $filterMonth !== '' && (int) $date->month !== (int) $filterMonth) {
+                        continue;
+                    }
+                    if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
+                        continue;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+
+            if (isset($groups[$prefix])) {
+                $groups[$prefix]['count']++;
+                $groups[$prefix]['filtered_porp'][] = (int) $nomor;
+            }
+        }
+
+        ksort($groups);
+
+        $empty = ['formulir' => '', 'masuk_jumlah' => '', 'masuk_seri_awal' => '', 'masuk_seri_akhir' => '', 'keluar_jumlah' => '', 'keluar_seri_awal' => '', 'keluar_seri_akhir' => '', 'sisa_jumlah' => '', 'sisa_seri_awal' => '', 'sisa_seri_akhir' => '', 'keterangan' => ''];
+
+        $rows = [array_merge($empty, ['formulir' => 'Model N'])];
+
+        $naVersions = [];
+        foreach ($groups as $prefix => $data) {
+            if ($data['count'] === 0) {
+                continue;
+            }
+            $filteredPorp = $data['filtered_porp'];
+            $ver = [
+                'prefix' => $prefix,
+                'label' => 'Model NA ('.$prefix.')',
+                'keluar_jumlah' => $data['count'],
+                'min_porp' => (string) min($filteredPorp),
+                'max_porp' => (string) max($filteredPorp),
+            ];
+            $naVersions[] = $ver;
+            $rows[] = array_merge($empty, [
+                'formulir' => $ver['label'],
+                'keluar_jumlah' => (string) $ver['keluar_jumlah'],
+                'keluar_seri_awal' => $ver['min_porp'],
+                'keluar_seri_akhir' => $ver['max_porp'],
+            ]);
+        }
+
+        $rows[] = array_merge($empty, ['formulir' => 'Model DN']);
+        $rows[] = array_merge($empty, ['formulir' => 'Model NB']);
+
+        $staticRows = [
+            ['formulir' => 'Model N', 'row_num' => 1, 'dynamic' => false],
+        ];
+        $rowNum = 2;
+        foreach ($naVersions as $ver) {
+            $staticRows[] = [
+                'formulir' => $ver['label'],
+                'row_num' => $rowNum,
+                'dynamic' => true,
+                'dynamic_type' => 'na_version',
+            ];
+            $rowNum++;
+        }
+        $staticRows[] = ['formulir' => 'Model DN', 'row_num' => $rowNum, 'dynamic' => false];
+        $rowNum++;
+        $staticRows[] = ['formulir' => 'Model NB', 'row_num' => $rowNum, 'dynamic' => false];
+
+        return [
+            'rows' => $rows,
+            'na_versions' => $naVersions,
+            'static_rows' => $staticRows,
+        ];
     }
 
     public function destroy(Report $report): RedirectResponse

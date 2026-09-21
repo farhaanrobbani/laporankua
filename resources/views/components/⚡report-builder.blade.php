@@ -784,6 +784,7 @@ new class extends Component
                 'merged_import_ids' => $this->mergeImportIds,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
+                'manual_data' => ($this->tableLayout['type'] ?? '') === 'formulir' ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
