@@ -73,6 +73,16 @@ class DataController extends Controller
         return view('data.duplikat', compact('importIds'));
     }
 
+    public function bukanDuplikat(): View
+    {
+        $importIds = Import::where('user_id', auth()->id())
+            ->where('table_name', 'laporan model l3')
+            ->pluck('id')
+            ->toArray();
+
+        return view('data.bukan-duplikat', compact('importIds'));
+    }
+
     public function show(ImportData $record): View
     {
         $this->authorize('view', $record->import);

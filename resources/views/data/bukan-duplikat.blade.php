@@ -35,9 +35,9 @@
                         <livewire:data-table
                             :import-ids="$importIds"
                             :filter-column="'Keterangan'"
-                            :filter-value="'Duplikat'"
+                            :filter-value="'Bukan Duplikat'"
                             :filter-mode="'exact'"
-                            :key="'duplikat'"
+                            :key="'bukan-duplikat'"
                         />
                     @endif
                 </div>
