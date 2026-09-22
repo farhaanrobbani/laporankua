@@ -213,6 +213,10 @@
                         $hariName = $monthDays[$lastDate->dayOfWeek];
                         $tanggalFormatted = $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year;
                     }
+                } elseif (! $isLaporanNA && $lastDate !== null) {
+                    $lastDate = $lastDate->endOfMonth();
+                    $hariName = $monthDays[$lastDate->dayOfWeek];
+                    $tanggalFormatted = $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year;
                 }
                 $isL5Report = false;
                 foreach ($columns as $col) {
@@ -941,7 +945,7 @@
 
                     <div class="mt-6 flex justify-end">
                         <div class="text-center">
-                            <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
+                            <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year }}</p>
                             <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                             <div class="h-16"></div>
                             <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
