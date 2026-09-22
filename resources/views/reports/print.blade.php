@@ -604,7 +604,7 @@
                                 $uraian = '';
                                 if ($keluarBD > 0) {
                                     $nama = $bukanDuplikat[0]['_nama_suami'] ?? $bukanDuplikat[0]['Nama Catin'] ?? '';
-                                    $uraian = $keluarBD > 1 ? $nama.' Cs.' : $nama;
+                                    $uraian = $keluarBD > 2 ? $nama.' Cs.' : $nama;
                                 }
                             @endphp
                             {{-- Bukan Duplikat row --}}
