@@ -897,6 +897,7 @@
                 </div>
             @elseif ($isLaporanNA)
                 <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> bulan <strong>{{ strtoupper($bulanName) }}</strong> tahun <strong>{{ $tahunName }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisa }}</strong> buku.</p>
                     <div class="flex justify-end">
                         <div class="text-center">
                             <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
