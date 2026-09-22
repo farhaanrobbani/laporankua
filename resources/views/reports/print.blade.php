@@ -577,7 +577,7 @@
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['keluar'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBLSisa }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['seri_nomor'] ?? '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">@if($sisaBL['seri_dari'] ?? '')JT {{ $sisaBL['seri_dari'] }}@if($sisaBL['seri_sampai'] ?? '') - {{ $sisaBL['seri_sampai'] }}@endif@endif</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['penerimaan'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['pengeluaran'] ?? '' }}</td>
@@ -597,7 +597,8 @@
                                     return (int) $p;
                                 }, $bukanDuplikat);
                                 $porforasiNums = array_filter($porforasiNums);
-                                $seriRange = $porforasiNums ? 'JT '.min($porforasiNums).' - '.max($porforasiNums) : '';
+                                $seriDari = $porforasiNums ? 'JT '.min($porforasiNums) : '';
+                                $seriSampai = $porforasiNums ? 'JT '.max($porforasiNums) : '';
                                 $aktaList = array_filter(array_map(fn ($r) => $r['_nomor_akta'] ?? null, $bukanDuplikat));
                                 $aktaNums = array_map(fn ($a) => (int) $a, $aktaList);
                                 $aktaRange = $aktaNums ? min($aktaNums).' - '.max($aktaNums) : '';
@@ -616,7 +617,8 @@
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarBD ?: '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;" rowspan="{{ $rowspan }}">{{ $sisa < 0 ? 0 : $sisa }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">NA</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $seriRange }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $seriDari }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $seriSampai }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">Buku</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}"></td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $aktaRange }}</td>
