@@ -905,7 +905,7 @@
                     </div>
                 </div>
             @elseif ($isLaporanNA)
-                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                <div class="mt-6 leading-relaxed" style="font-size: 12px; padding-left: 90px; padding-right: 90px;">
                     <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisa }}</strong> buku.</p>
                     <div class="flex justify-between mt-6">
                         <div class="text-center">
@@ -916,6 +916,7 @@
                             <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
                         </div>
                         <div class="text-center">
+                            <br>
                             <p>Petugas Stok</p>
                             <div class="h-16"></div>
                             <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
