@@ -771,9 +771,9 @@
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalMasuk ?: '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalKeluar }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisa }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold; white-space:pre-line;">{{ implode("\n", $remainingRanges) }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                         </tr>
