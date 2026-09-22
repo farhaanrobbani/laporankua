@@ -597,7 +597,7 @@
                                     return (int) $p;
                                 }, $bukanDuplikat);
                                 $porforasiNums = array_filter($porforasiNums);
-                                $seriRange = $porforasiNums ? min($porforasiNums).' - '.max($porforasiNums) : '';
+                                $seriRange = $porforasiNums ? 'JT '.min($porforasiNums).' - '.max($porforasiNums) : '';
                                 $aktaList = array_filter(array_map(fn ($r) => $r['_nomor_akta'] ?? null, $bukanDuplikat));
                                 $aktaNums = array_map(fn ($a) => (int) $a, $aktaList);
                                 $aktaRange = $aktaNums ? min($aktaNums).' - '.max($aktaNums) : '';
