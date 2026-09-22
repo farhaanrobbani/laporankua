@@ -464,28 +464,33 @@ new class extends Component
 
     public function removeLaporanNaRow(int $index): void
     {
-        if (isset($this->manualData[$index]) && empty($this->manualData[$index]['is_sisa_bulan_lalu'])) {
+        if (isset($this->manualData[$index])) {
             array_splice($this->manualData, $index, 1);
         }
     }
 
+    public function addSisaBulanLalu(): void
+    {
+        $this->manualData[] = ['is_sisa_bulan_lalu' => true, 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'keluar' => '', 'sisa' => '', 'model' => 'NA', 'seri_dari' => '', 'seri_sampai' => '', 'penerimaan' => '', 'pengeluaran' => ''];
+    }
+
     private function initLaporanNaData(): void
     {
-        $existingSisaBL = null;
+        $sisaBLEntries = [];
         $existingRows = [];
         if ($this->manualData) {
             foreach ($this->manualData as $row) {
                 if (! empty($row['is_sisa_bulan_lalu'])) {
-                    $existingSisaBL = $row;
+                    $sisaBLEntries[] = $row;
                 } else {
                     $existingRows[] = $row;
                 }
             }
         }
-        if ($existingSisaBL === null) {
-            $existingSisaBL = ['is_sisa_bulan_lalu' => true, 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'keluar' => '', 'sisa' => '', 'model' => 'NA', 'seri_dari' => '', 'seri_sampai' => '', 'penerimaan' => '', 'pengeluaran' => ''];
+        if (empty($sisaBLEntries)) {
+            $sisaBLEntries[] = ['is_sisa_bulan_lalu' => true, 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'keluar' => '', 'sisa' => '', 'model' => 'NA', 'seri_dari' => '', 'seri_sampai' => '', 'penerimaan' => '', 'pengeluaran' => ''];
         }
-        $this->manualData = array_values(array_merge([$existingSisaBL], $existingRows));
+        $this->manualData = array_values(array_merge($sisaBLEntries, $existingRows));
     }
 
     private function buildSeriRange(string $awal, string $akhir): string
@@ -506,18 +511,18 @@ new class extends Component
     private function buildManualDataForSave(): array
     {
         if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
-            $sisaBL = null;
+            $sisaBLEntries = [];
             $rows = [];
             foreach ($this->manualData as $row) {
                 if (! empty($row['is_sisa_bulan_lalu'])) {
-                    $sisaBL = $row;
+                    $sisaBLEntries[] = $row;
                 } else {
                     $rows[] = $row;
                 }
             }
 
             return [
-                'sisa_bulan_lalu' => $sisaBL,
+                'sisa_bulan_lalu' => count($sisaBLEntries) === 1 ? $sisaBLEntries[0] : $sisaBLEntries,
                 'rows' => $rows,
             ];
         }
@@ -1296,6 +1301,10 @@ new class extends Component
                                     <button wire:click="addLaporanNaRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                         Tambah Baris
+                                    </button>
+                                    <button wire:click="addSisaBulanLalu" type="button" class="inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 ml-3">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Sisa Bulan Lalu
                                     </button>
                                 </td>
                             </tr>
