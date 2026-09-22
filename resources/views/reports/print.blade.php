@@ -591,7 +591,6 @@
                                 $sisa = $dateSisa[$dateKey];
                                 $dateDisplay = $dateKey;
                                 try { $dateDisplay = \Carbon\Carbon::parse($dateKey)->format('d/m/Y'); } catch (\Exception $e) {}
-                                $rowspan = 1 + $keluarD;
                                 $porforasiNums = array_map(function ($r) {
                                     $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
                                     return (int) $p;
@@ -608,27 +607,48 @@
                                     $nama = $bukanDuplikat[0]['_nama_suami'] ?? $bukanDuplikat[0]['Nama Catin'] ?? '';
                                     $uraian = $keluarBD > 2 ? $nama.' Cs.' : $nama;
                                 }
+                                $dupliPorforasiNums = array_map(function ($r) {
+                                    $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
+                                    return (int) $p;
+                                }, $duplikat);
+                                $dupliPorforasiNums = array_filter($dupliPorforasiNums);
+                                $dupliSeriRange = '';
+                                if (count($dupliPorforasiNums) === 1) {
+                                    $dupliSeriRange = 'JT '.reset($dupliPorforasiNums);
+                                } elseif (count($dupliPorforasiNums) > 1) {
+                                    $dupliSeriRange = 'JT '.min($dupliPorforasiNums).' - '.max($dupliPorforasiNums);
+                                }
                             @endphp
                             {{-- Bukan Duplikat row --}}
                             <tr>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $rowNum++ }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $dateDisplay }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $uraian }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}"></td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $dateDisplay }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $uraian }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarBD ?: '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;" rowspan="{{ $rowspan }}">{{ $sisa < 0 ? 0 : $sisa }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">NA</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $seriRange }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">Buku</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}"></td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;" rowspan="{{ $rowspan }}">{{ $aktaRange }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisa < 0 ? 0 : $sisa }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $seriRange }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $aktaRange }}</td>
                             </tr>
-                            {{-- Duplikat sub-rows --}}
-                            @foreach ($duplikat as $d)
+                            {{-- Duplikat row --}}
+                            @if ($keluarD > 0)
                                 <tr>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">1</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $dateDisplay }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Duplikat</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisa < 0 ? 0 : $sisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dupliSeriRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                 </tr>
-                            @endforeach
+                            @endif
                         @endforeach
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
