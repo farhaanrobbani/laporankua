@@ -565,7 +565,7 @@
                                 $runningSisaCalc -= $bdCount + $dCount;
                                 $dateSisa[$dateKey] = max(0, $runningSisaCalc);
                             }
-                            krsort($grouped);
+                            ksort($grouped);
                             $rowNum = 1;
                         @endphp
                         {{-- Sisa Bulan Lalu row --}}
