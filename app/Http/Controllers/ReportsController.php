@@ -196,9 +196,6 @@ class ReportsController extends Controller
             $tableLayout = $config['table_layout'] ?? [];
             $layoutColumns = $tableLayout['columns'] ?? [];
             $tanggalNikahField = null;
-            if (($config['table_layout']['type'] ?? '') === 'laporan_na' && in_array('Tanggal Cetak', $effectiveFields, true)) {
-                $tanggalNikahField = 'Tanggal Cetak';
-            }
             foreach ($layoutColumns as $col) {
                 if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
                     $tanggalNikahField = $col['field'];
@@ -223,6 +220,10 @@ class ReportsController extends Controller
                 if ($dateFilterField && in_array($dateFilterField, $effectiveFields, true)) {
                     $tanggalNikahField = $dateFilterField;
                 }
+            }
+
+            if (($config['table_layout']['type'] ?? '') === 'laporan_na' && in_array('Tanggal Cetak', $effectiveFields, true)) {
+                $tanggalNikahField = 'Tanggal Cetak';
             }
 
             if ($tanggalNikahField !== null) {

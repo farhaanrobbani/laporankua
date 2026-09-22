@@ -698,11 +698,6 @@ new class extends Component
         }
 
         $tanggalNikahField = null;
-        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
-            if (in_array('Tanggal Cetak', $this->preview['headings'] ?? [], true)) {
-                $tanggalNikahField = 'Tanggal Cetak';
-            }
-        }
         if ($this->tableLayout) {
             foreach ($this->tableLayout['columns'] ?? [] as $col) {
                 if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
@@ -728,6 +723,12 @@ new class extends Component
             $dateFilterField = $this->tableLayout['aggregation']['date_filter_field'] ?? null;
             if ($dateFilterField && in_array($dateFilterField, $this->preview['headings'] ?? [], true)) {
                 $tanggalNikahField = $dateFilterField;
+            }
+        }
+
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            if (in_array('Tanggal Cetak', $this->preview['headings'] ?? [], true)) {
+                $tanggalNikahField = 'Tanggal Cetak';
             }
         }
 
