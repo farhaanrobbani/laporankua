@@ -907,13 +907,19 @@
             @elseif ($isLaporanNA)
                 <div class="mt-6 leading-relaxed" style="font-size: 12px;">
                     <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisa }}</strong> buku.</p>
-                    <div class="flex justify-end">
+                    <div class="flex justify-between mt-6">
                         <div class="text-center">
-                            <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
+                            <p>Mengetahui,</p>
                             <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                             <div class="h-16"></div>
                             <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
                             <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p>Petugas Stok</p>
+                            <div class="h-16"></div>
+                            <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
+                            <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
                         </div>
                     </div>
                 </div>

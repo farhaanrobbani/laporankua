@@ -41,6 +41,19 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="nama_petugas_stok" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Petugas Stok</label>
+                    <input type="text" id="nama_petugas_stok" name="nama_petugas_stok" value="{{ old('nama_petugas_stok', $user->nama_petugas_stok) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                    @error('nama_petugas_stok') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nip_petugas_stok" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NIP Petugas Stok</label>
+                    <input type="text" id="nip_petugas_stok" name="nip_petugas_stok" value="{{ old('nip_petugas_stok', $user->nip_petugas_stok) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                    @error('nip_petugas_stok') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             <div class="flex items-center gap-4 pt-2">
                 <button type="submit" style="background-color: #111827; color: #fff;" class="px-4 py-2 text-sm font-semibold rounded-md hover:opacity-90">Simpan Perubahan</button>
                 @if (session('status') === 'profile-updated')

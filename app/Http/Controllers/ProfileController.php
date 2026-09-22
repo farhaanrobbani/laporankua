@@ -54,7 +54,7 @@ class ProfileController extends Controller
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $validated = $request->only(['name', 'email', 'kecamatan', 'nama_kepala_kua', 'nip_kepala']);
+        $validated = $request->only(['name', 'email', 'kecamatan', 'nama_kepala_kua', 'nip_kepala', 'nama_petugas_stok', 'nip_petugas_stok']);
 
         $request->user()->fill($validated);
 

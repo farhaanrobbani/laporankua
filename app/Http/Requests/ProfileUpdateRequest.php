@@ -29,6 +29,8 @@ class ProfileUpdateRequest extends FormRequest
             'kecamatan' => ['nullable', 'string', 'max:255'],
             'nama_kepala_kua' => ['nullable', 'string', 'max:255'],
             'nip_kepala' => ['nullable', 'string', 'max:255'],
+            'nama_petugas_stok' => ['nullable', 'string', 'max:255'],
+            'nip_petugas_stok' => ['nullable', 'string', 'max:255'],
             'nama_kementerian' => ['nullable', 'string', 'max:255'],
             'nama_kantor_kota' => ['nullable', 'string', 'max:255'],
             'nama_kantor' => ['nullable', 'string', 'max:255'],

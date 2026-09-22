@@ -264,8 +264,10 @@ class ReportsController extends Controller
         }
 
         $dataset['kecamatan'] = $config['kecamatan'] ?? null;
-        $dataset['nama_kepala_kua'] = $config['nama_kepala_kua'] ?? null;
-        $dataset['nip_kepala'] = $config['nip_kepala'] ?? null;
+            $dataset['nama_kepala_kua'] = $config['nama_kepala_kua'] ?? null;
+            $dataset['nip_kepala'] = $config['nip_kepala'] ?? null;
+            $dataset['nama_petugas_stok'] = $config['nama_petugas_stok'] ?? null;
+            $dataset['nip_petugas_stok'] = $config['nip_petugas_stok'] ?? null;
         $dataset['nama_kementerian'] = $config['nama_kementerian'] ?? null;
         $dataset['nama_kantor_kota'] = $config['nama_kantor_kota'] ?? null;
         $dataset['nama_kantor'] = $config['nama_kantor'] ?? null;
