@@ -32,7 +32,7 @@
                 $l2Title = 'LAPORAN';
 
                 // Aggregation: group data if configured
-                if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail') {
+                if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'laporan_na') {
                     $groupBy = $layout['aggregation']['group_by'];
                     $grouped = [];
                     foreach ($dataset['rows'] as $row) {
