@@ -566,6 +566,7 @@
                             $grouped = [];
                             foreach ($rows as $row) {
                                 $key = $row['Tanggal Cetak'] ?? 'Lainnya';
+                                try { $key = \Carbon\Carbon::parse($key)->format('Y-m-d'); } catch (\Exception $e) {}
                                 if (! isset($grouped[$key])) {
                                     $grouped[$key] = [];
                                 }
