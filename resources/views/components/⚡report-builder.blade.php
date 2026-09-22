@@ -1245,7 +1245,7 @@ new class extends Component
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
                                     @if ($isSisaBL)
-                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium bg-blue-50 dark:bg-blue-900/20">Sisa bulan lalu</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 dark:text-blue-200">Sisa bulan lalu</td>
                                     @else
                                         <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                             <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
@@ -1270,7 +1270,7 @@ new class extends Component
                                         <span class="text-xs text-gray-700 dark:text-gray-300">{{ $sisaVal < 0 ? 0 : $sisaVal }}</span>
                                     </td>
                                     @if ($isSisaBL)
-                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20">NA</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20 dark:text-blue-200">NA</td>
                                     @else
                                         <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                             <input type="text" wire:model.live="manualData.{{ $i }}.model" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="NA XXXXXX" />
@@ -1283,7 +1283,7 @@ new class extends Component
                                         <input type="text" wire:model.live="manualData.{{ $i }}.seri_sampai" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Sampai" />
                                     </td>
                                     @if ($isSisaBL)
-                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20">Buku</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium bg-blue-50 dark:bg-blue-900/20 dark:text-blue-200">Buku</td>
                                     @else
                                         <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
                                             <span class="text-xs">Buku</span>
