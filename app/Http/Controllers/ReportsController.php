@@ -124,7 +124,7 @@ class ReportsController extends Controller
             $mergeService = app(MergeService::class);
             $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
             $effectiveFields = $fields === [] ? $allColumns : $fields;
-            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true) && ($config['table_layout']['type'] ?? '') !== 'laporan_na') {
                 if (in_array('Tanggal Nikah', $allColumns, true)) {
                     $effectiveFields[] = 'Tanggal Nikah';
                 }

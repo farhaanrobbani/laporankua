@@ -587,11 +587,14 @@ new class extends Component
 
         $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
         $effectiveFields = $this->fields;
-        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true) && ($this->tableLayout['type'] ?? '') !== 'laporan_na') {
             $import = Import::whereIn('id', $this->selectedImportIds)->first();
             if ($import && in_array('Tanggal Nikah', $import->availableColumns(), true)) {
                 $effectiveFields[] = 'Tanggal Nikah';
             }
+        }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
+            $effectiveFields[] = 'Tanggal Cetak';
         }
 
         $dataset = app(MergeService::class)->buildConcatDataset(
@@ -635,7 +638,7 @@ new class extends Component
 
         $hasFilter = $this->filterMonth !== '' || $this->filterYear !== '';
         $effectiveFields = $this->fields;
-        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+        if ($hasFilter && ! in_array('Tanggal Nikah', $effectiveFields, true) && ($this->tableLayout['type'] ?? '') !== 'laporan_na') {
             $allCols = app(MergeService::class)->getAllColumns($this->mergeImportIds);
             if (in_array('Tanggal Nikah', $allCols, true)) {
                 $effectiveFields[] = 'Tanggal Nikah';
