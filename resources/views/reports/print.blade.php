@@ -913,7 +913,7 @@
             </table>
 
             @if ($isL2Report)
-                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <div class="flex justify-end">
                         <div class="text-center">
                             <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
@@ -925,7 +925,7 @@
                     </div>
                 </div>
             @elseif ($isL4Report)
-                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <div class="flex justify-end">
                         <div class="text-center">
                             <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
@@ -937,7 +937,7 @@
                     </div>
                 </div>
             @elseif ($isL3Report)
-                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <div class="flex justify-end">
                         <div class="text-center">
                             <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
@@ -949,7 +949,7 @@
                     </div>
                 </div>
             @elseif ($isLaporanNA)
-                <div class="mt-6 leading-relaxed" style="font-size: 12px;">
+                <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisa }}</strong> buku.</p>
                     <div class="flex justify-between mt-6" style="padding-left: 90px; padding-right: 90px;">
                         <div class="text-center">
@@ -969,7 +969,7 @@
                     </div>
                 </div>
             @else
-                <div class="mt-4 leading-relaxed" style="font-size: 12px;">
+                <div class="mt-4 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
                     <p class="mt-2 ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
                     <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
