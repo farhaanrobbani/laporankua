@@ -599,6 +599,41 @@
                                 }
                             }
                             ksort($grouped);
+                            $totalKeluar = 0;
+                            foreach ($grouped as $dateKey => $dateRows) {
+                                $totalKeluar += count($dateRows);
+                            }
+                            $totalMasuk = 0;
+                            foreach ($sisaBLEntries as $sbl) {
+                                $totalMasuk += (int) ($sbl['masuk'] ?? 0);
+                            }
+                            $totalSisa = max(0, array_sum($runningSisa));
+                            $lastKeluarPerPrefix = [];
+                            foreach ($grouped as $dateKey => $dateRows) {
+                                foreach ($dateRows as $r) {
+                                    $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
+                                    $pf = substr((string) $p, 0, $prefixLength);
+                                    $num = (int) $p;
+                                    if (! isset($lastKeluarPerPrefix[$pf]) || $num > $lastKeluarPerPrefix[$pf]) {
+                                        $lastKeluarPerPrefix[$pf] = $num;
+                                    }
+                                }
+                            }
+                            $remainingRanges = [];
+                            foreach ($sisaBLEntries as $sbl) {
+                                $sblSeriDari = preg_replace('/^JT\s*/i', '', trim((string) ($sbl['seri_dari'] ?? '')));
+                                $sblSeriSampai = preg_replace('/^JT\s*/i', '', trim((string) ($sbl['seri_sampai'] ?? '')));
+                                $pf = substr($sblSeriDari, 0, $prefixLength);
+                                $lastKeluar = $lastKeluarPerPrefix[$pf] ?? 0;
+                                if ($lastKeluar > 0 && $sblSeriSampai !== '') {
+                                    $nextNum = $lastKeluar + 1;
+                                    if ((int) $nextNum <= (int) $sblSeriSampai) {
+                                        $remainingRanges[] = 'JT '.$nextNum.' - '.$sblSeriSampai;
+                                    }
+                                } elseif ($sblSeriSampai !== '' && $sblSeriDari !== '') {
+                                    $remainingRanges[] = 'JT '.$sblSeriDari.' - '.$sblSeriSampai;
+                                }
+                            }
                             $rowNum = 1;
                         @endphp
                         {{-- Sisa Bulan Lalu rows --}}
@@ -719,6 +754,20 @@
                                 @endif
                             @endforeach
                         @endforeach
+                        {{-- Jumlah dipindahkan row --}}
+                        <tr>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah dipindahkan</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalMasuk ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalKeluar }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisa }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold; white-space:pre-line;">{{ implode("\n", $remainingRanges) }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                        </tr>
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
                             <tr>
