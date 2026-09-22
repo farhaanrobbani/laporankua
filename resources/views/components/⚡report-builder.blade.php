@@ -33,7 +33,7 @@ new class extends Component
 
     public string $title = '';
 
-    public string $format = 'pdf';
+    public string $format = 'print';
 
     public string $orientation = 'portrait';
 
@@ -1326,30 +1326,15 @@ new class extends Component
             <input type="text" wire:model="title" placeholder="Judul laporan" class="mt-3 border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" />
             @error('title') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'pdf' ? 'border-red-500 bg-red-50 dark:bg-red-900/50 dark:border-red-700' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
-                    <input type="radio" wire:model.live="format" value="pdf" class="sr-only" />
-                    <p class="font-bold text-red-600 dark:text-red-400">PDF</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dokumen siap cetak</p>
-                </label>
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'word' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/50 dark:border-blue-700' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
-                    <input type="radio" wire:model.live="format" value="word" class="sr-only" />
-                    <p class="font-bold text-blue-600 dark:text-blue-400">Word</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Bisa diedit (.docx)</p>
-                </label>
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'excel' ? 'border-green-500 bg-green-50 dark:bg-green-900/50 dark:border-green-700' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
-                    <input type="radio" wire:model.live="format" value="excel" class="sr-only" />
-                    <p class="font-bold text-green-600 dark:text-green-400">Excel</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Olah lanjut (.xlsx)</p>
-                </label>
-                <label class="cursor-pointer border rounded-lg p-4 text-center {{ $this->format === 'print' ? 'border-gray-500 bg-gray-100 dark:bg-gray-700 dark:border-gray-400' : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500' }}">
+            <div class="grid grid-cols-1 sm:grid-cols-1 gap-3 mt-4">
+                <label class="cursor-pointer border rounded-lg p-4 text-center border-gray-500 bg-gray-100 dark:bg-gray-700 dark:border-gray-400">
                     <input type="radio" wire:model.live="format" value="print" class="sr-only" />
                     <p class="font-bold text-gray-600 dark:text-gray-400">Print</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pratinjau cetak</p>
                 </label>
             </div>
 
-            @if ($this->format === 'pdf')
+            @if (false)
                 <label class="block mt-4 text-sm text-gray-700 dark:text-gray-300">
                     Orientasi PDF:
                     <select wire:model.live="orientation" class="ml-2 border-gray-300 dark:border-gray-600 rounded-md text-sm">
