@@ -557,13 +557,21 @@
                                 $grouped[$key][] = $row;
                             }
                             ksort($grouped);
-                            $runningSisa = $sisaBLSisa;
+                            $runningSisaCalc = $sisaBLSisa;
+                            $dateSisa = [];
+                            foreach ($grouped as $dateKey => $dateRows) {
+                                $bdCount = count(array_values(array_filter($dateRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') !== 'duplikat')));
+                                $dCount = count(array_values(array_filter($dateRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') === 'duplikat')));
+                                $runningSisaCalc -= $bdCount + $dCount;
+                                $dateSisa[$dateKey] = max(0, $runningSisaCalc);
+                            }
+                            krsort($grouped);
                             $rowNum = 1;
                         @endphp
                         {{-- Sisa Bulan Lalu row --}}
                         <tr>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">-</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['masuk'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['keluar'] ?? '' }}</td>
@@ -580,7 +588,7 @@
                                 $duplikat = array_values(array_filter($dateRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') === 'duplikat'));
                                 $keluarBD = count($bukanDuplikat);
                                 $keluarD = count($duplikat);
-                                $sisa = $runningSisa - $keluarBD - $keluarD;
+                                $sisa = $dateSisa[$dateKey];
                                 $dateDisplay = $dateKey;
                                 try { $dateDisplay = \Carbon\Carbon::parse($dateKey)->format('d/m/Y'); } catch (\Exception $e) {}
                                 $rowspan = 1 + $keluarD;
@@ -619,7 +627,6 @@
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">1</td>
                                 </tr>
                             @endforeach
-                            @php $runningSisa = $sisa; @endphp
                         @endforeach
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)

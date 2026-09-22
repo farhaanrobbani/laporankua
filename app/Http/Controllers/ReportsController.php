@@ -255,6 +255,8 @@ class ReportsController extends Controller
             if ($filterYear !== null && $filterYear !== '') {
                 $dataset['tahun_override'] = $filterYear;
             }
+            $dataset['filter_month'] = $filterMonth;
+            $dataset['filter_year'] = $filterYear;
         }
 
         $dataset['kecamatan'] = $config['kecamatan'] ?? null;
