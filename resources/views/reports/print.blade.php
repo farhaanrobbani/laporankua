@@ -558,12 +558,15 @@
                             }
                             ksort($grouped);
                             $runningSisaCalc = $sisaBLSisa;
-                            $dateSisa = [];
+                            $dateSisaBD = [];
+                            $dateSisaD = [];
                             foreach ($grouped as $dateKey => $dateRows) {
                                 $bdCount = count(array_values(array_filter($dateRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') !== 'duplikat')));
                                 $dCount = count(array_values(array_filter($dateRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') === 'duplikat')));
-                                $runningSisaCalc -= $bdCount + $dCount;
-                                $dateSisa[$dateKey] = max(0, $runningSisaCalc);
+                                $runningSisaCalc -= $bdCount;
+                                $dateSisaBD[$dateKey] = max(0, $runningSisaCalc);
+                                $runningSisaCalc -= $dCount;
+                                $dateSisaD[$dateKey] = max(0, $runningSisaCalc);
                             }
                             ksort($grouped);
                             $rowNum = 1;
@@ -588,7 +591,8 @@
                                 $duplikat = array_values(array_filter($dateRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') === 'duplikat'));
                                 $keluarBD = count($bukanDuplikat);
                                 $keluarD = count($duplikat);
-                                $sisa = $dateSisa[$dateKey];
+                                $sisaBD = $dateSisaBD[$dateKey];
+                                $sisaD = $dateSisaD[$dateKey];
                                 $dateDisplay = $dateKey;
                                 try { $dateDisplay = \Carbon\Carbon::parse($dateKey)->format('d/m/Y'); } catch (\Exception $e) {}
                                 $porforasiNums = array_map(function ($r) {
@@ -632,7 +636,7 @@
                                 <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $uraian }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarBD ?: '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisa < 0 ? 0 : $sisa }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaBD < 0 ? 0 : $sisaBD }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $seriRange }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
@@ -647,7 +651,7 @@
                                     <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Duplikat</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarD }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisa < 0 ? 0 : $sisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaD < 0 ? 0 : $sisaD }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dupliSeriRange }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
