@@ -604,8 +604,15 @@
                                 $aktaRange = $aktaMin !== null ? ($aktaMin === $aktaMax ? (string) $aktaMin : $aktaMin.' - '.$aktaMax) : '';
                                 $uraian = '';
                                 if ($keluarBD > 0) {
-                                    $nama = $bukanDuplikat[0]['_nama_suami'] ?? $bukanDuplikat[0]['Nama Catin'] ?? '';
-                                    $uraian = $keluarBD > 2 ? $nama.' Cs.' : $nama;
+                                    $names = [];
+                                    foreach ($bukanDuplikat as $bd) {
+                                        $n = trim($bd['_nama_suami'] ?? $bd['Nama Catin'] ?? '');
+                                        if ($n !== '' && !in_array($n, $names)) {
+                                            $names[] = $n;
+                                        }
+                                    }
+                                    $namaStr = implode(' - ', $names);
+                                    $uraian = $keluarBD > 2 ? $namaStr.' Cs.' : $namaStr;
                                 }
                                 $dupliPorforasiNums = array_map(function ($r) {
                                     $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
