@@ -284,9 +284,9 @@
                     </div>
                 @elseif ($isLaporanNA)
                     <div class="mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 40px;">BUKU STOK KHUSUS</h1>
-                        <p style="font-size: 12px; padding-left: 40px;">Bulan : {{ strtoupper($bulanName) }}</p>
-                        <div style="font-size: 12px; padding-left: 40px; padding-right: 40px; display: flex; justify-content: space-between;">
+                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 60px;">BUKU STOK KHUSUS</h1>
+                        <p style="font-size: 12px; padding-left: 60px;">Bulan : {{ strtoupper($bulanName) }}</p>
+                        <div style="font-size: 12px; padding-left: 60px; padding-right: 60px; display: flex; justify-content: space-between;">
                             <span>Tahun : {{ $tahunName }}</span>
                             <span>Model : NA</span>
                         </div>
