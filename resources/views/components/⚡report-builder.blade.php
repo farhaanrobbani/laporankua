@@ -695,6 +695,11 @@ new class extends Component
         }
 
         $tanggalNikahField = null;
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
+            if (in_array('Tanggal Cetak', $this->preview['headings'] ?? [], true)) {
+                $tanggalNikahField = 'Tanggal Cetak';
+            }
+        }
         if ($this->tableLayout) {
             foreach ($this->tableLayout['columns'] ?? [] as $col) {
                 if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
