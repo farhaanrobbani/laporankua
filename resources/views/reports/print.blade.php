@@ -563,6 +563,7 @@
                         {{-- Sisa Bulan Lalu row --}}
                         <tr>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">-</td>
                             <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['masuk'] ?? '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sisaBL['keluar'] ?? '' }}</td>
@@ -615,13 +616,7 @@
                             {{-- Duplikat sub-rows --}}
                             @foreach ($duplikat as $d)
                                 <tr>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Duplikat</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">1</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $d['Nomor Perforasi'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                 </tr>
                             @endforeach
                             @php $runningSisa = $sisa; @endphp
