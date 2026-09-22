@@ -283,13 +283,12 @@
                         </div>
                     </div>
                 @elseif ($isLaporanNA)
-                    <div class="flex items-start mb-3">
-                        <span style="font-size: 21px; font-weight: bold;">NA</span>
-                        <div class="text-center flex-1">
-                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
-                            <h2 class="font-bold uppercase" style="font-size: 13px;">STOK FORMULIR NA/RA/DN</h2>
-                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
-                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                    <div class="mb-3">
+                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 40px;">BUKU STOK KHUSUS</h1>
+                        <p style="font-size: 12px; padding-left: 40px;">Bulan : {{ strtoupper($bulanName) }}</p>
+                        <div style="font-size: 12px; padding-left: 40px; display: flex; justify-content: space-between;">
+                            <span>Tahun : {{ $tahunName }}</span>
+                            <span>Model : NA</span>
                         </div>
                     </div>
                 @elseif ($isL4Report)
