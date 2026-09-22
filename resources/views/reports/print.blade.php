@@ -637,10 +637,18 @@
                                 if ($lastKeluar > 0 && $sblSeriSampai !== '') {
                                     $nextNum = $lastKeluar + 1;
                                     if ((int) $nextNum <= (int) $sblSeriSampai) {
-                                        $remainingRanges[] = 'JT '.$nextNum.' - '.$sblSeriSampai;
+                                        if ((int) $nextNum === (int) $sblSeriSampai) {
+                                            $remainingRanges[] = 'JT '.$nextNum;
+                                        } else {
+                                            $remainingRanges[] = 'JT '.$nextNum.' - '.$sblSeriSampai;
+                                        }
                                     }
                                 } elseif ($sblSeriSampai !== '' && $sblSeriDari !== '') {
-                                    $remainingRanges[] = 'JT '.$sblSeriDari.' - '.$sblSeriSampai;
+                                    if ((int) $sblSeriDari === (int) $sblSeriSampai) {
+                                        $remainingRanges[] = 'JT '.$sblSeriDari;
+                                    } else {
+                                        $remainingRanges[] = 'JT '.$sblSeriDari.' - '.$sblSeriSampai;
+                                    }
                                 }
                             }
                             $rowNum = 1;
