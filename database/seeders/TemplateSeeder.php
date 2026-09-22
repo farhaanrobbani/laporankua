@@ -297,10 +297,9 @@ class TemplateSeeder extends Seeder
                                 ['type' => 'aggregate_total', 'label' => 'Keluar'],
                                 ['type' => 'stok_sisa', 'label' => 'Sisa'],
                             ]],
-                            ['type' => 'group', 'label' => 'NA, RA, atau DN', 'colspan' => 3, 'children' => [
+                            ['type' => 'group', 'label' => 'NA, RA, atau DN', 'colspan' => 2, 'children' => [
                                 ['type' => 'na_model', 'label' => 'Model'],
-                                ['type' => 'field', 'field' => 'Nomor Perforasi', 'label' => 'Dari'],
-                                ['type' => 'field', 'field' => 'Nomor Perforasi', 'label' => 'Sampai'],
+                                ['type' => 'field', 'field' => 'Nomor Perforasi', 'label' => 'Seri/Nomor'],
                             ]],
                             ['type' => 'static', 'value' => 'Buku', 'label' => 'Satuan', 'rowspan' => 2],
                             ['type' => 'group', 'label' => 'Nomor Bukti', 'colspan' => 2, 'children' => [
