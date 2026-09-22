@@ -641,8 +641,11 @@ new class extends Component
                 $effectiveFields[] = 'Tanggal Nikah';
             }
         }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
+            $effectiveFields[] = 'Tanggal Cetak';
+        }
 
-        if (($this->tableLayout['type'] ?? '') === 'formulir') {
+        if (in_array(($this->tableLayout['type'] ?? ''), ['formulir', 'laporan_na'], true)) {
             $dataset = app(MergeService::class)->buildConcatDataset(
                 $this->mergeImportIds,
                 $effectiveFields,
