@@ -600,7 +600,9 @@
                                 $seriRange = $porforasiNums ? 'JT '.min($porforasiNums).' - '.max($porforasiNums) : '';
                                 $aktaList = array_filter(array_map(fn ($r) => $r['_nomor_akta'] ?? null, $bukanDuplikat));
                                 $aktaNums = array_map(fn ($a) => (int) $a, $aktaList);
-                                $aktaRange = $aktaNums ? min($aktaNums).' - '.max($aktaNums) : '';
+                                $aktaMin = $aktaNums ? min($aktaNums) : null;
+                                $aktaMax = $aktaNums ? max($aktaNums) : null;
+                                $aktaRange = $aktaMin !== null ? ($aktaMin === $aktaMax ? (string) $aktaMin : $aktaMin.' - '.$aktaMax) : '';
                                 $uraian = '';
                                 if ($keluarBD > 0) {
                                     $nama = $bukanDuplikat[0]['_nama_suami'] ?? $bukanDuplikat[0]['Nama Catin'] ?? '';
