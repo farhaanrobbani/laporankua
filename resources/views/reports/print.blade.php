@@ -205,6 +205,15 @@
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
                 $isL3Report = ($layout['type'] ?? '') === 'formulir';
                 $isLaporanNA = ($layout['type'] ?? '') === 'laporan_na';
+                if ($isLaporanNA && ($hariName === '-' || $tanggalFormatted === '-')) {
+                    $filterMonth = (int) ($dataset['filter_month'] ?? 0);
+                    $filterYear = (int) ($dataset['filter_year'] ?? 0);
+                    if ($filterMonth > 0 && $filterYear > 0) {
+                        $lastDate = \Carbon\Carbon::createFromDate($filterYear, $filterMonth, 1)->endOfMonth();
+                        $hariName = $monthDays[$lastDate->dayOfWeek];
+                        $tanggalFormatted = $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year;
+                    }
+                }
                 $isL5Report = false;
                 foreach ($columns as $col) {
                     if (($col['type'] ?? '') === 'group' && ($col['label'] ?? '') === 'Memiliki Sertifikat Suscatin') {
