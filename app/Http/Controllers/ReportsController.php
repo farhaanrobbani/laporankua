@@ -129,6 +129,9 @@ class ReportsController extends Controller
                     $effectiveFields[] = 'Tanggal Nikah';
                 }
             }
+            if (($config['table_layout']['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
+                $effectiveFields[] = 'Tanggal Cetak';
+            }
             $dataset = $mergeService->buildConcatDataset(
                 $config['merged_import_ids'],
                 $effectiveFields,
