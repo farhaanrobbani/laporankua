@@ -150,22 +150,54 @@
                     return [null, null];
                 };
 
+                $dateFilterField = $dataset['config_json']['table_layout']['aggregation']['date_filter_field'] ?? null;
                 $tanggalNikahField = null;
                 $nikahDiField = null;
-                foreach ($columns as $col) {
-                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
-                        $tanggalNikahField = $col['field'];
-                    }
-                    if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Nikah Di') {
-                        $nikahDiField = $col['field'];
-                    }
-                    if ($col['type'] === 'group') {
-                        foreach ($col['children'] ?? [] as $child) {
-                            if (($child['field'] ?? '') === 'Tanggal Nikah') {
-                                $tanggalNikahField = $child['field'];
+
+                if ($dateFilterField) {
+                    foreach ($columns as $col) {
+                        if ($col['type'] === 'field' && ($col['field'] ?? '') === $dateFilterField) {
+                            $tanggalNikahField = $col['field'];
+                        }
+                        if ($col['type'] === 'group') {
+                            foreach ($col['children'] ?? [] as $child) {
+                                if (($child['field'] ?? '') === $dateFilterField) {
+                                    $tanggalNikahField = $child['field'];
+                                }
                             }
-                            if (($child['field'] ?? '') === 'Nikah Di') {
-                                $nikahDiField = $child['field'];
+                        }
+                    }
+                }
+
+                if ($tanggalNikahField === null) {
+                    foreach ($columns as $col) {
+                        if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
+                            $tanggalNikahField = $col['field'];
+                        }
+                        if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Nikah Di') {
+                            $nikahDiField = $col['field'];
+                        }
+                        if ($col['type'] === 'group') {
+                            foreach ($col['children'] ?? [] as $child) {
+                                if (($child['field'] ?? '') === 'Tanggal Nikah') {
+                                    $tanggalNikahField = $child['field'];
+                                }
+                                if (($child['field'] ?? '') === 'Nikah Di') {
+                                    $nikahDiField = $child['field'];
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    foreach ($columns as $col) {
+                        if ($col['type'] === 'field' && ($col['field'] ?? '') === 'Nikah Di') {
+                            $nikahDiField = $col['field'];
+                        }
+                        if ($col['type'] === 'group') {
+                            foreach ($col['children'] ?? [] as $child) {
+                                if (($child['field'] ?? '') === 'Nikah Di') {
+                                    $nikahDiField = $child['field'];
+                                }
                             }
                         }
                     }

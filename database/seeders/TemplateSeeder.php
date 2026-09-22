@@ -33,10 +33,13 @@ class TemplateSeeder extends Seeder
                 'description' => 'Rekapitulasi nikah/rujuk',
                 'fields_json' => ['Nama Suami', 'Nama Istri', 'Tanggal Nikah', 'Kelurahan', 'Tanggal Daftar', 'Nikah Di'],
                 'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
-                'sorting_json' => ['column' => 'Tanggal Nikah', 'direction' => 'asc'],
+                'sorting_json' => ['column' => 'Tanggal Daftar', 'direction' => 'asc'],
                 'layout_json' => [
                     'orientation' => 'portrait',
                     'table_layout' => [
+                        'aggregation' => [
+                            'date_filter_field' => 'Tanggal Daftar',
+                        ],
                         'columns' => [
                             ['type' => 'row_number', 'label' => 'No', 'rowspan' => 2],
                             ['type' => 'group', 'label' => 'Nama', 'colspan' => 2, 'children' => [

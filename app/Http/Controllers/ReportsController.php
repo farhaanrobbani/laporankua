@@ -82,6 +82,7 @@ class ReportsController extends Controller
         $filterMonth = $config['filter_month'] ?? null;
         $filterYear = $config['filter_year'] ?? null;
         $hasDateFilter = ($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '');
+        $dateFilterField = $config['table_layout']['aggregation']['date_filter_field'] ?? 'Tanggal Nikah';
 
         if (! empty($config['is_merged']) && ! empty($config['merged_import_ids'])) {
             $mergeService = app(MergeService::class);
@@ -90,10 +91,10 @@ class ReportsController extends Controller
                 $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
                 $effectiveFields = array_values(array_unique(array_merge($fields, $allColumns)));
             }
-            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+            if ($hasDateFilter && ! in_array($dateFilterField, $effectiveFields, true)) {
                 $allCols = $mergeService->getAllColumns($config['merged_import_ids']);
-                if (in_array('Tanggal Nikah', $allCols, true)) {
-                    $effectiveFields[] = 'Tanggal Nikah';
+                if (in_array($dateFilterField, $allCols, true)) {
+                    $effectiveFields[] = $dateFilterField;
                 }
             }
             if (($config['table_layout']['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
@@ -124,9 +125,9 @@ class ReportsController extends Controller
             $mergeService = app(MergeService::class);
             $allColumns = $mergeService->getAllColumns($config['merged_import_ids']);
             $effectiveFields = $fields === [] ? $allColumns : $fields;
-            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true) && ($config['table_layout']['type'] ?? '') !== 'laporan_na') {
-                if (in_array('Tanggal Nikah', $allColumns, true)) {
-                    $effectiveFields[] = 'Tanggal Nikah';
+            if ($hasDateFilter && ! in_array($dateFilterField, $effectiveFields, true) && ($config['table_layout']['type'] ?? '') !== 'laporan_na') {
+                if (in_array($dateFilterField, $allColumns, true)) {
+                    $effectiveFields[] = $dateFilterField;
                 }
             }
             if (($config['table_layout']['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
@@ -143,10 +144,10 @@ class ReportsController extends Controller
             );
         } else {
             $effectiveFields = $fields === [] ? $report->import->availableColumns() : $fields;
-            if ($hasDateFilter && ! in_array('Tanggal Nikah', $effectiveFields, true)) {
+            if ($hasDateFilter && ! in_array($dateFilterField, $effectiveFields, true)) {
                 $available = $report->import->availableColumns();
-                if (in_array('Tanggal Nikah', $available, true)) {
-                    $effectiveFields[] = 'Tanggal Nikah';
+                if (in_array($dateFilterField, $available, true)) {
+                    $effectiveFields[] = $dateFilterField;
                 }
             }
             $dataset = $service->buildDataset(
@@ -200,16 +201,23 @@ class ReportsController extends Controller
             $tableLayout = $config['table_layout'] ?? [];
             $layoutColumns = $tableLayout['columns'] ?? [];
             $tanggalNikahField = null;
-            foreach ($layoutColumns as $col) {
-                if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
-                    $tanggalNikahField = $col['field'];
-                    break;
-                }
-                if (($col['type'] ?? '') === 'group') {
-                    foreach ($col['children'] ?? [] as $child) {
-                        if (($child['field'] ?? '') === 'Tanggal Nikah') {
-                            $tanggalNikahField = $child['field'];
-                            break 2;
+
+            if ($dateFilterField && in_array($dateFilterField, $effectiveFields, true)) {
+                $tanggalNikahField = $dateFilterField;
+            }
+
+            if ($tanggalNikahField === null) {
+                foreach ($layoutColumns as $col) {
+                    if (($col['type'] ?? '') === 'field' && ($col['field'] ?? '') === 'Tanggal Nikah') {
+                        $tanggalNikahField = $col['field'];
+                        break;
+                    }
+                    if (($col['type'] ?? '') === 'group') {
+                        foreach ($col['children'] ?? [] as $child) {
+                            if (($child['field'] ?? '') === 'Tanggal Nikah') {
+                                $tanggalNikahField = $child['field'];
+                                break 2;
+                            }
                         }
                     }
                 }
@@ -217,13 +225,6 @@ class ReportsController extends Controller
 
             if ($tanggalNikahField === null && in_array('Tanggal Nikah', $effectiveFields, true)) {
                 $tanggalNikahField = 'Tanggal Nikah';
-            }
-
-            if ($tanggalNikahField === null) {
-                $dateFilterField = $tableLayout['aggregation']['date_filter_field'] ?? null;
-                if ($dateFilterField && in_array($dateFilterField, $effectiveFields, true)) {
-                    $tanggalNikahField = $dateFilterField;
-                }
             }
 
             if (($config['table_layout']['type'] ?? '') === 'laporan_na' && in_array('Tanggal Cetak', $effectiveFields, true)) {
