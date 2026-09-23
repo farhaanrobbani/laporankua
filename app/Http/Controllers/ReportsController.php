@@ -197,10 +197,6 @@ class ReportsController extends Controller
             unset($row);
         }
 
-        if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
-            $dataset['rows'] = $this->buildL1Data($config, $user);
-        }
-
         if ($hasDateFilter) {
             $tableLayout = $config['table_layout'] ?? [];
             $layoutColumns = $tableLayout['columns'] ?? [];
@@ -288,6 +284,10 @@ class ReportsController extends Controller
         $dataset['font_size_kop_alamat'] = $config['font_size_kop_alamat'] ?? null;
         $dataset['font_size_kop_kontak'] = $config['font_size_kop_kontak'] ?? null;
         $dataset['config_json'] = $config;
+
+        if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
+            $dataset['rows'] = $this->buildL1Data($config, $user);
+        }
 
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
             $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
