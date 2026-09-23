@@ -649,11 +649,10 @@ class ReportsController extends Controller
                     }
 
                     $nikahDi = mb_strtoupper(trim((string) ($pdk['Nikah Di'] ?? '')));
-                    if (str_contains($nikahDi, 'KANTOR') || str_contains($nikahDi, 'KUA')) {
-                        $kantor++;
-                    }
                     if (str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL')) {
                         $luarKantor++;
+                    } elseif (str_contains($nikahDi, 'KANTOR') || str_contains($nikahDi, 'KUA')) {
+                        $kantor++;
                     }
                 }
             }
