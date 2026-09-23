@@ -296,23 +296,6 @@ class ReportsController extends Controller
         }
 
         if (($config['table_layout']['type'] ?? '') === 'rekap_nr1') {
-            $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
-                ->where('status', 'success')
-                ->pluck('id');
-            $pnMap = [];
-            if ($pnImports->isNotEmpty()) {
-                $pnRaw = ImportData::whereIn('import_id', $pnImports)
-                    ->pluck('row_data')
-                    ->all();
-                foreach ($pnRaw as $r) {
-                    $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
-                    $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
-                    if ($nd !== '') {
-                        $pnMap[$nd] = $row;
-                    }
-                }
-            }
-
             $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
                 ->where('status', 'success')
                 ->pluck('id');
@@ -330,21 +313,56 @@ class ReportsController extends Controller
                 }
             }
 
+            $daftarDesa = $user?->daftar_desa ?? [];
+
             if (isset($dataset['rows'])) {
                 foreach ($dataset['rows'] as &$dataRow) {
                     $nd = trim((string) ($dataRow['Nomor Daftar'] ?? ''));
-
-                    if (empty($dataRow['Kelurahan']) && isset($pnMap[$nd])) {
-                        $dataRow['Kelurahan'] = $pnMap[$nd]['Kelurahan'] ?? '';
-                    }
-
                     $pdk = $pdkMap[$nd] ?? null;
+
                     if ($pdk) {
                         if (empty($dataRow['Tanggal Daftar'])) {
                             $dataRow['Tanggal Daftar'] = $pdk['Tanggal Daftar'] ?? '';
                         }
                         if (empty($dataRow['Nikah Di'])) {
                             $dataRow['Nikah Di'] = $pdk['Nikah Di'] ?? '';
+                        }
+
+                        $suamiAddr = mb_strtoupper(trim((string) ($pdk['Alamat Suami'] ?? '')));
+                        $istriAddr = mb_strtoupper(trim((string) ($pdk['Alamat Istri'] ?? '')));
+                        $matchSuami = str_contains($suamiAddr, 'AMPELGADING');
+                        $matchIstri = str_contains($istriAddr, 'AMPELGADING');
+
+                        $desaSuami = '';
+                        if ($matchSuami) {
+                            foreach ($daftarDesa as $desa) {
+                                if (str_contains($suamiAddr, mb_strtoupper($desa))) {
+                                    $desaSuami = $desa;
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        $desaIstri = '';
+                        if ($matchIstri) {
+                            foreach ($daftarDesa as $desa) {
+                                if (str_contains($istriAddr, mb_strtoupper($desa))) {
+                                    $desaIstri = $desa;
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ($matchSuami && $matchIstri) {
+                            $dataRow['Kelurahan'] = $desaIstri ?: $desaSuami;
+                        } elseif ($matchSuami) {
+                            $dataRow['Kelurahan'] = $desaSuami;
+                        } elseif ($matchIstri) {
+                            $dataRow['Kelurahan'] = $desaIstri;
+                        } else {
+                            $dataRow['Kelurahan'] = '';
                         }
                     }
                 }
