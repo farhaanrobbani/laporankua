@@ -1116,6 +1116,16 @@
                         </div>
                     </div>
                 </div>
+            @elseif ($isL1Report)
+                <div class="mt-4 flex justify-end" style="font-size: 12px; page-break-inside: avoid;">
+                    <div class="text-center">
+                        <p>{{ $dataset['kecamatan'] ?? '-' }}, {{ \Carbon\Carbon::now()->day . ' ' . $monthNames[\Carbon\Carbon::now()->month] . ' ' . \Carbon\Carbon::now()->year }}</p>
+                        <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                        <div class="h-16"></div>
+                        <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                        <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                    </div>
+                </div>
             @else
                 <div class="mt-4 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
