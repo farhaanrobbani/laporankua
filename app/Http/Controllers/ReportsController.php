@@ -296,6 +296,23 @@ class ReportsController extends Controller
         }
 
         if (($config['table_layout']['type'] ?? '') === 'rekap_nr1') {
+            $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
+                ->where('status', 'success')
+                ->pluck('id');
+            $pnMap = [];
+            if ($pnImports->isNotEmpty()) {
+                $pnRaw = ImportData::whereIn('import_id', $pnImports)
+                    ->pluck('row_data')
+                    ->all();
+                foreach ($pnRaw as $r) {
+                    $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                    $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                    if ($nd !== '') {
+                        $pnMap[$nd] = $row;
+                    }
+                }
+            }
+
             $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
                 ->where('status', 'success')
                 ->pluck('id');
@@ -312,13 +329,23 @@ class ReportsController extends Controller
                     }
                 }
             }
+
             if (isset($dataset['rows'])) {
                 foreach ($dataset['rows'] as &$dataRow) {
                     $nd = trim((string) ($dataRow['Nomor Daftar'] ?? ''));
+
+                    if (empty($dataRow['Kelurahan']) && isset($pnMap[$nd])) {
+                        $dataRow['Kelurahan'] = $pnMap[$nd]['Kelurahan'] ?? '';
+                    }
+
                     $pdk = $pdkMap[$nd] ?? null;
                     if ($pdk) {
-                        $dataRow['Tanggal Daftar'] = $dataRow['Tanggal Daftar'] ?? $pdk['Tanggal Daftar'] ?? '';
-                        $dataRow['Nikah Di'] = $dataRow['Nikah Di'] ?? $pdk['Nikah Di'] ?? '';
+                        if (empty($dataRow['Tanggal Daftar'])) {
+                            $dataRow['Tanggal Daftar'] = $pdk['Tanggal Daftar'] ?? '';
+                        }
+                        if (empty($dataRow['Nikah Di'])) {
+                            $dataRow['Nikah Di'] = $pdk['Nikah Di'] ?? '';
+                        }
                     }
                 }
                 unset($dataRow);
