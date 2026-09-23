@@ -688,22 +688,22 @@
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Itsbat Nikah'] ?? 0 }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Campuran Laki-laki'] ?? 0 }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Campuran Perempuan'] ?? 0 }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami II'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami III'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami IV'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami II'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami III'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami IV'] ?? 0 }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Kantor'] ?? 0 }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Luar Kantor'] ?? 0 }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Miskin'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Bencana Alam'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Pencatatan LN'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Miskin'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Bencana Alam'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Pencatatan LN'] ?? 0 }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Duplikat'] ?? 0 }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak I'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak II'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak III'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Cerai'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk I'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk II'] ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk III'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak I'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak II'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak III'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Cerai'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk I'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk II'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk III'] ?? 0 }}</td>
                         </tr>
                     @elseif ($isL3Report)
                         @php
