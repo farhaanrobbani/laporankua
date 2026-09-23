@@ -296,6 +296,23 @@ class ReportsController extends Controller
         }
 
         if (($config['table_layout']['type'] ?? '') === 'rekap_nr1') {
+            $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
+                ->where('status', 'success')
+                ->pluck('id');
+            $pnMap = [];
+            if ($pnImports->isNotEmpty()) {
+                $pnRaw = ImportData::whereIn('import_id', $pnImports)
+                    ->pluck('row_data')
+                    ->all();
+                foreach ($pnRaw as $r) {
+                    $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                    $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                    if ($nd !== '') {
+                        $pnMap[$nd] = $row;
+                    }
+                }
+            }
+
             $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
                 ->where('status', 'success')
                 ->pluck('id');
@@ -318,16 +335,10 @@ class ReportsController extends Controller
             if (isset($dataset['rows'])) {
                 foreach ($dataset['rows'] as &$dataRow) {
                     $nd = trim((string) ($dataRow['Nomor Daftar'] ?? ''));
-                    $pdk = $pdkMap[$nd] ?? null;
 
-                    if ($pdk) {
-                        if (empty($dataRow['Tanggal Daftar'])) {
-                            $dataRow['Tanggal Daftar'] = $pdk['Tanggal Daftar'] ?? '';
-                        }
-                        if (empty($dataRow['Nikah Di'])) {
-                            $dataRow['Nikah Di'] = $pdk['Nikah Di'] ?? '';
-                        }
-
+                    $kelurahan = trim((string) ($pnMap[$nd]['Kelurahan'] ?? ''));
+                    if ($kelurahan === '' && isset($pdkMap[$nd])) {
+                        $pdk = $pdkMap[$nd];
                         $suamiAddr = mb_strtoupper(trim((string) ($pdk['Alamat Suami'] ?? '')));
                         $istriAddr = mb_strtoupper(trim((string) ($pdk['Alamat Istri'] ?? '')));
                         $matchSuami = str_contains($suamiAddr, 'AMPELGADING');
@@ -356,13 +367,22 @@ class ReportsController extends Controller
                         }
 
                         if ($matchSuami && $matchIstri) {
-                            $dataRow['Kelurahan'] = $desaIstri ?: $desaSuami;
+                            $kelurahan = $desaIstri ?: $desaSuami;
                         } elseif ($matchSuami) {
-                            $dataRow['Kelurahan'] = $desaSuami;
+                            $kelurahan = $desaSuami;
                         } elseif ($matchIstri) {
-                            $dataRow['Kelurahan'] = $desaIstri;
-                        } else {
-                            $dataRow['Kelurahan'] = '';
+                            $kelurahan = $desaIstri;
+                        }
+                    }
+                    $dataRow['Kelurahan'] = $kelurahan;
+
+                    $pdk = $pdkMap[$nd] ?? null;
+                    if ($pdk) {
+                        if (empty($dataRow['Tanggal Daftar'])) {
+                            $dataRow['Tanggal Daftar'] = $pdk['Tanggal Daftar'] ?? '';
+                        }
+                        if (empty($dataRow['Nikah Di'])) {
+                            $dataRow['Nikah Di'] = $pdk['Nikah Di'] ?? '';
                         }
                     }
                 }
