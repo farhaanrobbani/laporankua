@@ -38,7 +38,7 @@ class User extends Authenticatable
 
     public function isPremium(): bool
     {
-        return $this->plan === 'premium';
+        return $this->role === 'admin' || $this->plan === 'premium';
     }
 
     public function importCount(): int

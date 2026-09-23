@@ -43,7 +43,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'plan' => $validated['plan'],
+            'plan' => $validated['role'] === 'admin' ? 'premium' : $validated['plan'],
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dibuat.');
@@ -70,7 +70,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'role' => $validated['role'],
             'status' => $validated['status'],
-            'plan' => $validated['plan'],
+            'plan' => $validated['role'] === 'admin' ? 'premium' : $validated['plan'],
         ];
 
         if (! empty($validated['password'])) {
