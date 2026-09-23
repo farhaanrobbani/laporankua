@@ -430,6 +430,55 @@
             </div>
 
             <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
+                @if ($isL1Report)
+                <thead>
+                    {{-- Row 1 --}}
+                    <tr class="bg-gray-100">
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">DESA</th>
+                        <th colspan="14" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">PERKAWINAN</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pencatatan Perkawinan Luar Negeri</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Duplikat Buku Perkawinan</th>
+                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">TALAK KE</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">CERAI</th>
+                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">RUJUK KE</th>
+                    </tr>
+                    {{-- Row 2 --}}
+                    <tr class="bg-gray-100">
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Jumlah Seluruhnya</th>
+                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">WALI NIKAH</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Itsbat Nikah</th>
+                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">CAMPURAN</th>
+                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">POLIGAMI</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Kantor</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Luar Kantor</th>
+                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">BEBAS BIAYA</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">I</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">II</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">III</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">I</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">II</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">III</th>
+                    </tr>
+                    {{-- Row 3 --}}
+                    <tr class="bg-gray-100">
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nasab</th>
+                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Hakim</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Laki-laki</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Perempuan</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">II</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">III</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">IV</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Miskin</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Bencana Alam</th>
+                    </tr>
+                    {{-- Row 4 --}}
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Adhal</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Lain-lain</th>
+                    </tr>
+                </thead>
+                @else
                 <thead>
                     <tr class="bg-gray-100">
                     @foreach ($columns as $col)
@@ -485,6 +534,7 @@
                     </tr>
                     @endif
                 </thead>
+                @endif
                 <tbody style="font-size: 11px;">
                     @if ($isL4Report)
                         @php $l4GroupNum = 1; @endphp
