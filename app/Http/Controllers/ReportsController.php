@@ -741,9 +741,7 @@ class ReportsController extends Controller
             if (isset($manualData[$desa])) {
                 foreach ($manualCols as $col) {
                     $val = $manualData[$desa][$col] ?? null;
-                    if ($val !== null && $val !== '') {
-                        $row[$col] = (int) $val;
-                    }
+                    $row[$col] = ($val !== null && $val !== '') ? (int) $val : 0;
                 }
             }
         }
