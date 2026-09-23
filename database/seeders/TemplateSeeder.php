@@ -321,5 +321,71 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+
+        // Laporan L1
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan L1'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'plan_level' => 'premium',
+                'output_format' => 'print',
+                'description' => 'Laporan Rekapitulasi Perkawinan',
+                'fields_json' => ['Kelurahan', 'Status Wali', 'Tanggal Isbat', 'NIK Suami', 'NIK Istri', 'Nikah Di', 'Nomor Daftar', 'Nama Suami', 'Nama Istri', 'Desa/Kelurahan/Kecamatan'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Kelurahan', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'landscape',
+                    'table_layout' => [
+                        'type' => 'laporan_l1',
+                        'aggregation' => [
+                            'group_by' => 'Kelurahan',
+                        ],
+                        'columns' => [
+                            ['type' => 'row_number', 'label' => 'No', 'rowspan' => 2],
+                            ['type' => 'field', 'field' => 'Kelurahan', 'label' => 'DESA', 'rowspan' => 2],
+                            ['type' => 'group', 'label' => 'PERKAWINAN', 'colspan' => 14, 'children' => [
+                                ['type' => 'aggregate_total', 'label' => 'Jumlah Seluruhnya', 'rowspan' => 2],
+                                ['type' => 'group', 'label' => 'WALI NIKAH', 'colspan' => 3, 'children' => [
+                                    ['type' => 'aggregate_count', 'field' => 'Status Wali', 'match' => ['NASAB'], 'label' => 'Nasab'],
+                                    ['type' => 'aggregate_count', 'field' => 'Status Wali', 'match' => ['HAKIM'], 'label' => 'Adhal'],
+                                    ['type' => 'manual', 'label' => 'Lain-lain'],
+                                ]],
+                                ['type' => 'manual', 'label' => 'Itsbat Nikah', 'rowspan' => 2],
+                                ['type' => 'group', 'label' => 'CAMPURAN', 'colspan' => 2, 'children' => [
+                                    ['type' => 'manual', 'label' => 'Laki-laki'],
+                                    ['type' => 'manual', 'label' => 'Perempuan'],
+                                ]],
+                                ['type' => 'group', 'label' => 'POLIGAMI', 'colspan' => 3, 'children' => [
+                                    ['type' => 'manual', 'label' => 'II'],
+                                    ['type' => 'manual', 'label' => 'III'],
+                                    ['type' => 'manual', 'label' => 'IV'],
+                                ]],
+                                ['type' => 'manual', 'label' => 'Kantor', 'rowspan' => 2],
+                                ['type' => 'manual', 'label' => 'Luar Kantor', 'rowspan' => 2],
+                                ['type' => 'group', 'label' => 'BEBAS BIAYA', 'colspan' => 2, 'children' => [
+                                    ['type' => 'manual', 'label' => 'Miskin'],
+                                    ['type' => 'manual', 'label' => 'Bencana Alam'],
+                                ]],
+                                ['type' => 'manual', 'label' => 'Pnc. LN', 'rowspan' => 2],
+                                ['type' => 'manual', 'label' => 'Duplikat', 'rowspan' => 2],
+                            ]],
+                            ['type' => 'group', 'label' => 'TALAK KE', 'colspan' => 3, 'children' => [
+                                ['type' => 'manual', 'label' => 'I'],
+                                ['type' => 'manual', 'label' => 'II'],
+                                ['type' => 'manual', 'label' => 'III'],
+                            ]],
+                            ['type' => 'manual', 'label' => 'CERAI', 'rowspan' => 2],
+                            ['type' => 'group', 'label' => 'RUJUK KE', 'colspan' => 3, 'children' => [
+                                ['type' => 'manual', 'label' => 'I'],
+                                ['type' => 'manual', 'label' => 'II'],
+                                ['type' => 'manual', 'label' => 'III'],
+                            ]],
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 }

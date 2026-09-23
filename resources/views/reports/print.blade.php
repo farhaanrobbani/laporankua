@@ -237,6 +237,7 @@
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
                 $isL3Report = ($layout['type'] ?? '') === 'formulir';
                 $isLaporanNA = ($layout['type'] ?? '') === 'laporan_na';
+                $isL1Report = ($layout['type'] ?? '') === 'laporan_l1';
                 if ($isLaporanNA && ($hariName === '-' || $tanggalFormatted === '-')) {
                     $filterMonth = (int) ($dataset['filter_month'] ?? 0);
                     $filterYear = (int) ($dataset['filter_year'] ?? 0);
@@ -342,6 +343,15 @@
                         <div class="text-center flex-1">
                             <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN</h1>
                             <h2 class="font-bold uppercase" style="font-size: 13px;">PNPB NIKAH ATAU RUJUK</h2>
+                            <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                            <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
+                        </div>
+                    </div>
+                @elseif ($isL1Report)
+                    <div class="flex items-start mb-3">
+                        <span style="font-size: 21px; font-weight: bold;">L1</span>
+                        <div class="text-center flex-1">
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN REKAPITULASI PERKAWINAN</h1>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
@@ -556,6 +566,93 @@
                                     <td class="border border-gray-700 px-1 py-0.5 text-center">{{ number_format($l4TotalSetor, 0, ',', '.') }}</td>
                                 @endif
                             @endforeach
+                        </tr>
+                    @elseif ($isL1Report)
+                        @php
+                            $l1RowNum = 1;
+                            $l1Totals = array_fill_keys([
+                                'Jumlah Nikah', 'Nasab', 'Adhal', 'Lain-lain', 'Itsbat Nikah',
+                                'Campuran Laki-laki', 'Campuran Perempuan',
+                                'Poligami II', 'Poligami III', 'Poligami IV',
+                                'Kantor', 'Luar Kantor', 'Miskin', 'Bencana Alam',
+                                'Pencatatan LN', 'Duplikat',
+                                'Talak I', 'Talak II', 'Talak III', 'Cerai',
+                                'Rujuk I', 'Rujuk II', 'Rujuk III',
+                            ], 0);
+                        @endphp
+                        @foreach ($dataset['rows'] as $row)
+                            <tr>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1RowNum++ }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $row['Kelurahan'] ?? '' }}</td>
+                                {{-- Jumlah Seluruhnya --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Jumlah Nikah'] ?? 0 }}</td>
+                                {{-- Wal nikah: Nasab, Adhal, Lain-lain --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Nasab'] ?? 0 }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Adhal'] ?? 0 }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Lain-lain'] ?? 0 }}</td>
+                                {{-- Itsbat Nikah --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Itsbat Nikah'] ?? 0 }}</td>
+                                {{-- Campuran: Laki, Perempuan --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Campuran Laki-laki'] ?? 0 }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Campuran Perempuan'] ?? 0 }}</td>
+                                {{-- Poligami: II, III, IV --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Poligami II'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Poligami III'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Poligami IV'] ?? '' }}</td>
+                                {{-- Kantor, Luar Kantor --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Kantor'] ?? 0 }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Luar Kantor'] ?? 0 }}</td>
+                                {{-- Bebas Biaya: Miskin, Bencana --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Miskin'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Bencana Alam'] ?? '' }}</td>
+                                {{-- Pencatatan LN, Duplikat --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Pencatatan LN'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Duplikat'] ?? 0 }}</td>
+                                {{-- Talak: I, II, III --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Talak I'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Talak II'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Talak III'] ?? '' }}</td>
+                                {{-- Cerai --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Cerai'] ?? '' }}</td>
+                                {{-- Rujuk: I, II, III --}}
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Rujuk I'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Rujuk II'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Rujuk III'] ?? '' }}</td>
+                            </tr>
+                            @php
+                                foreach ($l1Totals as $key => &$val) {
+                                    $val += (int) ($row[$key] ?? 0);
+                                }
+                                unset($val);
+                            @endphp
+                        @endforeach
+                        {{-- Total row --}}
+                        <tr style="font-weight: bold;">
+                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Jumlah Nikah'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Nasab'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Adhal'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Lain-lain'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Itsbat Nikah'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Campuran Laki-laki'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Campuran Perempuan'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami II'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami III'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Poligami IV'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Kantor'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Luar Kantor'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Miskin'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Bencana Alam'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Pencatatan LN'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Duplikat'] ?? 0 }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak I'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak II'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Talak III'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Cerai'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk I'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk II'] ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $l1Totals['Rujuk III'] ?: '' }}</td>
                         </tr>
                     @elseif ($isL3Report)
                         @php

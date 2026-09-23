@@ -197,6 +197,10 @@ class ReportsController extends Controller
             unset($row);
         }
 
+        if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
+            $dataset['rows'] = $this->buildL1Data($config, $user);
+        }
+
         if ($hasDateFilter) {
             $tableLayout = $config['table_layout'] ?? [];
             $layoutColumns = $tableLayout['columns'] ?? [];
@@ -504,6 +508,164 @@ class ReportsController extends Controller
         }
 
         return ['sisa_bulan_lalu' => $saved['sisa_bulan_lalu'] ?? []];
+    }
+
+    private function buildL1Data(array $config, ?User $user): array
+    {
+        $importIds = $config['merged_import_ids'] ?? [];
+        $daftarDesa = $user?->daftar_desa ?? [];
+
+        // Load peristiwa nikah data (the selected imports)
+        $pnRows = [];
+        if ($importIds !== []) {
+            $raw = ImportData::whereIn('import_id', $importIds)
+                ->orderBy('row_number')
+                ->pluck('row_data')
+                ->all();
+            foreach ($raw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $pnRows[] = $row;
+            }
+        }
+
+        // Load ALL pendaftaran nikah data
+        $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $pdkMap = [];
+        if ($pdkImports->isNotEmpty()) {
+            $pdkRaw = ImportData::whereIn('import_id', $pdkImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($pdkRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                if ($nd !== '') {
+                    $pdkMap[$nd] = $row;
+                }
+            }
+        }
+
+        // Load ALL model l3 data for duplikat
+        $l3Imports = Import::where('table_name', 'like', '%model l3%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $duplikatByDesa = [];
+        if ($l3Imports->isNotEmpty()) {
+            $l3Raw = ImportData::whereIn('import_id', $l3Imports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($l3Raw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                if (mb_strtolower((string) ($row['Keterangan'] ?? '')) === 'duplikat') {
+                    $desa = trim((string) ($row['Desa/Kelurahan/Kecamatan'] ?? $row['Desa'] ?? $row['Kelurahan'] ?? ''));
+                    if ($desa !== '') {
+                        $duplikatByDesa[$desa] = ($duplikatByDesa[$desa] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+
+        // Group peristiwa nikah by Kelurahan and compute L1 columns
+        $grouped = [];
+        foreach ($pnRows as $pn) {
+            $kelurahan = trim((string) ($pn['Kelurahan'] ?? ''));
+            if ($kelurahan === '') {
+                $kelurahan = 'Lainnya';
+            }
+            if (! isset($grouped[$kelurahan])) {
+                $grouped[$kelurahan] = [];
+            }
+            $grouped[$kelurahan][] = $pn;
+        }
+
+        $rows = [];
+        foreach ($daftarDesa as $desa) {
+            $pnGroup = $grouped[$desa] ?? [];
+            $jmlNikah = count($pnGroup);
+
+            // Count wali nikah from pendaftaran nikah
+            $nasab = 0;
+            $adhal = 0;
+            $hakim = 0;
+            $kantor = 0;
+            $luarKantor = 0;
+
+            foreach ($pnGroup as $pn) {
+                $nd = trim((string) ($pn['Nomor Daftar'] ?? ''));
+                $pdk = $pdkMap[$nd] ?? null;
+
+                if ($pdk) {
+                    $statusWali = mb_strtoupper(trim((string) ($pdk['Status Wali'] ?? '')));
+                    if ($statusWali === 'NASAB') {
+                        $nasab++;
+                    } elseif ($statusWali === 'HAKIM') {
+                        $hakim++;
+                    } else {
+                        $adhal++;
+                    }
+
+                    $nikahDi = mb_strtoupper(trim((string) ($pdk['Nikah Di'] ?? '')));
+                    if (str_contains($nikahDi, 'KANTOR') || str_contains($nikahDi, 'KUA')) {
+                        $kantor++;
+                    }
+                    if (str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL')) {
+                        $luarKantor++;
+                    }
+                }
+            }
+
+            // Count itsbat nikah (Tanggal Isbat not empty)
+            $itsbat = 0;
+            foreach ($pnGroup as $pn) {
+                if (! empty(trim((string) ($pn['Tanggal Isbat'] ?? '')))) {
+                    $itsbat++;
+                }
+            }
+
+            // Count campuran: NIK Suami/Istri empty
+            $campuranL = 0;
+            $campuranP = 0;
+            foreach ($pnGroup as $pn) {
+                if (empty(trim((string) ($pn['NIK Suami'] ?? '')))) {
+                    $campuranL++;
+                }
+                if (empty(trim((string) ($pn['NIK Istri'] ?? '')))) {
+                    $campuranP++;
+                }
+            }
+
+            $duplikat = $duplikatByDesa[$desa] ?? 0;
+
+            $rows[] = [
+                'Kelurahan' => $desa,
+                'Jumlah Nikah' => $jmlNikah,
+                'Nasab' => $nasab,
+                'Adhal' => $adhal,
+                'Lain-lain' => $hakim,
+                'Itsbat Nikah' => $itsbat,
+                'Campuran Laki-laki' => $campuranL,
+                'Campuran Perempuan' => $campuranP,
+                'Poligami II' => null,
+                'Poligami III' => null,
+                'Poligami IV' => null,
+                'Kantor' => $kantor,
+                'Luar Kantor' => $luarKantor,
+                'Miskin' => null,
+                'Bencana Alam' => null,
+                'Pencatatan LN' => null,
+                'Duplikat' => $duplikat,
+                'Talak I' => null,
+                'Talak II' => null,
+                'Talak III' => null,
+                'Cerai' => null,
+                'Rujuk I' => null,
+                'Rujuk II' => null,
+                'Rujuk III' => null,
+            ];
+        }
+
+        return $rows;
     }
 
     public function destroy(Report $report): RedirectResponse
