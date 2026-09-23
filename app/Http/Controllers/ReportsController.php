@@ -601,7 +601,7 @@ class ReportsController extends Controller
                             continue;
                         }
                     }
-                    $desa = trim((string) ($row['Desa/Kelurahan/Kecamatan'] ?? $row['Desa'] ?? $row['Kelurahan'] ?? ''));
+                    $desa = mb_strtoupper(trim((string) ($row['Desa/Kelurahan/Kecamatan'] ?? $row['Desa'] ?? $row['Kelurahan'] ?? '')));
                     if ($desa !== '') {
                         $duplikatByDesa[$desa] = ($duplikatByDesa[$desa] ?? 0) + 1;
                     }
