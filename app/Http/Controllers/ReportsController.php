@@ -288,7 +288,8 @@ class ReportsController extends Controller
         $dataset['config_json'] = $config;
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
-            $dataset['rows'] = $this->buildL1Data($config, $user, $filterMonth, $filterYear);
+            $rows = $this->buildL1Data($config, $user, $filterMonth, $filterYear);
+            $dataset['rows'] = $this->mergeL1ManualData($config, $rows);
         }
 
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
@@ -722,6 +723,31 @@ class ReportsController extends Controller
                 'Rujuk III' => null,
             ];
         }
+
+        return $rows;
+    }
+
+    private function mergeL1ManualData(array $config, array $rows): array
+    {
+        $manualData = $config['manual_data'] ?? null;
+        if (! is_array($manualData)) {
+            return $rows;
+        }
+
+        $manualCols = ['Poligami II', 'Poligami III', 'Poligami IV', 'Miskin', 'Bencana Alam', 'Pencatatan LN', 'Talak I', 'Talak II', 'Talak III', 'Cerai', 'Rujuk I', 'Rujuk II', 'Rujuk III'];
+
+        foreach ($rows as &$row) {
+            $desa = $row['Kelurahan'] ?? '';
+            if (isset($manualData[$desa])) {
+                foreach ($manualCols as $col) {
+                    $val = $manualData[$desa][$col] ?? null;
+                    if ($val !== null && $val !== '') {
+                        $row[$col] = (int) $val;
+                    }
+                }
+            }
+        }
+        unset($row);
 
         return $rows;
     }

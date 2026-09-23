@@ -210,6 +210,9 @@ new class extends Component
         if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
             $this->initLaporanNaData();
         }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_l1') {
+            $this->initL1ManualData();
+        }
     }
 
     private function initManualData(): void
@@ -494,6 +497,37 @@ new class extends Component
         $this->manualData = array_values(array_merge($sisaBLEntries, $existingRows));
     }
 
+    private function initL1ManualData(): void
+    {
+        $daftarDesa = auth()->user()->daftar_desa ?? [];
+        $manualCols = ['Poligami II', 'Poligami III', 'Poligami IV', 'Miskin', 'Bencana Alam', 'Pencatatan LN', 'Talak I', 'Talak II', 'Talak III', 'Cerai', 'Rujuk I', 'Rujuk II', 'Rujuk III'];
+
+        $existing = [];
+        if ($this->manualData) {
+            foreach ($this->manualData as $row) {
+                $desa = $row['desa'] ?? '';
+                if ($desa !== '') {
+                    $existing[$desa] = $row;
+                }
+            }
+        }
+
+        $rows = [];
+        foreach ($daftarDesa as $desa) {
+            if (isset($existing[$desa])) {
+                $rows[] = $existing[$desa];
+            } else {
+                $row = ['desa' => $desa];
+                foreach ($manualCols as $col) {
+                    $row[$col] = '';
+                }
+                $rows[] = $row;
+            }
+        }
+
+        $this->manualData = $rows;
+    }
+
     private function buildSeriRange(string $awal, string $akhir): string
     {
         if ($awal === '' && $akhir === '') {
@@ -526,6 +560,33 @@ new class extends Component
                 'sisa_bulan_lalu' => count($sisaBLEntries) === 1 ? $sisaBLEntries[0] : $sisaBLEntries,
                 'rows' => $rows,
             ];
+        }
+
+        if (($this->tableLayout['type'] ?? '') === 'laporan_l1') {
+            $data = [];
+            foreach ($this->manualData as $row) {
+                $desa = $row['desa'] ?? '';
+                if ($desa === '') {
+                    continue;
+                }
+                $data[$desa] = [
+                    'Poligami II' => $row['Poligami II'] ?? null,
+                    'Poligami III' => $row['Poligami III'] ?? null,
+                    'Poligami IV' => $row['Poligami IV'] ?? null,
+                    'Miskin' => $row['Miskin'] ?? null,
+                    'Bencana Alam' => $row['Bencana Alam'] ?? null,
+                    'Pencatatan LN' => $row['Pencatatan LN'] ?? null,
+                    'Talak I' => $row['Talak I'] ?? null,
+                    'Talak II' => $row['Talak II'] ?? null,
+                    'Talak III' => $row['Talak III'] ?? null,
+                    'Cerai' => $row['Cerai'] ?? null,
+                    'Rujuk I' => $row['Rujuk I'] ?? null,
+                    'Rujuk II' => $row['Rujuk II'] ?? null,
+                    'Rujuk III' => $row['Rujuk III'] ?? null,
+                ];
+            }
+
+            return $data;
         }
 
         $data = array_map(function ($row) {
@@ -631,6 +692,9 @@ new class extends Component
         }
         if (($this->tableLayout['type'] ?? '') === 'laporan_na') {
             $this->initLaporanNaData();
+        }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_l1') {
+            $this->initL1ManualData();
         }
     }
 
@@ -826,7 +890,7 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
-                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na']) ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -892,7 +956,7 @@ new class extends Component
                 'merged_import_ids' => $this->mergeImportIds,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
-                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na']) ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1315,6 +1379,48 @@ new class extends Component
                                     </button>
                                 </td>
                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- 3. Isi Data Manual (L1 only) --}}
+        @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'laporan_l1')
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Data Manual</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi kolom yang tidak tersedia dari import data. Kosongkan jika tidak ada.</p>
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    <table class="min-w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-700">
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold">Desa</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Poligami II</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Poligami III</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Poligami IV</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Miskin</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Bencana Alam</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Pencatatan LN</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Talak I</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Talak II</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Talak III</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Cerai</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Rujuk I</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Rujuk II</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Rujuk III</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($this->manualData as $i => $row)
+                                <tr>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium">{{ $row['desa'] ?? '' }}</td>
+                                    @foreach (['Poligami II', 'Poligami III', 'Poligami IV', 'Miskin', 'Bencana Alam', 'Pencatatan LN', 'Talak I', 'Talak II', 'Talak III', 'Cerai', 'Rujuk I', 'Rujuk II', 'Rujuk III'] as $col)
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="number" min="0" wire:model.live="manualData.{{ $i }}.{{ $col }}" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
