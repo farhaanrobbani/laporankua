@@ -16,7 +16,7 @@
         @media screen {
             .print-sheet { max-width: {{ ($dataset['orientation'] ?? $dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? '297mm' : '210mm' }}; margin: 1.5rem auto; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 15mm; }
         }
-        .th-rotate { writing-mode: vertical-rl; text-orientation: mixed; white-space: nowrap; }
+        .th-rotate { writing-mode: vertical-rl; text-orientation: sideways; white-space: nowrap; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900" style="font-family: Arial, sans-serif;">
@@ -438,8 +438,8 @@
                         <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
                         <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">DESA</th>
                         <th colspan="14" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">PERKAWINAN</th>
-                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Pencatatan Perkawinan Luar Negeri</th>
-                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Duplikat Buku Perkawinan</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">{!! 'Pencatatan<br>Perkawinan Luar Negeri' !!}</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">{!! 'Duplikat<br>Buku Perkawinan' !!}</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">TALAK KE</th>
                         <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">CERAI</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">RUJUK KE</th>
