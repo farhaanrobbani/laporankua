@@ -234,7 +234,7 @@
                 $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
                 $bulanName = $dataset['bulan_override'] ?? ($lastDate ? $monthNames[$lastDate->month] : '-');
                 $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
-                $isL2Report = !empty($dataset['table_layout']['aggregation']) && empty($dataset['table_layout']['aggregation']['date_filter_field']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'formulir' && ($layout['type'] ?? '') !== 'laporan_na';
+                $isL2Report = !empty($dataset['table_layout']['aggregation']) && empty($dataset['table_layout']['aggregation']['date_filter_field']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'formulir' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1';
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
                 $isL3Report = ($layout['type'] ?? '') === 'formulir';
                 $isLaporanNA = ($layout['type'] ?? '') === 'laporan_na';
@@ -352,7 +352,7 @@
                     <div class="flex items-start mb-3">
                         <span style="font-size: 21px; font-weight: bold;">L1</span>
                         <div class="text-center flex-1">
-                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN REKAPITULASI PERKAWINAN</h1>
+                            <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN PERISTIWA PERKAWINAN / RUJUK</h1>
                             <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
                             <p style="font-size: 12px;">BULAN {{ strtoupper($bulanName) }} TAHUN {{ $tahunName }}</p>
                         </div>
