@@ -9,12 +9,12 @@
         @media print {
             .no-print { display: none !important; }
             body { margin: 0; }
-            @page { size: {{ ($dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? 'A4 landscape' : 'A4' }}; margin: 8mm 15mm 15mm 15mm; }
+            @page { size: {{ ($dataset['orientation'] ?? $dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? 'A4 landscape' : 'A4' }}; margin: 8mm 15mm 15mm 15mm; }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; }
         }
         @media screen {
-            .print-sheet { max-width: {{ ($dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? '297mm' : '210mm' }}; margin: 1.5rem auto; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 15mm; }
+            .print-sheet { max-width: {{ ($dataset['orientation'] ?? $dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? '297mm' : '210mm' }}; margin: 1.5rem auto; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 15mm; }
         }
     </style>
 </head>
