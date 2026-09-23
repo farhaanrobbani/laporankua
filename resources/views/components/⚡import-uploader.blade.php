@@ -90,6 +90,12 @@ new class extends Component
             'sheet' => 'required|string',
         ]);
 
+        $user = auth()->user();
+        if ($user->plan === 'free' && !$this->isAppend && $user->importCount() >= 5) {
+            $this->addError('file', 'Anda telah mencapai batas 5 file import untuk plan Free. Silakan upgrade ke Premium untuk import tanpa batas.');
+            return;
+        }
+
         if (! str_starts_with($this->tmpPath, 'tmp/imports/')) {
             abort(403);
         }

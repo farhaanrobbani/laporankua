@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'role', 'status', 'email', 'password', 'kecamatan', 'nama_kepala_kua', 'nip_kepala', 'nama_petugas_stok', 'nip_petugas_stok', 'nama_kementerian', 'nama_kantor_kota', 'nama_kantor', 'alamat_kantor', 'telepon_kantor', 'email_kantor', 'logo_kantor', 'daftar_desa', 'font_size_kop_kementerian', 'font_size_kop_kantor_kota', 'font_size_kop_kantor', 'font_size_kop_alamat', 'font_size_kop_kontak'])]
+#[Fillable(['name', 'role', 'status', 'plan', 'email', 'password', 'kecamatan', 'nama_kepala_kua', 'nip_kepala', 'nama_petugas_stok', 'nip_petugas_stok', 'nama_kementerian', 'nama_kantor_kota', 'nama_kantor', 'alamat_kantor', 'telepon_kantor', 'email_kantor', 'logo_kantor', 'daftar_desa', 'font_size_kop_kementerian', 'font_size_kop_kantor_kota', 'font_size_kop_kantor', 'font_size_kop_alamat', 'font_size_kop_kontak'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,6 +34,16 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function isPremium(): bool
+    {
+        return $this->plan === 'premium';
+    }
+
+    public function importCount(): int
+    {
+        return $this->imports()->count();
     }
 
     public function imports(): HasMany

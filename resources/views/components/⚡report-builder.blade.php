@@ -88,6 +88,7 @@ new class extends Component
 
         $this->globalTemplates = ReportTemplate::where('is_global', true)
             ->where('is_active', true)
+            ->forPlan(auth()->user()->plan)
             ->latest()
             ->get()
             ->map(fn ($t) => [

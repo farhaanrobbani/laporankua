@@ -20,6 +20,7 @@
                         <th class="px-6 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Email</th>
                         <th class="px-6 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Role</th>
                         <th class="px-6 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th class="px-6 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Plan</th>
                         <th class="px-6 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Terdaftar</th>
                         <th class="px-6 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Aksi</th>
                     </tr>
@@ -39,6 +40,11 @@
                                     {{ $user->status }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ $user->plan === 'premium' ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300' : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200' }}">
+                                    {{ $user->plan }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">{{ $user->created_at->format('d M Y') }}</td>
                             <td class="px-6 py-4 text-right space-x-2">
                                 <a href="{{ route('admin.users.edit', $user) }}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium">Edit</a>
@@ -53,7 +59,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Tidak ada user ditemukan</td>
+                            <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Tidak ada user ditemukan</td>
                         </tr>
                     @endforelse
                 </tbody>

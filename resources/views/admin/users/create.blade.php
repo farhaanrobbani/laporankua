@@ -33,6 +33,13 @@
                     <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                 </select>
             </div>
+            <div>
+                <label for="plan" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plan</label>
+                <select id="plan" name="plan" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm">
+                    <option value="free" {{ old('plan') !== 'premium' ? 'selected' : '' }}>Free</option>
+                    <option value="premium" {{ old('plan') === 'premium' ? 'selected' : '' }}>Premium</option>
+                </select>
+            </div>
             <div class="flex items-center gap-3 pt-2">
                 <button type="submit" style="background-color: #111827; color: #fff;" class="px-4 py-2 text-sm font-semibold rounded-md hover:opacity-90">Simpan</button>
                 <a href="{{ route('admin.users.index') }}" class="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">Batal</a>

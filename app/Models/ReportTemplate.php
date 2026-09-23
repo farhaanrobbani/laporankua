@@ -23,6 +23,7 @@ class ReportTemplate extends Model
         'is_default',
         'is_global',
         'is_active',
+        'plan_level',
     ];
 
     protected function casts(): array
@@ -46,5 +47,14 @@ class ReportTemplate extends Model
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
+    }
+
+    public function scopeForPlan($query, string $plan)
+    {
+        if ($plan === 'premium') {
+            return $query;
+        }
+
+        return $query->where('plan_level', 'free');
     }
 }

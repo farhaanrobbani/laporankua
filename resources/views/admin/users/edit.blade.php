@@ -33,6 +33,13 @@
                 </select>
             </div>
             <div>
+                <label for="plan" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plan</label>
+                <select id="plan" name="plan" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm">
+                    <option value="free" {{ old('plan', $user->plan) === 'free' ? 'selected' : '' }}>Free</option>
+                    <option value="premium" {{ old('plan', $user->plan) === 'premium' ? 'selected' : '' }}>Premium</option>
+                </select>
+            </div>
+            <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password Baru (opsional)</label>
                 <input type="password" id="password" name="password" class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm" placeholder="Kosongkan jika tidak diubah" />
                 @error('password') <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p> @enderror

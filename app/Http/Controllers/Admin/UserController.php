@@ -35,6 +35,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => 'required|in:admin,user',
+            'plan' => 'required|in:free,premium',
         ]);
 
         User::create([
@@ -42,6 +43,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'plan' => $validated['plan'],
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dibuat.');
@@ -59,6 +61,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'role' => 'required|in:admin,user',
             'status' => 'required|in:active,inactive',
+            'plan' => 'required|in:free,premium',
             'password' => ['nullable', 'confirmed', Password::min(8)],
         ]);
 
@@ -67,6 +70,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'role' => $validated['role'],
             'status' => $validated['status'],
+            'plan' => $validated['plan'],
         ];
 
         if (! empty($validated['password'])) {
