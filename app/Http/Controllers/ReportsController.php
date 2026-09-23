@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Models\Report;
+use App\Models\User;
 use App\Services\MergeService;
 use App\Services\ReportGenerationService;
 use Carbon\Carbon;
