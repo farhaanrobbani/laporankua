@@ -89,7 +89,7 @@ new class extends Component
         $this->globalTemplates = ReportTemplate::where('is_global', true)
             ->where('is_active', true)
             ->forPlan(auth()->user()->plan)
-            ->latest()
+            ->orderBy('sort_order')
             ->get()
             ->map(fn ($t) => [
                 'id' => $t->id,
