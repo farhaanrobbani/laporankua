@@ -622,6 +622,22 @@ class ReportsController extends Controller
             $grouped[$kelurahan][] = $pn;
         }
 
+        // Dedup peristiwa nikah by Nomor Daftar (prevent double count from appended imports)
+        foreach ($grouped as $desa => &$pnGroup) {
+            $seen = [];
+            $pnGroup = array_values(array_filter($pnGroup, function ($row) use (&$seen) {
+                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                if ($nd === '' || ! isset($seen[$nd])) {
+                    $seen[$nd] = true;
+
+                    return true;
+                }
+
+                return false;
+            }));
+        }
+        unset($pnGroup);
+
         $rows = [];
         foreach ($daftarDesa as $desa) {
             $pnGroup = $grouped[$desa] ?? [];
