@@ -134,6 +134,9 @@ class ReportsController extends Controller
             if (($config['table_layout']['type'] ?? '') === 'laporan_na' && ! in_array('Tanggal Cetak', $effectiveFields, true)) {
                 $effectiveFields[] = 'Tanggal Cetak';
             }
+            if (($config['table_layout']['type'] ?? '') === 'rekap_nr1' && ! in_array('Nomor Daftar', $effectiveFields, true)) {
+                $effectiveFields[] = 'Nomor Daftar';
+            }
             $dataset = $mergeService->buildConcatDataset(
                 $config['merged_import_ids'],
                 $effectiveFields,
@@ -290,6 +293,36 @@ class ReportsController extends Controller
         if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
             $rows = $this->buildL1Data($config, $user, $filterMonth, $filterYear);
             $dataset['rows'] = $this->mergeL1ManualData($config, $rows);
+        }
+
+        if (($config['table_layout']['type'] ?? '') === 'rekap_nr1') {
+            $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
+                ->where('status', 'success')
+                ->pluck('id');
+            $pdkMap = [];
+            if ($pdkImports->isNotEmpty()) {
+                $pdkRaw = ImportData::whereIn('import_id', $pdkImports)
+                    ->pluck('row_data')
+                    ->all();
+                foreach ($pdkRaw as $r) {
+                    $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                    $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                    if ($nd !== '') {
+                        $pdkMap[$nd] = $row;
+                    }
+                }
+            }
+            if (isset($dataset['rows'])) {
+                foreach ($dataset['rows'] as &$dataRow) {
+                    $nd = trim((string) ($dataRow['Nomor Daftar'] ?? ''));
+                    $pdk = $pdkMap[$nd] ?? null;
+                    if ($pdk) {
+                        $dataRow['Tanggal Daftar'] = $dataRow['Tanggal Daftar'] ?? $pdk['Tanggal Daftar'] ?? '';
+                        $dataRow['Nikah Di'] = $dataRow['Nikah Di'] ?? $pdk['Nikah Di'] ?? '';
+                    }
+                }
+                unset($dataRow);
+            }
         }
 
         if (($config['table_layout']['type'] ?? '') === 'formulir') {

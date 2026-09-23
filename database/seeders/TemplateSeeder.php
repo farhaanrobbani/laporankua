@@ -39,6 +39,7 @@ class TemplateSeeder extends Seeder
                 'layout_json' => [
                     'orientation' => 'portrait',
                     'table_layout' => [
+                        'type' => 'rekap_nr1',
                         'aggregation' => [
                             'date_filter_field' => 'Tanggal Daftar',
                         ],
