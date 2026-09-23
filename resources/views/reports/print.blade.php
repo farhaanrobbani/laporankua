@@ -16,6 +16,7 @@
         @media screen {
             .print-sheet { max-width: {{ ($dataset['orientation'] ?? $dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? '297mm' : '210mm' }}; margin: 1.5rem auto; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 15mm; }
         }
+        .th-rotate { writing-mode: vertical-rl; text-orientation: mixed; white-space: nowrap; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900" style="font-family: Arial, sans-serif;">
@@ -32,7 +33,7 @@
                 $l2Title = 'LAPORAN';
 
                 // Aggregation: group data if configured
-                if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'laporan_na') {
+                if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1') {
                     $groupBy = $layout['aggregation']['group_by'];
                     $grouped = [];
                     foreach ($dataset['rows'] as $row) {
@@ -437,21 +438,21 @@
                         <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
                         <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">DESA</th>
                         <th colspan="14" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">PERKAWINAN</th>
-                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pencatatan Perkawinan Luar Negeri</th>
-                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Duplikat Buku Perkawinan</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Pencatatan Perkawinan Luar Negeri</th>
+                        <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Duplikat Buku Perkawinan</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">TALAK KE</th>
                         <th rowspan="4" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">CERAI</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">RUJUK KE</th>
                     </tr>
                     {{-- Row 2 --}}
                     <tr class="bg-gray-100">
-                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Jumlah Seluruhnya</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Jumlah Seluruhnya</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">WALI NIKAH</th>
-                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Itsbat Nikah</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Itsbat Nikah</th>
                         <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">CAMPURAN</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">POLIGAMI</th>
-                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Kantor</th>
-                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Luar Kantor</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Kantor</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Luar Kantor</th>
                         <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">BEBAS BIAYA</th>
                         <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">I</th>
                         <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">II</th>
@@ -462,20 +463,20 @@
                     </tr>
                     {{-- Row 3 --}}
                     <tr class="bg-gray-100">
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nasab</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Nasab</th>
                         <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Hakim</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Laki-laki</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Perempuan</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Laki-laki</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Perempuan</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">II</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">III</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">IV</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Miskin</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Bencana Alam</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Miskin</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Bencana Alam</th>
                     </tr>
                     {{-- Row 4 --}}
                     <tr class="bg-gray-100">
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Adhal</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Lain-lain</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Adhal</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Lain-lain</th>
                     </tr>
                 </thead>
                 @else
