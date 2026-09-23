@@ -16,7 +16,7 @@
         @media screen {
             .print-sheet { max-width: {{ ($dataset['orientation'] ?? $dataset['table_layout']['orientation'] ?? 'portrait') === 'landscape' ? '297mm' : '210mm' }}; margin: 1.5rem auto; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 15mm; }
         }
-        .th-rotate { writing-mode: vertical-rl; text-orientation: sideways; white-space: nowrap; }
+        .th-rotate { writing-mode: vertical-rl; text-orientation: sideways; white-space: nowrap; transform: rotate(180deg); }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900" style="font-family: Arial, sans-serif;">
