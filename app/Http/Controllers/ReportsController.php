@@ -288,7 +288,7 @@ class ReportsController extends Controller
         $dataset['config_json'] = $config;
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
-            $dataset['rows'] = $this->buildL1Data($config, $user);
+            $dataset['rows'] = $this->buildL1Data($config, $user, $filterMonth, $filterYear);
         }
 
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
@@ -512,7 +512,7 @@ class ReportsController extends Controller
         return ['sisa_bulan_lalu' => $saved['sisa_bulan_lalu'] ?? []];
     }
 
-    private function buildL1Data(array $config, ?User $user): array
+    private function buildL1Data(array $config, ?User $user, ?string $filterMonth = null, ?string $filterYear = null): array
     {
         $importIds = $config['merged_import_ids'] ?? [];
         $daftarDesa = $user?->daftar_desa ?? [];
@@ -528,6 +528,29 @@ class ReportsController extends Controller
                 $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
                 $pnRows[] = $row;
             }
+        }
+
+        // Filter peristiwa nikah by Tanggal Nikah if month/year filter is set
+        if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '')) {
+            $pnRows = array_values(array_filter($pnRows, function ($row) use ($filterMonth, $filterYear) {
+                $dateVal = $row['Tanggal Nikah'] ?? null;
+                if ($dateVal === null || $dateVal === '') {
+                    return false;
+                }
+                try {
+                    $date = Carbon::parse($dateVal);
+                } catch (\Exception $e) {
+                    return false;
+                }
+                if ($filterMonth !== null && $filterMonth !== '' && (int) $date->month !== (int) $filterMonth) {
+                    return false;
+                }
+                if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
+                    return false;
+                }
+
+                return true;
+            }));
         }
 
         // Load ALL pendaftaran nikah data
@@ -560,6 +583,24 @@ class ReportsController extends Controller
             foreach ($l3Raw as $r) {
                 $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
                 if (mb_strtolower((string) ($row['Keterangan'] ?? '')) === 'duplikat') {
+                    // Filter duplikat by Tanggal Cetak if month/year filter is set
+                    if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '')) {
+                        $dupDateVal = $row['Tanggal Cetak'] ?? null;
+                        if ($dupDateVal === null || $dupDateVal === '') {
+                            continue;
+                        }
+                        try {
+                            $dupDate = Carbon::parse($dupDateVal);
+                        } catch (\Exception $e) {
+                            continue;
+                        }
+                        if ($filterMonth !== null && $filterMonth !== '' && (int) $dupDate->month !== (int) $filterMonth) {
+                            continue;
+                        }
+                        if ($filterYear !== null && $filterYear !== '' && (int) $dupDate->year !== (int) $filterYear) {
+                            continue;
+                        }
+                    }
                     $desa = trim((string) ($row['Desa/Kelurahan/Kecamatan'] ?? $row['Desa'] ?? $row['Kelurahan'] ?? ''));
                     if ($desa !== '') {
                         $duplikatByDesa[$desa] = ($duplikatByDesa[$desa] ?? 0) + 1;
