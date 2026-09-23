@@ -163,6 +163,7 @@ class ReportsController extends Controller
         }
         $dataset['title'] = $report->title;
         $dataset['table_layout'] = $config['table_layout'] ?? null;
+        $dataset['orientation'] = $config['orientation'] ?? null;
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_na' && isset($dataset['rows'])) {
             $dataset['rows'] = array_values(array_filter($dataset['rows'], fn ($row) => ! empty($row['Tanggal Cetak'])));
