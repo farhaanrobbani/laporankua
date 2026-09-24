@@ -579,7 +579,7 @@ new class extends Component
         }
 
         if (empty($existing)) {
-            $existing[] = ['tanggal' => '01', 'uraian' => '', 'masuk' => '', 'penerimaan' => ''];
+            $existing[] = ['is_sisa_bulan_lalu' => true, 'tanggal' => '01', 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'penerimaan' => ''];
         }
 
         $this->manualData = $existing;
@@ -588,6 +588,11 @@ new class extends Component
     public function addNbRow(): void
     {
         $this->manualData[] = ['tanggal' => '', 'uraian' => '', 'masuk' => '', 'penerimaan' => ''];
+    }
+
+    public function addSisaBulanLaluNb(): void
+    {
+        $this->manualData[] = ['is_sisa_bulan_lalu' => true, 'tanggal' => '', 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'penerimaan' => ''];
     }
 
     public function removeNbRow(int $index): void
@@ -1582,15 +1587,19 @@ new class extends Component
                         </thead>
                         <tbody>
                             @foreach ($this->manualData as $i => $row)
-                                @php $isTgl1 = ($row['tanggal'] ?? '') === '01'; @endphp
+                                @php $isSisaBL = !empty($row['is_sisa_bulan_lalu']); @endphp
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.tanggal" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dd/mm/yyyy" />
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.tanggal" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dd" />
                                     </td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
-                                    </td>
+                                    @if ($isSisaBL)
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">Sisa bulan lalu</td>
+                                    @else
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
+                                        </td>
+                                    @endif
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="number" min="0" wire:model.live="manualData.{{ $i }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
                                     </td>
@@ -1609,6 +1618,10 @@ new class extends Component
                                     <button wire:click="addNbRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                         Tambah Baris
+                                    </button>
+                                    <button wire:click="addSisaBulanLaluNb" type="button" class="inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 ml-3">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Sisa Bulan Lalu
                                     </button>
                                 </td>
                             </tr>
