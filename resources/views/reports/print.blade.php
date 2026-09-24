@@ -436,7 +436,6 @@
                             </div>
                         @endif
                         <hr class="border-t border-gray-900 mb-1">
-                    @endif
 
                     <h1 class="font-bold text-center" style="font-size: 14px;">REKAP PENDAFTARAN NIKAH/RUJUK</h1>
                     <div class="mt-2 mb-3" style="font-size: 12px;">
