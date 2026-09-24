@@ -1090,7 +1090,11 @@
                         @foreach ($dataset['rows'] as $row)
                             <tr @if($row['is_manual'] ?? false)style="font-style: italic;"@endif>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] ?? '' }}</td>
+                                @if ($row['is_manual'] ?? false)
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">1/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
+                                @else
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] ?? '' }}</td>
+                                @endif
                                 <td class="border border-gray-700 px-1 py-0.5">{{ $row['uraian'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['masuk'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['keluar'] ?? 0 }}</td>

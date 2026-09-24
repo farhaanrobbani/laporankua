@@ -1204,7 +1204,7 @@ class ReportsController extends Controller
             $masuk = isset($sr['masuk']) && $sr['masuk'] !== '' ? (int) $sr['masuk'] : null;
             $rows[] = [
                 'no' => $rowNum,
-                'tanggal' => $sr['tanggal'] ?? '',
+                'tanggal' => '01/'.str_pad((string) $filterMonth, 2, '0', STR_PAD_LEFT).'/'.$filterYear,
                 'tanggal_key' => 'manual_sisa_'.$rowNum,
                 'uraian' => $sr['uraian'] ?? 'Sisa bulan lalu',
                 'masuk' => $masuk,
