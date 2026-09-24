@@ -592,7 +592,7 @@ new class extends Component
 
     public function addSisaBulanLaluNb(): void
     {
-        $this->manualData[] = ['is_sisa_bulan_lalu' => true, 'tanggal' => '', 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'penerimaan' => ''];
+        $this->manualData[] = ['is_sisa_bulan_lalu' => true, 'tanggal' => '01', 'uraian' => 'Sisa bulan lalu', 'masuk' => '', 'penerimaan' => ''];
     }
 
     public function removeNbRow(int $index): void
@@ -1590,9 +1590,13 @@ new class extends Component
                                 @php $isSisaBL = !empty($row['is_sisa_bulan_lalu']); @endphp
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <input type="text" wire:model.live="manualData.{{ $i }}.tanggal" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dd" />
-                                    </td>
+                                    @if ($isSisaBL)
+                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center text-xs font-medium text-gray-700 dark:text-gray-300">1</td>
+                                    @else
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.tanggal" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dd" />
+                                        </td>
+                                    @endif
                                     @if ($isSisaBL)
                                         <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">Sisa bulan lalu</td>
                                     @else
