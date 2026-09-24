@@ -982,7 +982,17 @@ class ReportsController extends Controller
             $rows[$bulan - 1]['Nikah'] = $rows[$bulan - 1]['LK'] + $rows[$bulan - 1]['K'];
         }
 
+        $pdkDedup = [];
+        $pdkSeen = [];
         foreach ($pdkRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '' && ! isset($pdkSeen[$nd])) {
+                $pdkSeen[$nd] = true;
+                $pdkDedup[] = $row;
+            }
+        }
+
+        foreach ($pdkDedup as $row) {
             if ($filterYear !== null && $filterYear !== '') {
                 $tglDaftar = $row['Tanggal Daftar'] ?? '';
                 try {
