@@ -24,6 +24,7 @@ class ReportTemplate extends Model
         'is_global',
         'is_active',
         'plan_level',
+        'sort_order',
     ];
 
     protected function casts(): array
