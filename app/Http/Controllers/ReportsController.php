@@ -394,6 +394,11 @@ class ReportsController extends Controller
             }
         }
 
+        if (($config['table_layout']['type'] ?? '') === 'rekap_ntcr') {
+            $dataset['rows'] = $this->buildNtcrData($config, $user, $filterYear);
+            $dataset['config_json']['manual_data'] = $this->buildNtcrManualData($config);
+        }
+
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
             $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
         }
@@ -848,6 +853,244 @@ class ReportsController extends Controller
             }
         }
         unset($row);
+
+        return $rows;
+    }
+
+    private function buildNtcrData(array $config, ?User $user, ?string $filterYear): array
+    {
+        $monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $pnRows = [];
+        if ($pnImports->isNotEmpty()) {
+            $pnRaw = ImportData::whereIn('import_id', $pnImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($pnRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $pnRows[] = $row;
+            }
+        }
+
+        $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $pdkRows = [];
+        if ($pdkImports->isNotEmpty()) {
+            $pdkRaw = ImportData::whereIn('import_id', $pdkImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($pdkRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $pdkRows[] = $row;
+            }
+        }
+
+        $pdkMap = [];
+        foreach ($pdkRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '') {
+                $pdkMap[$nd] = $row;
+            }
+        }
+
+        $simImports = Import::where('table_name', 'like', '%simponi%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $simRows = [];
+        if ($simImports->isNotEmpty()) {
+            $simRaw = ImportData::whereIn('import_id', $simImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($simRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $simRows[] = $row;
+            }
+        }
+
+        $rows = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $rows[] = [
+                'Bulan' => $monthNames[$m - 1],
+                'month_num' => $m,
+                'LK' => 0,
+                'K' => 0,
+                'Nikah' => 0,
+                'Talak' => 0,
+                'Cerai' => 0,
+                'Rujuk' => 0,
+                'Pdk_K' => 0,
+                'Pdk_LK' => 0,
+                'Pdk_Jml' => 0,
+                'R1' => 0, 'R2' => 0, 'R3' => 0, 'R4' => 0, 'R5' => 0, 'R6' => 0,
+                'R7' => 0, 'R8' => 0, 'R9' => 0, 'R10' => 0, 'R11' => 0, 'R12' => 0,
+                'Gagal' => 0,
+                'Tunda' => 0,
+                'Miskin' => 0,
+                'Bencana Alam' => 0,
+                'Jumlah' => 0,
+                'Setor' => 0,
+            ];
+        }
+
+        $pnDedup = [];
+        $seen = [];
+        foreach ($pnRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '' && ! isset($seen[$nd])) {
+                $seen[$nd] = true;
+                $pnDedup[] = $row;
+            }
+        }
+
+        foreach ($pnDedup as $row) {
+            if ($filterYear !== null && $filterYear !== '') {
+                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                $pdk = $pdkMap[$nd] ?? null;
+                $tglDaftar = $pdk['Tanggal Daftar'] ?? ($row['Tanggal Daftar'] ?? '');
+                try {
+                    $d = Carbon::parse($tglDaftar);
+                    if ((string) $d->year !== $filterYear) {
+                        continue;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            $pdk = $pdkMap[$nd] ?? null;
+            $tglDaftar = $pdk['Tanggal Daftar'] ?? ($row['Tanggal Daftar'] ?? '');
+            try {
+                $bulan = (int) Carbon::parse($tglDaftar)->month;
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($bulan < 1 || $bulan > 12) {
+                continue;
+            }
+
+            $nikahDi = mb_strtoupper(trim((string) ($pdk['Nikah Di'] ?? '')));
+            if (str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL')) {
+                $rows[$bulan - 1]['LK']++;
+            } else {
+                $rows[$bulan - 1]['K']++;
+            }
+            $rows[$bulan - 1]['Nikah'] = $rows[$bulan - 1]['LK'] + $rows[$bulan - 1]['K'];
+        }
+
+        foreach ($pdkRows as $row) {
+            if ($filterYear !== null && $filterYear !== '') {
+                $tglDaftar = $row['Tanggal Daftar'] ?? '';
+                try {
+                    $d = Carbon::parse($tglDaftar);
+                    if ((string) $d->year !== $filterYear) {
+                        continue;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+
+            $tglDaftar = $row['Tanggal Daftar'] ?? '';
+            try {
+                $bulan = (int) Carbon::parse($tglDaftar)->month;
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($bulan < 1 || $bulan > 12) {
+                continue;
+            }
+
+            $nikahDi = mb_strtoupper(trim((string) ($row['Nikah Di'] ?? '')));
+            if (str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL')) {
+                $rows[$bulan - 1]['Pdk_LK']++;
+            } else {
+                $rows[$bulan - 1]['Pdk_K']++;
+            }
+            $rows[$bulan - 1]['Pdk_Jml'] = $rows[$bulan - 1]['Pdk_K'] + $rows[$bulan - 1]['Pdk_LK'];
+
+            $tglNikah = $row['Tanggal Nikah'] ?? '';
+            try {
+                $bulanPelaksanaan = (int) Carbon::parse($tglNikah)->month;
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($bulanPelaksanaan >= 1 && $bulanPelaksanaan <= 12) {
+                $key = 'R'.$bulanPelaksanaan;
+                $rows[$bulan - 1][$key]++;
+            }
+        }
+
+        foreach ($simRows as $row) {
+            $setorDate = $row['Tanggal dan Jam Setor'] ?? $row['Tanggal Setor'] ?? '';
+            if ($setorDate === '') {
+                continue;
+            }
+            try {
+                $d = Carbon::parse($setorDate);
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($filterYear !== null && $filterYear !== '' && (string) $d->year !== $filterYear) {
+                continue;
+            }
+            $bulan = (int) $d->month;
+            if ($bulan >= 1 && $bulan <= 12) {
+                $rows[$bulan - 1]['Setor']++;
+            }
+        }
+
+        $totalRow = [
+            'Bulan' => 'TOTAL',
+            'month_num' => 0,
+            'LK' => 0, 'K' => 0, 'Nikah' => 0,
+            'Talak' => 0, 'Cerai' => 0, 'Rujuk' => 0,
+            'Pdk_K' => 0, 'Pdk_LK' => 0, 'Pdk_Jml' => 0,
+            'R1' => 0, 'R2' => 0, 'R3' => 0, 'R4' => 0, 'R5' => 0, 'R6' => 0,
+            'R7' => 0, 'R8' => 0, 'R9' => 0, 'R10' => 0, 'R11' => 0, 'R12' => 0,
+            'Gagal' => 0, 'Tunda' => 0, 'Miskin' => 0, 'Bencana Alam' => 0,
+            'Jumlah' => 0, 'Setor' => 0,
+        ];
+        foreach ($rows as $r) {
+            foreach (['LK', 'K', 'Nikah', 'Talak', 'Cerai', 'Rujuk', 'Pdk_K', 'Pdk_LK', 'Pdk_Jml', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'Gagal', 'Tunda', 'Miskin', 'Bencana Alam', 'Setor'] as $f) {
+                $totalRow[$f] += $r[$f];
+            }
+        }
+        foreach ($rows as &$r) {
+            $r['Jumlah'] = $r['R1'] + $r['R2'] + $r['R3'] + $r['R4'] + $r['R5'] + $r['R6'] + $r['R7'] + $r['R8'] + $r['R9'] + $r['R10'] + $r['R11'] + $r['R12'] + $r['Gagal'] + $r['Tunda'] + $r['Miskin'] + $r['Bencana Alam'];
+        }
+        unset($r);
+        $totalRow['Jumlah'] = $totalRow['R1'] + $totalRow['R2'] + $totalRow['R3'] + $totalRow['R4'] + $totalRow['R5'] + $totalRow['R6'] + $totalRow['R7'] + $totalRow['R8'] + $totalRow['R9'] + $totalRow['R10'] + $totalRow['R11'] + $totalRow['R12'] + $totalRow['Gagal'] + $totalRow['Tunda'] + $totalRow['Miskin'] + $totalRow['Bencana Alam'];
+
+        $rows[] = $totalRow;
+
+        return $rows;
+    }
+
+    private function buildNtcrManualData(array $config): array
+    {
+        $savedManual = $config['manual_data'] ?? [];
+        if (! is_array($savedManual)) {
+            $savedManual = [];
+        }
+
+        $monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $manualCols = ['Talak', 'Cerai', 'Rujuk', 'Gagal', 'Tunda', 'Miskin', 'Bencana Alam'];
+
+        $rows = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthName = $monthNames[$m - 1];
+            $existing = $savedManual[$monthName] ?? [];
+            $row = ['bulan' => $monthName];
+            foreach ($manualCols as $col) {
+                $row[$col] = $existing[$col] ?? 0;
+            }
+            $rows[] = $row;
+        }
 
         return $rows;
     }

@@ -398,5 +398,41 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+
+        // REKAP NTCR
+        ReportTemplate::firstOrCreate(
+            ['name' => 'REKAP NTCR'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'plan_level' => 'premium',
+                'sort_order' => 9,
+                'output_format' => 'print',
+                'description' => 'Rekapitulasi Nikah, Talak, Cerai & Rujuk',
+                'fields_json' => ['Tanggal Daftar', 'Tanggal Nikah', 'Nikah Di'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Tanggal Daftar', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'landscape',
+                    'table_layout' => [
+                        'type' => 'rekap_ntcr',
+                        'aggregation' => [
+                            'date_filter_field' => 'Tanggal Daftar',
+                        ],
+                        'manual_columns' => [
+                            'Talak',
+                            'Cerai',
+                            'Rujuk',
+                            'Gagal',
+                            'Tunda',
+                            'Miskin',
+                            'Bencana Alam',
+                        ],
+                        'columns' => [],
+                    ],
+                ],
+            ]
+        );
     }
 }
