@@ -1300,8 +1300,8 @@ class ReportsController extends Controller
             if ($r['is_manual'] ?? false) {
                 continue;
             }
-            if ($r['is_tgl1']) {
-                $r['sisa'] = ($r['masuk'] ?? 0) - $r['keluar'];
+            if ($r['is_tgl1'] && isset($r['masuk']) && $r['masuk'] !== null) {
+                $r['sisa'] = $r['masuk'] - $r['keluar'];
                 $runningSisa = $r['sisa'];
             } else {
                 $runningSisa -= $r['keluar'];
