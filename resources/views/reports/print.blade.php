@@ -1313,6 +1313,7 @@
                     </div>
                 </div>
             @endif
+        @else
             <div class="border-b-2 border-gray-900 pb-3 mb-4">
                 <h1 class="text-2xl font-bold">{{ $dataset['title'] }}</h1>
                 <p class="text-sm text-gray-500">Total {{ number_format($dataset['total']) }} baris &middot; Dibuat {{ $dataset['generated_at'] }}</p>
