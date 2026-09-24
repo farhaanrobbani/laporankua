@@ -1185,9 +1185,42 @@ class ReportsController extends Controller
             $manualRows = [];
         }
 
+        $sisaRows = [];
+        $otherManualRows = [];
+        foreach ($manualRows as $mr) {
+            if (! empty($mr['is_sisa_bulan_lalu'])) {
+                $sisaRows[] = $mr;
+            } else {
+                $otherManualRows[] = $mr;
+            }
+        }
+
         $rows = [];
         $runningSisa = 0;
         $rowNum = 0;
+
+        foreach ($sisaRows as $sr) {
+            $rowNum++;
+            $masuk = $sr['masuk'] !== '' && $sr['masuk'] !== null ? (int) $sr['masuk'] : null;
+            $rows[] = [
+                'no' => $rowNum,
+                'tanggal' => $sr['tanggal'] ?? '',
+                'tanggal_key' => 'manual_sisa_'.$rowNum,
+                'uraian' => $sr['uraian'] ?? 'Sisa bulan lalu',
+                'masuk' => $masuk,
+                'keluar' => 0,
+                'sisa' => $masuk,
+                'satuan' => 'Lembar',
+                'penerimaan' => $sr['penerimaan'] ?? null,
+                'pengeluaran' => '',
+                'is_tgl1' => true,
+                'is_manual' => true,
+                'entries' => [],
+            ];
+            $runningSisa = $masuk ?? 0;
+        }
+
+        $matchedManual = [];
 
         foreach ($byDate as $dateKey => $entries) {
             $d = Carbon::parse($dateKey);
@@ -1215,9 +1248,11 @@ class ReportsController extends Controller
             }
 
             $md = [];
-            foreach ($manualRows as $mr) {
-                if (($mr['tanggal'] ?? '') === $tanggal) {
+            foreach ($otherManualRows as $mr) {
+                $mrDay = str_pad((string) ($mr['tanggal'] ?? ''), 2, '0', STR_PAD_LEFT);
+                if ($mrDay === $d->format('d') && ! in_array($mr, $matchedManual, true)) {
                     $md = $mr;
+                    $matchedManual[] = $mr;
                     break;
                 }
             }
@@ -1228,7 +1263,7 @@ class ReportsController extends Controller
                 'tanggal' => $tanggal,
                 'tanggal_key' => $dateKey,
                 'uraian' => $md['uraian'] ?? $uraian,
-                'masuk' => $md['masuk'] ?? null,
+                'masuk' => $md['masuk'] !== '' && $md['masuk'] !== null ? (int) $md['masuk'] : null,
                 'keluar' => $count,
                 'sisa' => null,
                 'satuan' => 'Lembar',
@@ -1239,7 +1274,32 @@ class ReportsController extends Controller
             ];
         }
 
+        foreach ($otherManualRows as $mr) {
+            if (in_array($mr, $matchedManual, true)) {
+                continue;
+            }
+            $rowNum++;
+            $rows[] = [
+                'no' => $rowNum,
+                'tanggal' => $mr['tanggal'] ?? '',
+                'tanggal_key' => 'manual_extra_'.$rowNum,
+                'uraian' => $mr['uraian'] ?? '',
+                'masuk' => $mr['masuk'] !== '' && $mr['masuk'] !== null ? (int) $mr['masuk'] : null,
+                'keluar' => 0,
+                'sisa' => null,
+                'satuan' => 'Lembar',
+                'penerimaan' => $mr['penerimaan'] ?? null,
+                'pengeluaran' => '',
+                'is_tgl1' => false,
+                'is_manual' => true,
+                'entries' => [],
+            ];
+        }
+
         foreach ($rows as &$r) {
+            if ($r['is_manual'] ?? false) {
+                continue;
+            }
             if ($r['is_tgl1']) {
                 $r['sisa'] = ($r['masuk'] ?? 0) - $r['keluar'];
                 $runningSisa = $r['sisa'];

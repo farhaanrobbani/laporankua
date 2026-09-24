@@ -1087,24 +1087,16 @@
                             </tr>
                         @endforeach
                     @elseif ($isNbReport)
-                        @php
-                            $nbManualData = $dataset['config_json']['manual_data'] ?? [];
-                        @endphp
                         @foreach ($dataset['rows'] as $row)
-                            @php
-                                $tglKey = $row['tanggal_key'] ?? '';
-                                $md = $nbManualData[$tglKey] ?? [];
-                                $isTgl1 = $row['is_tgl1'] ?? false;
-                            @endphp
-                            <tr>
+                            <tr @if($row['is_manual'] ?? false)style="font-style: italic;"@endif>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5">{{ $row['uraian'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['masuk'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['masuk'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['keluar'] ?? 0 }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['sisa'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['penerimaan'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['penerimaan'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['pengeluaran'] ?? '' }}</td>
                             </tr>
                         @endforeach
