@@ -498,14 +498,14 @@
                         <th colspan="6" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nikah, Talak, Cerai &amp; Rujuk</th>
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pendaftaran</th>
                         <th colspan="16" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Rincian Pendaftaran</th>
-                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Jumlah</th>
-                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Setor PNBP NR</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Jumlah</th>
+                        <th rowspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Setor PNBP NR</th>
                     </tr>
                     {{-- Row 2 --}}
                     <tr class="bg-gray-100">
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">LK</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">K</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nikah</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Nikah</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">T</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">C</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">R</th>
@@ -519,10 +519,10 @@
                         @for ($i = 1; $i <= 12; $i++)
                             <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $i }}</th>
                         @endfor
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Gagal</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tunda</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Miskin</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Bencana Alam</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Gagal</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Tunda</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">Miskin</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">{!! 'Bencana<br>Alam' !!}</th>
                     </tr>
                 </thead>
                 @else
