@@ -861,6 +861,20 @@ class ReportsController extends Controller
     {
         $monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
+        $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $pnRows = [];
+        if ($pnImports->isNotEmpty()) {
+            $pnRaw = ImportData::whereIn('import_id', $pnImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($pnRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $pnRows[] = $row;
+            }
+        }
+
         $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
             ->where('status', 'success')
             ->pluck('id');
@@ -875,13 +889,11 @@ class ReportsController extends Controller
             }
         }
 
-        $pdkDedup = [];
-        $pdkSeen = [];
+        $pdkMap = [];
         foreach ($pdkRows as $row) {
             $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
-            if ($nd !== '' && ! isset($pdkSeen[$nd])) {
-                $pdkSeen[$nd] = true;
-                $pdkDedup[] = $row;
+            if ($nd !== '') {
+                $pdkMap[$nd] = $row;
             }
         }
 
@@ -924,7 +936,62 @@ class ReportsController extends Controller
             ];
         }
 
-        // Loop 1: pendaftaran nikah -> LK/K/Nikah (group by Tanggal Nikah) + Pdk_K/Pdk_LK/Pdk_Jml (group by Tanggal Daftar) + R1-R12 (group by Tanggal Nikah)
+        $pnDedup = [];
+        $seen = [];
+        foreach ($pnRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '' && ! isset($seen[$nd])) {
+                $seen[$nd] = true;
+                $pnDedup[] = $row;
+            }
+        }
+
+        foreach ($pnDedup as $row) {
+            if ($filterYear !== null && $filterYear !== '') {
+                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+                $pdk = $pdkMap[$nd] ?? null;
+                $tglDaftar = $pdk['Tanggal Daftar'] ?? ($row['Tanggal Daftar'] ?? '');
+                try {
+                    $d = Carbon::parse($tglDaftar);
+                    if ((string) $d->year !== $filterYear) {
+                        continue;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            $pdk = $pdkMap[$nd] ?? null;
+            $tglDaftar = $pdk['Tanggal Daftar'] ?? ($row['Tanggal Daftar'] ?? '');
+            try {
+                $bulan = (int) Carbon::parse($tglDaftar)->month;
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($bulan < 1 || $bulan > 12) {
+                continue;
+            }
+
+            $nikahDi = mb_strtoupper(trim((string) ($pdk['Nikah Di'] ?? '')));
+            if (str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL')) {
+                $rows[$bulan - 1]['LK']++;
+            } else {
+                $rows[$bulan - 1]['K']++;
+            }
+            $rows[$bulan - 1]['Nikah'] = $rows[$bulan - 1]['LK'] + $rows[$bulan - 1]['K'];
+        }
+
+        $pdkDedup = [];
+        $pdkSeen = [];
+        foreach ($pdkRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '' && ! isset($pdkSeen[$nd])) {
+                $pdkSeen[$nd] = true;
+                $pdkDedup[] = $row;
+            }
+        }
+
         foreach ($pdkDedup as $row) {
             if ($filterYear !== null && $filterYear !== '') {
                 $tglDaftar = $row['Tanggal Daftar'] ?? '';
@@ -938,42 +1005,33 @@ class ReportsController extends Controller
                 }
             }
 
-            $nikahDi = mb_strtoupper(trim((string) ($row['Nikah Di'] ?? '')));
-            $isLK = str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL');
-
-            // LK/K/Nikah grouped by Tanggal Nikah
-            $tglNikah = $row['Tanggal Nikah'] ?? '';
-            try {
-                $bulanNikah = (int) Carbon::parse($tglNikah)->month;
-            } catch (\Exception $e) {
-                continue;
-            }
-            if ($bulanNikah >= 1 && $bulanNikah <= 12) {
-                if ($isLK) {
-                    $rows[$bulanNikah - 1]['LK']++;
-                } else {
-                    $rows[$bulanNikah - 1]['K']++;
-                }
-                $rows[$bulanNikah - 1]['Nikah'] = $rows[$bulanNikah - 1]['LK'] + $rows[$bulanNikah - 1]['K'];
-
-                $key = 'R'.$bulanNikah;
-                $rows[$bulanNikah - 1][$key]++;
-            }
-
-            // Pdk_K/Pdk_LK/Pdk_Jml grouped by Tanggal Daftar
             $tglDaftar = $row['Tanggal Daftar'] ?? '';
             try {
-                $bulanDaftar = (int) Carbon::parse($tglDaftar)->month;
+                $bulan = (int) Carbon::parse($tglDaftar)->month;
             } catch (\Exception $e) {
                 continue;
             }
-            if ($bulanDaftar >= 1 && $bulanDaftar <= 12) {
-                if ($isLK) {
-                    $rows[$bulanDaftar - 1]['Pdk_LK']++;
-                } else {
-                    $rows[$bulanDaftar - 1]['Pdk_K']++;
-                }
-                $rows[$bulanDaftar - 1]['Pdk_Jml'] = $rows[$bulanDaftar - 1]['Pdk_K'] + $rows[$bulanDaftar - 1]['Pdk_LK'];
+            if ($bulan < 1 || $bulan > 12) {
+                continue;
+            }
+
+            $nikahDi = mb_strtoupper(trim((string) ($row['Nikah Di'] ?? '')));
+            if (str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL')) {
+                $rows[$bulan - 1]['Pdk_LK']++;
+            } else {
+                $rows[$bulan - 1]['Pdk_K']++;
+            }
+            $rows[$bulan - 1]['Pdk_Jml'] = $rows[$bulan - 1]['Pdk_K'] + $rows[$bulan - 1]['Pdk_LK'];
+
+            $tglNikah = $row['Tanggal Nikah'] ?? '';
+            try {
+                $bulanPelaksanaan = (int) Carbon::parse($tglNikah)->month;
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($bulanPelaksanaan >= 1 && $bulanPelaksanaan <= 12) {
+                $key = 'R'.$bulanPelaksanaan;
+                $rows[$bulan - 1][$key]++;
             }
         }
 
