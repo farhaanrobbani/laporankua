@@ -963,9 +963,9 @@ class ReportsController extends Controller
 
             $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
             $pdk = $pdkMap[$nd] ?? null;
-            $tglDaftar = $pdk['Tanggal Daftar'] ?? ($row['Tanggal Daftar'] ?? '');
+            $tglNikah = $pdk['Tanggal Nikah'] ?? ($row['Tanggal Nikah'] ?? '');
             try {
-                $bulan = (int) Carbon::parse($tglDaftar)->month;
+                $bulan = (int) Carbon::parse($tglNikah)->month;
             } catch (\Exception $e) {
                 continue;
             }
