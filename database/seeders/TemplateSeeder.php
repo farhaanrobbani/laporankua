@@ -459,7 +459,6 @@ class TemplateSeeder extends Seeder
                         'manual_columns' => [
                             'Masuk',
                             'Penerimaan',
-                            'Keterangan',
                         ],
                         'columns' => [],
                     ],

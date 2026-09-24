@@ -541,7 +541,6 @@
                         <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
                         <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
                         <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keterangan</th>
                     </tr>
                     {{-- Row 2 --}}
                     <tr class="bg-gray-100">
@@ -1104,7 +1103,6 @@
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['penerimaan'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['pengeluaran'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5">{{ $md['keterangan'] ?? ($row['keterangan'] ?? '') }}</td>
                             </tr>
                         @endforeach
                     @else

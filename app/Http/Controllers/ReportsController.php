@@ -1180,6 +1180,11 @@ class ReportsController extends Controller
 
         ksort($byDate);
 
+        $manualRows = $config['manual_data'] ?? [];
+        if (! is_array($manualRows)) {
+            $manualRows = [];
+        }
+
         $rows = [];
         $runningSisa = 0;
         $rowNum = 0;
@@ -1209,29 +1214,34 @@ class ReportsController extends Controller
                 $uraian = $namaSuami.' - '.$namaIstri;
             }
 
+            $md = [];
+            foreach ($manualRows as $mr) {
+                if (($mr['tanggal'] ?? '') === $tanggal) {
+                    $md = $mr;
+                    break;
+                }
+            }
+
             $rowNum++;
             $rows[] = [
                 'no' => $rowNum,
                 'tanggal' => $tanggal,
                 'tanggal_key' => $dateKey,
-                'uraian' => $uraian,
-                'masuk' => null,
+                'uraian' => $md['uraian'] ?? $uraian,
+                'masuk' => $md['masuk'] ?? null,
                 'keluar' => $count,
                 'sisa' => null,
                 'satuan' => 'Lembar',
-                'penerimaan' => null,
+                'penerimaan' => $md['penerimaan'] ?? null,
                 'pengeluaran' => $pengeluaran,
-                'keterangan' => '',
                 'is_tgl1' => $d->day === 1,
                 'entries' => $entries,
             ];
         }
 
-        $hasTgl1 = false;
         foreach ($rows as &$r) {
             if ($r['is_tgl1']) {
-                $hasTgl1 = true;
-                $r['sisa'] = $r['masuk'] - $r['keluar'];
+                $r['sisa'] = ($r['masuk'] ?? 0) - $r['keluar'];
                 $runningSisa = $r['sisa'];
             } else {
                 $runningSisa -= $r['keluar'];

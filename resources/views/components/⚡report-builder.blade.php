@@ -570,15 +570,31 @@ new class extends Component
         $existing = [];
         if ($this->manualData) {
             if (is_array($this->manualData)) {
-                foreach ($this->manualData as $key => $value) {
-                    if (is_string($key) && $key !== '') {
-                        $existing[$key] = $value;
+                foreach ($this->manualData as $row) {
+                    if (is_array($row)) {
+                        $existing[] = $row;
                     }
                 }
             }
         }
 
+        if (empty($existing)) {
+            $existing[] = ['tanggal' => '01', 'uraian' => '', 'masuk' => '', 'penerimaan' => ''];
+        }
+
         $this->manualData = $existing;
+    }
+
+    public function addNbRow(): void
+    {
+        $this->manualData[] = ['tanggal' => '', 'uraian' => '', 'masuk' => '', 'penerimaan' => ''];
+    }
+
+    public function removeNbRow(int $index): void
+    {
+        if (isset($this->manualData[$index])) {
+            array_splice($this->manualData, $index, 1);
+        }
     }
 
     private function buildSeriRange(string $awal, string $akhir): string
@@ -1551,47 +1567,51 @@ new class extends Component
         @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'laporan_nb')
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Data Manual</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi data Masuk (tanggal 1), Penerimaan (tanggal 1), dan Keterangan per tanggal.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi data stok masuk dan penerimaan. Baris tanggal 1 untuk stok masuk, baris lainnya untuk keluar.</p>
                 <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
                     <table class="min-w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-gray-100 dark:bg-gray-700">
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">#</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Tanggal</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Uraian</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Masuk</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Penerimaan</th>
-                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Keterangan</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($this->preview['rows'] as $row)
-                                @php
-                                    $tglKey = $row['tanggal_key'] ?? '';
-                                    $isTgl1 = $row['is_tgl1'] ?? false;
-                                    $md = $this->manualData[$tglKey] ?? ['masuk' => '', 'penerimaan' => '', 'keterangan' => ''];
-                                @endphp
+                            @foreach ($this->manualData as $i => $row)
+                                @php $isTgl1 = ($row['tanggal'] ?? '') === '01'; @endphp
                                 <tr>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs">{{ $row['tanggal'] ?? '' }}</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs">{{ $row['uraian'] ?? '' }}</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        @if ($isTgl1)
-                                            <input type="number" min="0" wire:model.live="manualData.{{ $tglKey }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.tanggal" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="dd/mm/yyyy" />
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        @if ($isTgl1)
-                                            <input type="text" wire:model.live="manualData.{{ $tglKey }}.penerimaan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="No. Penerimaan" />
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
-                                        <input type="text" wire:model.live="manualData.{{ $tglKey }}.keterangan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Keterangan" />
+                                        <input type="number" min="0" wire:model.live="manualData.{{ $i }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        <input type="text" wire:model.live="manualData.{{ $i }}.penerimaan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="No. Penerimaan" />
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                        <button wire:click="removeNbRow({{ $i }})" type="button" class="text-red-400 hover:text-red-600 shrink-0" title="Hapus baris">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr>
+                                <td colspan="6" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                    <button wire:click="addNbRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Baris
+                                    </button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
