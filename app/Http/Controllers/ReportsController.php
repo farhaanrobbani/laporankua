@@ -1201,7 +1201,7 @@ class ReportsController extends Controller
 
         foreach ($sisaRows as $sr) {
             $rowNum++;
-            $masuk = $sr['masuk'] !== '' && $sr['masuk'] !== null ? (int) $sr['masuk'] : null;
+            $masuk = isset($sr['masuk']) && $sr['masuk'] !== '' ? (int) $sr['masuk'] : null;
             $rows[] = [
                 'no' => $rowNum,
                 'tanggal' => $sr['tanggal'] ?? '',
@@ -1263,7 +1263,7 @@ class ReportsController extends Controller
                 'tanggal' => $tanggal,
                 'tanggal_key' => $dateKey,
                 'uraian' => $md['uraian'] ?? $uraian,
-                'masuk' => $md['masuk'] !== '' && $md['masuk'] !== null ? (int) $md['masuk'] : null,
+                'masuk' => isset($md['masuk']) && $md['masuk'] !== '' ? (int) $md['masuk'] : null,
                 'keluar' => $count,
                 'sisa' => null,
                 'satuan' => 'Lembar',
@@ -1284,7 +1284,7 @@ class ReportsController extends Controller
                 'tanggal' => $mr['tanggal'] ?? '',
                 'tanggal_key' => 'manual_extra_'.$rowNum,
                 'uraian' => $mr['uraian'] ?? '',
-                'masuk' => $mr['masuk'] !== '' && $mr['masuk'] !== null ? (int) $mr['masuk'] : null,
+                'masuk' => isset($mr['masuk']) && $mr['masuk'] !== '' ? (int) $mr['masuk'] : null,
                 'keluar' => 0,
                 'sisa' => null,
                 'satuan' => 'Lembar',
