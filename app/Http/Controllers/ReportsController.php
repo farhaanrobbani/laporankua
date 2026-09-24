@@ -1035,7 +1035,17 @@ class ReportsController extends Controller
             }
         }
 
+        $simDedup = [];
+        $simSeen = [];
         foreach ($simRows as $row) {
+            $np = trim((string) ($row['No Pendaftaran'] ?? ''));
+            if ($np !== '' && ! isset($simSeen[$np])) {
+                $simSeen[$np] = true;
+                $simDedup[] = $row;
+            }
+        }
+
+        foreach ($simDedup as $row) {
             $setorDate = $row['Tanggal dan Jam Setor'] ?? $row['Tanggal Setor'] ?? '';
             if ($setorDate === '') {
                 continue;
