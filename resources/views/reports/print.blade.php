@@ -33,7 +33,7 @@
                 $l2Title = 'LAPORAN';
 
                 // Aggregation: group data if configured
-                if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1' && ($layout['type'] ?? '') !== 'rekap_ntcr') {
+                if (! empty($layout['aggregation']) && isset($layout['aggregation']['group_by']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1' && ($layout['type'] ?? '') !== 'rekap_ntcr' && ($layout['type'] ?? '') !== 'laporan_nb') {
                     $groupBy = $layout['aggregation']['group_by'];
                     $grouped = [];
                     foreach ($dataset['rows'] as $row) {
@@ -234,12 +234,13 @@
                 $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
                 $bulanName = $dataset['bulan_override'] ?? ($lastDate ? $monthNames[$lastDate->month] : '-');
                 $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
-                $isL2Report = !empty($dataset['table_layout']['aggregation']) && empty($dataset['table_layout']['aggregation']['date_filter_field']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'formulir' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1' && ($layout['type'] ?? '') !== 'rekap_ntcr';
+                $isL2Report = !empty($dataset['table_layout']['aggregation']) && empty($dataset['table_layout']['aggregation']['date_filter_field']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'formulir' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1' && ($layout['type'] ?? '') !== 'rekap_ntcr' && ($layout['type'] ?? '') !== 'laporan_nb';
                 $isL4Report = ($layout['type'] ?? '') === 'grouped_detail';
                 $isL3Report = ($layout['type'] ?? '') === 'formulir';
                 $isLaporanNA = ($layout['type'] ?? '') === 'laporan_na';
                 $isL1Report = ($layout['type'] ?? '') === 'laporan_l1';
                 $isNtcrReport = ($layout['type'] ?? '') === 'rekap_ntcr';
+                $isNbReport = ($layout['type'] ?? '') === 'laporan_nb';
                 if ($isLaporanNA && ($hariName === '-' || $tanggalFormatted === '-')) {
                     $filterMonth = (int) ($dataset['filter_month'] ?? 0);
                     $filterYear = (int) ($dataset['filter_year'] ?? 0);
@@ -367,8 +368,13 @@
                             <p style="font-size: 12px;">TAHUN {{ $dataset['filter_year'] ?? $tahunName }}</p>
                         </div>
                     </div>
+                @elseif ($isNbReport)
+                    <div class="text-center mb-3">
+                        <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN NB</h1>
+                        <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
+                        <p style="font-size: 12px;">BULAN {{ strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? '') }} {{ $dataset['filter_year'] ?? $tahunName }}</p>
+                    </div>
                 @else
-                    @if (! empty($dataset['nama_kementerian']) || ! empty($dataset['nama_kantor']))
                         @if (! empty($dataset['logo_kantor']))
                             <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
@@ -525,11 +531,28 @@
                         <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold th-rotate">{!! 'Bencana<br>Alam' !!}</th>
                     </tr>
                 </thead>
-                @else
+                @elseif ($isNbReport)
                 <thead>
+                    {{-- Row 1 --}}
                     <tr class="bg-gray-100">
-                    @foreach ($columns as $col)
-                        @if ($col['type'] === 'row_number')
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tanggal</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Uraian</th>
+                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
+                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
+                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keterangan</th>
+                    </tr>
+                    {{-- Row 2 --}}
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Masuk</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keluar</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Sisa</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Penerimaan</th>
+                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
+                    </tr>
+                </thead>
+                @else
                             <th rowspan="{{ $col['rowspan'] ?? 1 }}" @if(!empty($col['width']))style="max-width:{{ $col['width'] }};width:{{ $col['width'] }};"@endif class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '#' }}</th>
                         @elseif ($col['type'] === 'group')
                             <th colspan="{{ $col['colspan'] ?? 1 }}" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">{{ $col['label'] ?? '' }}</th>
@@ -1061,6 +1084,29 @@
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['Setor'] ?? 0 }}</td>
                             </tr>
                         @endforeach
+                    @elseif ($isNbReport)
+                        @php
+                            $nbManualData = $dataset['config_json']['manual_data'] ?? [];
+                        @endphp
+                        @foreach ($dataset['rows'] as $row)
+                            @php
+                                $tglKey = $row['tanggal_key'] ?? '';
+                                $md = $nbManualData[$tglKey] ?? [];
+                                $isTgl1 = $row['is_tgl1'] ?? false;
+                            @endphp
+                            <tr>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $row['uraian'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['masuk'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['keluar'] ?? 0 }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['sisa'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $md['penerimaan'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['pengeluaran'] ?? '' }}</td>
+                                <td class="border border-gray-700 px-1 py-0.5">{{ $md['keterangan'] ?? ($row['keterangan'] ?? '') }}</td>
+                            </tr>
+                        @endforeach
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
                             <tr>
@@ -1228,9 +1274,26 @@
                         <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
                     </div>
                 </div>
+            @elseif ($isNbReport)
+                <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                    <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                        <div class="text-center">
+                            <p>Mengetahui,</p>
+                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                            <div class="h-16"></div>
+                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                        </div>
+                        <div class="text-center">
+                            <br>
+                            <p>Petugas Stok</p>
+                            <div class="h-16"></div>
+                            <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
+                            <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
             @else
-                <div class="mt-4 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
-                    <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
                     <p class="mt-2 ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
                     <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
                     <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Keseluruhan</span> : <strong>{{ $countAll }}</strong> N</p>

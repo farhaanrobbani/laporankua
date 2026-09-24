@@ -399,6 +399,11 @@ class ReportsController extends Controller
             $dataset['config_json']['manual_data'] = $this->buildNtcrManualData($config);
         }
 
+        if (($config['table_layout']['type'] ?? '') === 'laporan_nb') {
+            $dataset['rows'] = $this->buildNbData($config, $user, $filterMonth, $filterYear);
+            $dataset['config_json']['manual_data'] = $this->buildNbManualData($config);
+        }
+
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
             $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
         }
@@ -1113,6 +1118,139 @@ class ReportsController extends Controller
         }
 
         return $rows;
+    }
+
+    private function buildNbData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear): array
+    {
+        $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $pdkRows = [];
+        if ($pdkImports->isNotEmpty()) {
+            $pdkRaw = ImportData::whereIn('import_id', $pdkImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($pdkRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $pdkRows[] = $row;
+            }
+        }
+
+        $pdkDedup = [];
+        $pdkSeen = [];
+        foreach ($pdkRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '' && ! isset($pdkSeen[$nd])) {
+                $pdkSeen[$nd] = true;
+                $pdkDedup[] = $row;
+            }
+        }
+
+        $filtered = [];
+        foreach ($pdkDedup as $row) {
+            $tglDaftar = $row['Tanggal Daftar'] ?? '';
+            try {
+                $d = Carbon::parse($tglDaftar);
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($filterYear !== null && $filterYear !== '' && (string) $d->year !== $filterYear) {
+                continue;
+            }
+            if ($filterMonth !== null && $filterMonth !== '' && (string) $d->month !== $filterMonth) {
+                continue;
+            }
+            $filtered[] = $row;
+        }
+
+        $byDate = [];
+        foreach ($filtered as $row) {
+            $tglDaftar = $row['Tanggal Daftar'] ?? '';
+            try {
+                $d = Carbon::parse($tglDaftar);
+            } catch (\Exception $e) {
+                continue;
+            }
+            $dateKey = $d->format('Y-m-d');
+            if (! isset($byDate[$dateKey])) {
+                $byDate[$dateKey] = [];
+            }
+            $byDate[$dateKey][] = $row;
+        }
+
+        ksort($byDate);
+
+        $rows = [];
+        $runningSisa = 0;
+        $rowNum = 0;
+
+        foreach ($byDate as $dateKey => $entries) {
+            $d = Carbon::parse($dateKey);
+            $tanggal = $d->format('d/m/Y');
+            $count = count($entries);
+            $nomorDaftars = array_map(fn ($r) => trim((string) ($r['Nomor Daftar'] ?? '')), $entries);
+            $nomorDaftars = array_values(array_filter($nomorDaftars));
+
+            if (count($nomorDaftars) > 1) {
+                $pengeluaran = $nomorDaftars[0].' - '.end($nomorDaftars);
+            } elseif (count($nomorDaftars) === 1) {
+                $pengeluaran = $nomorDaftars[0];
+            } else {
+                $pengeluaran = '';
+            }
+
+            if ($count > 1) {
+                $nama1 = trim((string) ($entries[0]['Nama Suami'] ?? ''));
+                $namaIstri1 = trim((string) ($entries[0]['Nama Istri'] ?? ''));
+                $uraian = $nama1.' - '.$namaIstri1.' Cs';
+            } else {
+                $namaSuami = trim((string) ($entries[0]['Nama Suami'] ?? ''));
+                $namaIstri = trim((string) ($entries[0]['Nama Istri'] ?? ''));
+                $uraian = $namaSuami.' - '.$namaIstri;
+            }
+
+            $rowNum++;
+            $rows[] = [
+                'no' => $rowNum,
+                'tanggal' => $tanggal,
+                'tanggal_key' => $dateKey,
+                'uraian' => $uraian,
+                'masuk' => null,
+                'keluar' => $count,
+                'sisa' => null,
+                'satuan' => 'Lembar',
+                'penerimaan' => null,
+                'pengeluaran' => $pengeluaran,
+                'keterangan' => '',
+                'is_tgl1' => $d->day === 1,
+                'entries' => $entries,
+            ];
+        }
+
+        $hasTgl1 = false;
+        foreach ($rows as &$r) {
+            if ($r['is_tgl1']) {
+                $hasTgl1 = true;
+                $r['sisa'] = $r['masuk'] - $r['keluar'];
+                $runningSisa = $r['sisa'];
+            } else {
+                $runningSisa -= $r['keluar'];
+                $r['sisa'] = $runningSisa;
+            }
+        }
+        unset($r);
+
+        return $rows;
+    }
+
+    private function buildNbManualData(array $config): array
+    {
+        $savedManual = $config['manual_data'] ?? [];
+        if (! is_array($savedManual)) {
+            $savedManual = [];
+        }
+
+        return $savedManual;
     }
 
     public function destroy(Report $report): RedirectResponse

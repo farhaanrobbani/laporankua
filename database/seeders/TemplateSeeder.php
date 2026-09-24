@@ -434,5 +434,37 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+
+        // Laporan NB
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan NB'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'plan_level' => 'premium',
+                'sort_order' => 10,
+                'output_format' => 'print',
+                'description' => 'Laporan NB - Catatan Pendaftaran Nikah',
+                'fields_json' => ['Tanggal Daftar', 'Nama Suami', 'Nama Istri', 'Nomor Daftar'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Tanggal Daftar', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'landscape',
+                    'table_layout' => [
+                        'type' => 'laporan_nb',
+                        'aggregation' => [
+                            'date_filter_field' => 'Tanggal Daftar',
+                        ],
+                        'manual_columns' => [
+                            'Masuk',
+                            'Penerimaan',
+                            'Keterangan',
+                        ],
+                        'columns' => [],
+                    ],
+                ],
+            ]
+        );
     }
 }

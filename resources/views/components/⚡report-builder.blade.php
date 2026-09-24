@@ -216,6 +216,9 @@ new class extends Component
         if (($this->tableLayout['type'] ?? '') === 'rekap_ntcr') {
             $this->initNtcrManualData();
         }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_nb') {
+            $this->initNbManualData();
+        }
     }
 
     private function initManualData(): void
@@ -562,6 +565,22 @@ new class extends Component
         $this->manualData = $rows;
     }
 
+    private function initNbManualData(): void
+    {
+        $existing = [];
+        if ($this->manualData) {
+            if (is_array($this->manualData)) {
+                foreach ($this->manualData as $key => $value) {
+                    if (is_string($key) && $key !== '') {
+                        $existing[$key] = $value;
+                    }
+                }
+            }
+        }
+
+        $this->manualData = $existing;
+    }
+
     private function buildSeriRange(string $awal, string $akhir): string
     {
         if ($awal === '' && $akhir === '') {
@@ -642,6 +661,10 @@ new class extends Component
             }
 
             return $data;
+        }
+
+        if (($this->tableLayout['type'] ?? '') === 'laporan_nb') {
+            return $this->manualData ?? [];
         }
 
         $data = array_map(function ($row) {
@@ -753,6 +776,9 @@ new class extends Component
         }
         if (($this->tableLayout['type'] ?? '') === 'rekap_ntcr') {
             $this->initNtcrManualData();
+        }
+        if (($this->tableLayout['type'] ?? '') === 'laporan_nb') {
+            $this->initNbManualData();
         }
     }
 
@@ -948,7 +974,7 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
-                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr']) ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1014,7 +1040,7 @@ new class extends Component
                 'merged_import_ids' => $this->mergeImportIds,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
-                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr']) ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1513,6 +1539,57 @@ new class extends Component
                                             <input type="number" min="0" wire:model.live="manualData.{{ $i }}.{{ $col }}" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
                                         </td>
                                     @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- 3c. Isi Data Manual (Laporan NB) --}}
+        @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'laporan_nb')
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Data Manual</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi data Masuk (tanggal 1), Penerimaan (tanggal 1), dan Keterangan per tanggal.</p>
+                <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    <table class="min-w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-700">
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Tanggal</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Uraian</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Masuk</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Penerimaan</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($this->preview['rows'] as $row)
+                                @php
+                                    $tglKey = $row['tanggal_key'] ?? '';
+                                    $isTgl1 = $row['is_tgl1'] ?? false;
+                                    $md = $this->manualData[$tglKey] ?? ['masuk' => '', 'penerimaan' => '', 'keterangan' => ''];
+                                @endphp
+                                <tr>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs">{{ $row['tanggal'] ?? '' }}</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs">{{ $row['uraian'] ?? '' }}</td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isTgl1)
+                                            <input type="number" min="0" wire:model.live="manualData.{{ $tglKey }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isTgl1)
+                                            <input type="text" wire:model.live="manualData.{{ $tglKey }}.penerimaan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="No. Penerimaan" />
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        <input type="text" wire:model.live="manualData.{{ $tglKey }}.keterangan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Keterangan" />
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
