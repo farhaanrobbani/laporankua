@@ -372,6 +372,10 @@ class ReportsController extends Controller
                             $kelurahan = $desaSuami;
                         } elseif ($matchIstri) {
                             $kelurahan = $desaIstri;
+                        } else {
+                            $raw = trim((string) ($pdk['Alamat Istri'] ?? ''));
+                            $words = preg_split('/\s+/', $raw);
+                            $kelurahan = implode(' ', array_slice($words ?? [], 0, 5));
                         }
                     }
                     $dataRow['Kelurahan'] = $kelurahan;
