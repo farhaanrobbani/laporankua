@@ -522,29 +522,6 @@ class ReportsController extends Controller
             }
         }
 
-        $duplikatCount = 0;
-        foreach ($allRows as $row) {
-            $keterangan = mb_strtolower(trim((string) ($row['Keterangan'] ?? '')));
-            if ($keterangan !== 'duplikat') {
-                continue;
-            }
-            $tanggalCetak = $row['Tanggal Cetak'] ?? null;
-            if ($tanggalCetak !== null && $tanggalCetak !== '') {
-                try {
-                    $date = Carbon::parse($tanggalCetak);
-                    if ($filterMonth !== null && $filterMonth !== '' && (int) $date->month !== (int) $filterMonth) {
-                        continue;
-                    }
-                    if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
-                        continue;
-                    }
-                } catch (\Exception $e) {
-                    continue;
-                }
-            }
-            $duplikatCount++;
-        }
-
         $naVersions = [];
         foreach ($groups as $prefix => $data) {
             if ($data['count'] === 0) {
@@ -587,8 +564,6 @@ class ReportsController extends Controller
                     $row['keluar_seri_akhir'] = '';
                     $row['keluar_seri'] = $row['masuk_seri'] ?? '';
                 }
-            } elseif ($formulir === 'Model DN') {
-                $row['keluar_jumlah'] = (string) $duplikatCount;
             }
 
             $masuk = (int) ($row['masuk_jumlah'] ?? 0);
