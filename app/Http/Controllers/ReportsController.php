@@ -1226,9 +1226,9 @@ class ReportsController extends Controller
             $d = Carbon::parse($dateKey);
             $tanggal = $d->format('d/m/Y');
             $count = count($entries);
+            usort($entries, fn ($a, $b) => strnatcmp(trim((string) ($a['Nomor Daftar'] ?? '')), trim((string) ($b['Nomor Daftar'] ?? ''))));
             $nomorDaftars = array_map(fn ($r) => trim((string) ($r['Nomor Daftar'] ?? '')), $entries);
             $nomorDaftars = array_values(array_filter($nomorDaftars));
-            sort($nomorDaftars, SORT_NATURAL);
 
             if (count($nomorDaftars) > 1) {
                 $pengeluaran = $nomorDaftars[0].' - '.end($nomorDaftars);
