@@ -1298,7 +1298,16 @@
                     </div>
                 </div>
             @elseif ($isNbReport)
+                @php
+                    $lastSisa = '';
+                    foreach ($dataset['rows'] as $r) {
+                        if (isset($r['sisa']) && $r['sisa'] !== '') {
+                            $lastSisa = $r['sisa'];
+                        }
+                    }
+                @endphp
                 <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
                     <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
                         <div class="text-center">
                             <p>Mengetahui,</p>
