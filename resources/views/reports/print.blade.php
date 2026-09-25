@@ -1107,6 +1107,29 @@
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['pengeluaran'] ?? '' }}</td>
                             </tr>
                         @endforeach
+                        @php
+                            $totalMasuk = 0;
+                            $totalKeluar = 0;
+                            $lastSisa = '';
+                            foreach ($dataset['rows'] as $r) {
+                                $totalMasuk += (int) ($r['masuk'] ?? 0);
+                                $totalKeluar += (int) ($r['keluar'] ?? 0);
+                                if (isset($r['sisa']) && $r['sisa'] !== '') {
+                                    $lastSisa = $r['sisa'];
+                                }
+                            }
+                        @endphp
+                        <tr style="font-weight: bold;">
+                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $totalMasuk }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $totalKeluar }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $lastSisa }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                        </tr>
                     @else
                         @foreach ($dataset['rows'] as $rowIndex => $row)
                             <tr>
