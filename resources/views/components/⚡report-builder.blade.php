@@ -216,7 +216,7 @@ new class extends Component
         if (($this->tableLayout['type'] ?? '') === 'rekap_ntcr') {
             $this->initNtcrManualData();
         }
-        if (($this->tableLayout['type'] ?? '') === 'laporan_nb') {
+        if (($this->tableLayout['type'] ?? '') === 'laporan_nb' || ($this->tableLayout['type'] ?? '') === 'laporan_n') {
             $this->initNbManualData();
         }
     }
@@ -684,7 +684,7 @@ new class extends Component
             return $data;
         }
 
-        if (($this->tableLayout['type'] ?? '') === 'laporan_nb') {
+        if (($this->tableLayout['type'] ?? '') === 'laporan_nb' || ($this->tableLayout['type'] ?? '') === 'laporan_n') {
             return $this->manualData ?? [];
         }
 
@@ -798,7 +798,7 @@ new class extends Component
         if (($this->tableLayout['type'] ?? '') === 'rekap_ntcr') {
             $this->initNtcrManualData();
         }
-        if (($this->tableLayout['type'] ?? '') === 'laporan_nb') {
+        if (($this->tableLayout['type'] ?? '') === 'laporan_nb' || ($this->tableLayout['type'] ?? '') === 'laporan_n') {
             $this->initNbManualData();
         }
     }
@@ -995,7 +995,7 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
-                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb']) ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1061,7 +1061,7 @@ new class extends Component
                 'merged_import_ids' => $this->mergeImportIds,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
-                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb']) ? $this->buildManualDataForSave() : null,
+                'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1569,7 +1569,7 @@ new class extends Component
         @endif
 
         {{-- 3c. Isi Data Manual (Laporan NB) --}}
-        @if ($this->preview && ($this->tableLayout['type'] ?? '') === 'laporan_nb')
+        @if ($this->preview && (($this->tableLayout['type'] ?? '') === 'laporan_nb' || ($this->tableLayout['type'] ?? '') === 'laporan_n'))
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Data Manual</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi data stok masuk dan penerimaan. Baris tanggal 1 untuk stok masuk, baris lainnya untuk keluar.</p>

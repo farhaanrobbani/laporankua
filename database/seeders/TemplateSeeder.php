@@ -465,5 +465,36 @@ class TemplateSeeder extends Seeder
                 ],
             ]
         );
+
+        // Laporan N
+        ReportTemplate::firstOrCreate(
+            ['name' => 'Laporan N'],
+            [
+                'user_id' => $systemUser->id,
+                'is_global' => true,
+                'is_active' => true,
+                'plan_level' => 'premium',
+                'sort_order' => 11,
+                'output_format' => 'print',
+                'description' => 'Laporan N - Catatan Peristiwa Nikah',
+                'fields_json' => ['Tanggal Nikah', 'Nama Suami', 'Nama Istri', 'Nomor Akta Nikah'],
+                'filters_json' => ['search' => null, 'filter_column' => null, 'filter_value' => null],
+                'sorting_json' => ['column' => 'Tanggal Nikah', 'direction' => 'asc'],
+                'layout_json' => [
+                    'orientation' => 'landscape',
+                    'table_layout' => [
+                        'type' => 'laporan_n',
+                        'aggregation' => [
+                            'date_filter_field' => 'Tanggal Nikah',
+                        ],
+                        'manual_columns' => [
+                            'Masuk',
+                            'Penerimaan',
+                        ],
+                        'columns' => [],
+                    ],
+                ],
+            ]
+        );
     }
 }

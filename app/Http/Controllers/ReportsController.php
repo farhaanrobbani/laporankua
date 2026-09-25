@@ -404,6 +404,11 @@ class ReportsController extends Controller
             $dataset['config_json']['manual_data'] = $this->buildNbManualData($config);
         }
 
+        if (($config['table_layout']['type'] ?? '') === 'laporan_n') {
+            $dataset['rows'] = $this->buildNData($config, $user, $filterMonth, $filterYear);
+            $dataset['config_json']['manual_data'] = $this->buildNManualData($config);
+        }
+
         if (($config['table_layout']['type'] ?? '') === 'formulir') {
             $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
         }
@@ -1315,6 +1320,210 @@ class ReportsController extends Controller
     }
 
     private function buildNbManualData(array $config): array
+    {
+        $savedManual = $config['manual_data'] ?? [];
+        if (! is_array($savedManual)) {
+            $savedManual = [];
+        }
+
+        return $savedManual;
+    }
+
+    private function buildNData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear): array
+    {
+        $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
+            ->where('status', 'success')
+            ->pluck('id');
+        $pnRows = [];
+        if ($pnImports->isNotEmpty()) {
+            $pnRaw = ImportData::whereIn('import_id', $pnImports)
+                ->pluck('row_data')
+                ->all();
+            foreach ($pnRaw as $r) {
+                $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $pnRows[] = $row;
+            }
+        }
+
+        $pnDedup = [];
+        $pnSeen = [];
+        foreach ($pnRows as $row) {
+            $na = trim((string) ($row['Nomor Akta Nikah'] ?? ''));
+            if ($na !== '' && ! isset($pnSeen[$na])) {
+                $pnSeen[$na] = true;
+                $pnDedup[] = $row;
+            }
+        }
+
+        $filtered = [];
+        foreach ($pnDedup as $row) {
+            $tglNikah = $row['Tanggal Nikah'] ?? '';
+            try {
+                $d = Carbon::parse($tglNikah);
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($filterYear !== null && $filterYear !== '' && (string) $d->year !== $filterYear) {
+                continue;
+            }
+            if ($filterMonth !== null && $filterMonth !== '' && (string) $d->month !== $filterMonth) {
+                continue;
+            }
+            $filtered[] = $row;
+        }
+
+        $byDate = [];
+        foreach ($filtered as $row) {
+            $tglNikah = $row['Tanggal Nikah'] ?? '';
+            try {
+                $d = Carbon::parse($tglNikah);
+            } catch (\Exception $e) {
+                continue;
+            }
+            $dateKey = $d->format('Y-m-d');
+            if (! isset($byDate[$dateKey])) {
+                $byDate[$dateKey] = [];
+            }
+            $byDate[$dateKey][] = $row;
+        }
+
+        ksort($byDate);
+
+        $manualRows = $config['manual_data'] ?? [];
+        if (! is_array($manualRows)) {
+            $manualRows = [];
+        }
+
+        $sisaRows = [];
+        $otherManualRows = [];
+        foreach ($manualRows as $mr) {
+            if (! empty($mr['is_sisa_bulan_lalu'])) {
+                $sisaRows[] = $mr;
+            } else {
+                $otherManualRows[] = $mr;
+            }
+        }
+
+        $rows = [];
+        $runningSisa = 0;
+        $rowNum = 0;
+
+        foreach ($sisaRows as $sr) {
+            $rowNum++;
+            $masuk = isset($sr['masuk']) && $sr['masuk'] !== '' ? (int) $sr['masuk'] : null;
+            $rows[] = [
+                'no' => $rowNum,
+                'tanggal' => '01/'.str_pad((string) $filterMonth, 2, '0', STR_PAD_LEFT).'/'.$filterYear,
+                'tanggal_key' => 'manual_sisa_'.$rowNum,
+                'uraian' => $sr['uraian'] ?? 'Sisa bulan lalu',
+                'masuk' => $masuk,
+                'keluar' => 0,
+                'sisa' => $masuk,
+                'satuan' => 'Lembar',
+                'penerimaan' => $sr['penerimaan'] ?? null,
+                'pengeluaran' => '',
+                'is_tgl1' => true,
+                'is_manual' => true,
+                'entries' => [],
+            ];
+            $runningSisa = $masuk ?? 0;
+        }
+
+        $matchedManual = [];
+
+        foreach ($byDate as $dateKey => $entries) {
+            $d = Carbon::parse($dateKey);
+            $tanggal = $d->format('d/m/Y');
+            $count = count($entries);
+            usort($entries, fn ($a, $b) => strnatcmp(trim((string) ($a['Nomor Akta Nikah'] ?? '')), trim((string) ($b['Nomor Akta Nikah'] ?? ''))));
+            $nomorAktas = array_map(fn ($r) => trim((string) ($r['Nomor Akta Nikah'] ?? '')), $entries);
+            $nomorAktas = array_values(array_filter($nomorAktas));
+
+            if (count($nomorAktas) > 1) {
+                $pengeluaran = $nomorAktas[0].' - '.end($nomorAktas);
+            } elseif (count($nomorAktas) === 1) {
+                $pengeluaran = $nomorAktas[0];
+            } else {
+                $pengeluaran = '';
+            }
+
+            if ($count > 1) {
+                $nama1 = trim((string) ($entries[0]['Nama Suami'] ?? ''));
+                $namaIstri1 = trim((string) ($entries[0]['Nama Istri'] ?? ''));
+                $uraian = $nama1.' - '.$namaIstri1.' Cs';
+            } else {
+                $namaSuami = trim((string) ($entries[0]['Nama Suami'] ?? ''));
+                $namaIstri = trim((string) ($entries[0]['Nama Istri'] ?? ''));
+                $uraian = $namaSuami.' - '.$namaIstri;
+            }
+
+            $md = [];
+            foreach ($otherManualRows as $mr) {
+                $mrDay = str_pad((string) ($mr['tanggal'] ?? ''), 2, '0', STR_PAD_LEFT);
+                if ($mrDay === $d->format('d') && ! in_array($mr, $matchedManual, true)) {
+                    $md = $mr;
+                    $matchedManual[] = $mr;
+                    break;
+                }
+            }
+
+            $rowNum++;
+            $rows[] = [
+                'no' => $rowNum,
+                'tanggal' => $tanggal,
+                'tanggal_key' => $dateKey,
+                'uraian' => $md['uraian'] ?? $uraian,
+                'masuk' => isset($md['masuk']) && $md['masuk'] !== '' ? (int) $md['masuk'] : null,
+                'keluar' => $count,
+                'sisa' => null,
+                'satuan' => 'Lembar',
+                'penerimaan' => $md['penerimaan'] ?? null,
+                'pengeluaran' => $pengeluaran,
+                'is_tgl1' => $d->day === 1,
+                'entries' => $entries,
+            ];
+        }
+
+        foreach ($otherManualRows as $mr) {
+            if (in_array($mr, $matchedManual, true)) {
+                continue;
+            }
+            $rowNum++;
+            $rows[] = [
+                'no' => $rowNum,
+                'tanggal' => $mr['tanggal'] ?? '',
+                'tanggal_key' => 'manual_extra_'.$rowNum,
+                'uraian' => $mr['uraian'] ?? '',
+                'masuk' => isset($mr['masuk']) && $mr['masuk'] !== '' ? (int) $mr['masuk'] : null,
+                'keluar' => 0,
+                'sisa' => null,
+                'satuan' => 'Lembar',
+                'penerimaan' => $mr['penerimaan'] ?? null,
+                'pengeluaran' => '',
+                'is_tgl1' => false,
+                'is_manual' => true,
+                'entries' => [],
+            ];
+        }
+
+        foreach ($rows as &$r) {
+            if ($r['is_manual'] ?? false) {
+                continue;
+            }
+            if ($r['is_tgl1'] && isset($r['masuk']) && $r['masuk'] !== null) {
+                $r['sisa'] = $r['masuk'] - $r['keluar'];
+                $runningSisa = $r['sisa'];
+            } else {
+                $runningSisa -= $r['keluar'];
+                $r['sisa'] = $runningSisa;
+            }
+        }
+        unset($r);
+
+        return $rows;
+    }
+
+    private function buildNManualData(array $config): array
     {
         $savedManual = $config['manual_data'] ?? [];
         if (! is_array($savedManual)) {
