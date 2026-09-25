@@ -1489,6 +1489,7 @@
             const tr = document.createElement('tr');
             tr.className = carryoverClass;
             tr.setAttribute('data-carryover', '1');
+            tr.style.pageBreakAfter = 'always';
             tr.innerHTML =
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
