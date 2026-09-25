@@ -1394,7 +1394,7 @@
                 </div>
             @elseif ($isLaporanNA)
                 <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
-                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisa }}</strong> buku.</p>
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisaVal }}</strong> buku.</p>
                     <div class="flex justify-between mt-6" style="padding-left: 90px; padding-right: 90px;">
                         <div class="text-center">
                             <p>Mengetahui,</p>
