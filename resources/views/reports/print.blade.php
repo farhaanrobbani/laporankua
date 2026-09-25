@@ -458,7 +458,7 @@
                 @endif
             </div>
 
-            <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
+            <table id="table-na" class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
                 @if ($isL1Report)
                 <thead>
                     {{-- Row 1 --}}
@@ -1467,5 +1467,104 @@
         @endif
 
     </div>
+    @if ($isLaporanNA ?? false)
+    <script>
+    (function() {
+        const TABLE_ID = 'table-na';
+        const carryoverClass = 'carryover-row';
+
+        function getPageHeightPx() {
+            const orientation = '{{ $dataset["orientation"] ?? $dataset["table_layout"]["orientation"] ?? "portrait" }}';
+            const pageH = orientation === 'landscape' ? 210 : 297;
+            const marginTop = 8, marginBottom = 15;
+            return (pageH - marginTop - marginBottom) * 3.7795275591;
+        }
+
+        function getRowSisa(row) {
+            const cells = row.querySelectorAll('td');
+            return cells.length >= 6 ? (cells[5].textContent.trim() || '0') : '0';
+        }
+
+        function makeDipindahkanRow(sisaVal) {
+            const tr = document.createElement('tr');
+            tr.className = carryoverClass;
+            tr.setAttribute('data-carryover', '1');
+            tr.innerHTML =
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;font-size:10px;">Jumlah Dipindahkan</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">' + sisaVal + '</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">NA</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">Buku</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>';
+            return tr;
+        }
+
+        function makePindahanRow(sisaVal) {
+            const tr = document.createElement('tr');
+            tr.className = carryoverClass;
+            tr.setAttribute('data-carryover', '1');
+            tr.innerHTML =
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;font-size:10px;">Jumlah Pindahan</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">' + sisaVal + '</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
+                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>';
+            return tr;
+        }
+
+        function cleanup() {
+            document.querySelectorAll('.' + carryoverClass).forEach(function(el) { el.remove(); });
+        }
+
+        function inject() {
+            cleanup();
+            var table = document.getElementById(TABLE_ID);
+            if (!table) return;
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            var rows = Array.from(tbody.querySelectorAll('tr:not([data-carryover])'));
+            if (rows.length === 0) return;
+
+            var pageH = getPageHeightPx();
+            var cumH = 0;
+            var insertions = [];
+
+            for (var i = 0; i < rows.length; i++) {
+                var h = rows[i].getBoundingClientRect().height;
+                if (cumH + h > pageH && i > 0) {
+                    var prevSisa = getRowSisa(rows[i - 1]);
+                    insertions.push({ index: i, sisa: prevSisa });
+                    cumH = h;
+                } else {
+                    cumH += h;
+                }
+            }
+
+            for (var j = insertions.length - 1; j >= 0; j--) {
+                var ins = insertions[j];
+                var ref = rows[ins.index];
+                var dipindahkan = makeDipindahkanRow(ins.sisa);
+                var pindahan = makePindahanRow(ins.sisa);
+                ref.parentNode.insertBefore(dipindahkan, ref);
+                ref.parentNode.insertBefore(pindahan, ref);
+            }
+        }
+
+        window.addEventListener('beforeprint', inject);
+        window.addEventListener('afterprint', cleanup);
+    })();
+    </script>
+    @endif
 </body>
 </html>
