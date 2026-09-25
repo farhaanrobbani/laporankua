@@ -384,7 +384,7 @@
                         <p style="font-size: 12px; padding-left: 90px;">Bulan : {{ strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? '') }}</p>
                         <div style="font-size: 12px; padding-left: 90px; padding-right: 90px; display: flex; justify-content: space-between;">
                             <span>Tahun : {{ $dataset['filter_year'] ?? $tahunName }}</span>
-                            <span>Model : N</span>
+                            <span>Model : N (Lembar)</span>
                         </div>
                     </div>
                 @else
@@ -1406,7 +1406,7 @@
                     }
                 @endphp
                 <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model N di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model N Lembar di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
                     <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
                         <div class="text-center">
                             <p>Mengetahui,</p>
