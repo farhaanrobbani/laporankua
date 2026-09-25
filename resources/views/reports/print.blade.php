@@ -849,6 +849,8 @@
                                 }
                             }
                             $prefixLength = 6;
+
+                            // Calculate running sisa from sisa bulan lalu
                             $runningSisa = [];
                             foreach ($sisaBLEntries as $sbl) {
                                 $sblMasuk = (int) ($sbl['masuk'] ?? 0);
@@ -858,6 +860,8 @@
                                 $pf = substr($sblSeri, 0, $prefixLength);
                                 $runningSisa[$pf] = $sblSisa;
                             }
+
+                            // Group data rows by date
                             $rows = $dataset['rows'] ?? [];
                             $grouped = [];
                             foreach ($rows as $row) {
@@ -869,6 +873,8 @@
                                 $grouped[$key][] = $row;
                             }
                             ksort($grouped);
+
+                            // Pre-calculate sisa per date/prefix
                             $dateSisaBD = [];
                             $dateSisaD = [];
                             foreach ($grouped as $dateKey => $dateRows) {
@@ -895,16 +901,194 @@
                                     $dateSisaD[$dateKey][$pf] = max(0, $runningSisa[$pf]);
                                 }
                             }
-                            ksort($grouped);
-                            $totalKeluar = 0;
-                            foreach ($grouped as $dateKey => $dateRows) {
-                                $totalKeluar += count($dateRows);
+
+                            // Build flat rows array
+                            $flatRows = [];
+                            foreach ($sisaBLEntries as $sblEntry) {
+                                $flatRows[] = ['type' => 'sbl', 'data' => $sblEntry];
                             }
+                            foreach ($grouped as $dateKey => $dateRows) {
+                                $byPrefix = [];
+                                foreach ($dateRows as $r) {
+                                    $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
+                                    $pf = substr((string) $p, 0, $prefixLength);
+                                    if (! isset($byPrefix[$pf])) {
+                                        $byPrefix[$pf] = ['bd' => [], 'd' => []];
+                                    }
+                                    if (mb_strtolower($r['Keterangan'] ?? '') === 'duplikat') {
+                                        $byPrefix[$pf]['d'][] = $r;
+                                    } else {
+                                        $byPrefix[$pf]['bd'][] = $r;
+                                    }
+                                }
+                                $dateDisplay = $dateKey;
+                                try { $dateDisplay = \Carbon\Carbon::parse($dateKey)->format('d/m/Y'); } catch (\Exception $e) {}
+                                foreach ($byPrefix as $pf => $pfData) {
+                                    $bukanDuplikat = $pfData['bd'];
+                                    $duplikat = $pfData['d'];
+                                    $keluarBD = count($bukanDuplikat);
+                                    $keluarD = count($duplikat);
+                                    $sisaBD = $dateSisaBD[$dateKey][$pf] ?? 0;
+                                    $sisaD = $dateSisaD[$dateKey][$pf] ?? 0;
+                                    if ($keluarBD > 0) {
+                                        $flatRows[] = ['type' => 'bd', 'date' => $dateDisplay, 'pf' => $pf, 'bukanDuplikat' => $bukanDuplikat, 'keluarBD' => $keluarBD, 'sisaBD' => $sisaBD];
+                                    }
+                                    if ($keluarD > 0) {
+                                        $flatRows[] = ['type' => 'd', 'date' => $dateDisplay, 'pf' => $pf, 'duplikat' => $duplikat, 'keluarD' => $keluarD, 'sisaD' => $sisaD];
+                                    }
+                                }
+                            }
+
+                            $rowNum = 1;
+                            $pageIndex = 0;
+                            $pageRows = 29;
+                            $pageNumber = 1;
+                            $prevPageSisa = null;
+
+                            // Calculate total sisa for Jumlah row
+                            $totalSisaVal = max(0, array_sum($runningSisa));
+                        @endphp
+                        @foreach ($flatRows as $flatRow)
+                            @if ($pageIndex >= $pageRows)
+                                @php
+                                    $pageNumber++;
+                                    $pageRows = 32;
+                                    $pageIndex = 0;
+                                    $prevPageSisa = $totalSisaVal;
+                                @endphp
+                                {{-- Jumlah row --}}
+                                <tr>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisaVal }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                </tr>
+                                {{-- Jumlah Pindahan row --}}
+                                <tr>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Pindahan</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageSisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                </tr>
+                            @endif
+                            @if ($flatRow['type'] === 'sbl')
+                                @php
+                                    $sblEntry = $flatRow['data'];
+                                    $sblMasuk = (int) ($sblEntry['masuk'] ?? 0);
+                                    $sblKeluar = (int) ($sblEntry['keluar'] ?? 0);
+                                    $sblSisa = max(0, $sblMasuk - $sblKeluar);
+                                    $sblDari = preg_replace('/^JT\s*/i', '', trim((string) ($sblEntry['seri_dari'] ?? '')));
+                                    $sblSampai = preg_replace('/^JT\s*/i', '', trim((string) ($sblEntry['seri_sampai'] ?? '')));
+                                    $sblSeriDisplay = $sblDari ? 'JT '.$sblDari.($sblSampai && $sblSampai !== $sblDari ? ' - '.$sblSampai : '') : '';
+                                @endphp
+                                <tr>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['masuk'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['keluar'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSeriDisplay }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['penerimaan'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['pengeluaran'] ?? '' }}</td>
+                                </tr>
+                                @php $pageIndex++; @endphp
+                            @elseif ($flatRow['type'] === 'bd')
+                                @php
+                                    $bukanDuplikat = $flatRow['bukanDuplikat'];
+                                    $keluarBD = $flatRow['keluarBD'];
+                                    $sisaBD = $flatRow['sisaBD'];
+                                    $porforasiNums = array_map(function ($r) {
+                                        $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
+                                        return (int) $p;
+                                    }, $bukanDuplikat);
+                                    $porforasiNums = array_filter($porforasiNums);
+                                    $seriRange = $porforasiNums ? 'JT '.min($porforasiNums).' - '.max($porforasiNums) : '';
+                                    $aktaList = array_filter(array_map(fn ($r) => $r['_nomor_akta'] ?? null, $bukanDuplikat));
+                                    $aktaNums = array_map(fn ($a) => (int) $a, $aktaList);
+                                    $aktaMin = $aktaNums ? min($aktaNums) : null;
+                                    $aktaMax = $aktaNums ? max($aktaNums) : null;
+                                    $aktaRange = $aktaMin !== null ? ($aktaMin === $aktaMax ? (string) $aktaMin : $aktaMin.' - '.$aktaMax) : '';
+                                    $uraian = '';
+                                    $names = [];
+                                    foreach ($bukanDuplikat as $bd) {
+                                        $n = trim($bd['Nama Catin'] ?? '');
+                                        if ($n !== '' && ! in_array($n, $names)) {
+                                            $names[] = $n;
+                                        }
+                                    }
+                                    $uraian = count($names) > 1 ? $names[0].' Cs.' : ($names[0] ?? '');
+                                @endphp
+                                <tr>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $flatRow['date'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $uraian }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarBD ?: '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaBD < 0 ? 0 : $sisaBD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $seriRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $aktaRange }}</td>
+                                </tr>
+                                @php $pageIndex++; @endphp
+                            @elseif ($flatRow['type'] === 'd')
+                                @php
+                                    $duplikat = $flatRow['duplikat'];
+                                    $keluarD = $flatRow['keluarD'];
+                                    $sisaD = $flatRow['sisaD'];
+                                    $dupliPorforasiNums = array_map(function ($r) {
+                                        $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
+                                        return (int) $p;
+                                    }, $duplikat);
+                                    $dupliPorforasiNums = array_filter($dupliPorforasiNums);
+                                    $dupliSeriRange = '';
+                                    if (count($dupliPorforasiNums) === 1) {
+                                        $dupliSeriRange = 'JT '.reset($dupliPorforasiNums);
+                                    } elseif (count($dupliPorforasiNums) > 1) {
+                                        $dupliSeriRange = 'JT '.min($dupliPorforasiNums).' - '.max($dupliPorforasiNums);
+                                    }
+                                @endphp
+                                <tr>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $flatRow['date'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Duplikat</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaD < 0 ? 0 : $sisaD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dupliSeriRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                </tr>
+                                @php $pageIndex++; @endphp
+                            @endif
+                        @endforeach
+                        {{-- Final Jumlah row (always at the end) --}}
+                        @php
                             $totalMasuk = 0;
                             foreach ($sisaBLEntries as $sbl) {
                                 $totalMasuk += (int) ($sbl['masuk'] ?? 0);
                             }
-                            $totalSisa = max(0, array_sum($runningSisa));
+                            $totalKeluar = count($rows);
                             $lastKeluarPerPrefix = [];
                             foreach ($grouped as $dateKey => $dateRows) {
                                 foreach ($dateRows as $r) {
@@ -939,134 +1123,14 @@
                                     }
                                 }
                             }
-                            $rowNum = 1;
                         @endphp
-                        {{-- Sisa Bulan Lalu rows --}}
-                        @foreach ($sisaBLEntries as $sblEntry)
-                            @php
-                                $sblMasuk = (int) ($sblEntry['masuk'] ?? 0);
-                                $sblKeluar = (int) ($sblEntry['keluar'] ?? 0);
-                                $sblSisa = max(0, $sblMasuk - $sblKeluar);
-                                $sblDari = preg_replace('/^JT\s*/i', '', trim((string) ($sblEntry['seri_dari'] ?? '')));
-                                $sblSampai = preg_replace('/^JT\s*/i', '', trim((string) ($sblEntry['seri_sampai'] ?? '')));
-                                $sblSeriDisplay = $sblDari ? 'JT '.$sblDari.($sblSampai && $sblSampai !== $sblDari ? ' - '.$sblSampai : '') : '';
-                            @endphp
-                            <tr>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['masuk'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['keluar'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSisa }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSeriDisplay }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['penerimaan'] ?? '' }}</td>
-                                <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['pengeluaran'] ?? '' }}</td>
-                            </tr>
-                        @endforeach
-                        @foreach ($grouped as $dateKey => $dateRows)
-                            @php
-                                $byPrefix = [];
-                                foreach ($dateRows as $r) {
-                                    $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
-                                    $pf = substr((string) $p, 0, $prefixLength);
-                                    if (! isset($byPrefix[$pf])) {
-                                        $byPrefix[$pf] = ['bd' => [], 'd' => []];
-                                    }
-                                    if (mb_strtolower($r['Keterangan'] ?? '') === 'duplikat') {
-                                        $byPrefix[$pf]['d'][] = $r;
-                                    } else {
-                                        $byPrefix[$pf]['bd'][] = $r;
-                                    }
-                                }
-                                $dateDisplay = $dateKey;
-                                try { $dateDisplay = \Carbon\Carbon::parse($dateKey)->format('d/m/Y'); } catch (\Exception $e) {}
-                            @endphp
-                            @foreach ($byPrefix as $pf => $pfData)
-                                @php
-                                    $bukanDuplikat = $pfData['bd'];
-                                    $duplikat = $pfData['d'];
-                                    $keluarBD = count($bukanDuplikat);
-                                    $keluarD = count($duplikat);
-                                    $sisaBD = $dateSisaBD[$dateKey][$pf] ?? 0;
-                                    $sisaD = $dateSisaD[$dateKey][$pf] ?? 0;
-                                    $porforasiNums = array_map(function ($r) {
-                                        $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
-                                        return (int) $p;
-                                    }, $bukanDuplikat);
-                                    $porforasiNums = array_filter($porforasiNums);
-                                    $seriRange = $porforasiNums ? 'JT '.min($porforasiNums).' - '.max($porforasiNums) : '';
-                                    $aktaList = array_filter(array_map(fn ($r) => $r['_nomor_akta'] ?? null, $bukanDuplikat));
-                                    $aktaNums = array_map(fn ($a) => (int) $a, $aktaList);
-                                    $aktaMin = $aktaNums ? min($aktaNums) : null;
-                                    $aktaMax = $aktaNums ? max($aktaNums) : null;
-                                    $aktaRange = $aktaMin !== null ? ($aktaMin === $aktaMax ? (string) $aktaMin : $aktaMin.' - '.$aktaMax) : '';
-                                    $uraian = '';
-                                    if ($keluarBD > 0) {
-                                        $names = [];
-                                        foreach ($bukanDuplikat as $bd) {
-                                            $n = trim($bd['Nama Catin'] ?? '');
-                                            if ($n !== '' && ! in_array($n, $names)) {
-                                                $names[] = $n;
-                                            }
-                                        }
-                                        $uraian = count($names) > 1 ? $names[0].' Cs.' : ($names[0] ?? '');
-                                    }
-                                    $dupliPorforasiNums = array_map(function ($r) {
-                                        $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
-                                        return (int) $p;
-                                    }, $duplikat);
-                                    $dupliPorforasiNums = array_filter($dupliPorforasiNums);
-                                    $dupliSeriRange = '';
-                                    if (count($dupliPorforasiNums) === 1) {
-                                        $dupliSeriRange = 'JT '.reset($dupliPorforasiNums);
-                                    } elseif (count($dupliPorforasiNums) > 1) {
-                                        $dupliSeriRange = 'JT '.min($dupliPorforasiNums).' - '.max($dupliPorforasiNums);
-                                    }
-                                @endphp
-                                @if ($keluarBD > 0)
-                                    {{-- Bukan Duplikat row --}}
-                                    <tr>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $dateDisplay }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $uraian }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarBD ?: '' }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaBD < 0 ? 0 : $sisaBD }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $seriRange }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $aktaRange }}</td>
-                                    </tr>
-                                @endif
-                                @if ($keluarD > 0)
-                                    {{-- Duplikat row --}}
-                                    <tr>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $dateDisplay }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Duplikat</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarD }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaD < 0 ? 0 : $sisaD }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dupliSeriRange }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    </tr>
-                                @endif
-                            @endforeach
-                        @endforeach
-                        {{-- Jumlah row --}}
                         <tr>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                             <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
                             <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalMasuk ?: '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalKeluar }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisa }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisaVal }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold; white-space:pre-line;">{{ implode("\n", $remainingRanges) }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
@@ -1467,104 +1531,5 @@
         @endif
 
     </div>
-    @if ($isLaporanNA ?? false)
-    <script>
-    (function() {
-        const TABLE_ID = 'table-na';
-        const carryoverClass = 'carryover-row';
-
-        function getPageHeightPx() {
-            const orientation = '{{ $dataset["orientation"] ?? $dataset["table_layout"]["orientation"] ?? "portrait" }}';
-            const pageH = orientation === 'landscape' ? 210 : 297;
-            const marginTop = 8, marginBottom = 15;
-            return (pageH - marginTop - marginBottom) * 3.7795275591;
-        }
-
-        function getRowSisa(row) {
-            const cells = row.querySelectorAll('td');
-            return cells.length >= 6 ? (cells[5].textContent.trim() || '0') : '0';
-        }
-
-        function makeDipindahkanRow(sisaVal) {
-            const tr = document.createElement('tr');
-            tr.className = carryoverClass;
-            tr.setAttribute('data-carryover', '1');
-            tr.innerHTML =
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;font-size:10px;">Jumlah</td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">' + sisaVal + '</td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">NA</td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">Buku</td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>';
-            return tr;
-        }
-
-        function makePindahanRow(sisaVal) {
-            const tr = document.createElement('tr');
-            tr.className = carryoverClass;
-            tr.setAttribute('data-carryover', '1');
-            tr.innerHTML =
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;font-size:10px;">Jumlah Pindahan</td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">' + sisaVal + '</td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>';
-            return tr;
-        }
-
-        function cleanup() {
-            document.querySelectorAll('.' + carryoverClass).forEach(function(el) { el.remove(); });
-        }
-
-        function inject() {
-            cleanup();
-            var table = document.getElementById(TABLE_ID);
-            if (!table) return;
-            var tbody = table.querySelector('tbody');
-            if (!tbody) return;
-            var rows = Array.from(tbody.querySelectorAll('tr:not([data-carryover])'));
-            if (rows.length === 0) return;
-
-            var pageH = getPageHeightPx();
-            var cumH = 0;
-            var insertions = [];
-
-            for (var i = 0; i < rows.length; i++) {
-                var h = rows[i].getBoundingClientRect().height;
-                if (cumH + h > pageH && i > 0) {
-                    var prevSisa = getRowSisa(rows[i - 1]);
-                    insertions.push({ index: i, sisa: prevSisa });
-                    cumH = h;
-                } else {
-                    cumH += h;
-                }
-            }
-
-            for (var j = insertions.length - 1; j >= 0; j--) {
-                var ins = insertions[j];
-                var ref = rows[ins.index];
-                var dipindahkan = makeDipindahkanRow(ins.sisa);
-                var pindahan = makePindahanRow(ins.sisa);
-                ref.parentNode.insertBefore(dipindahkan, ref);
-                ref.parentNode.insertBefore(pindahan, ref);
-            }
-        }
-
-        window.addEventListener('beforeprint', inject);
-        window.addEventListener('afterprint', cleanup);
-    })();
-    </script>
-    @endif
 </body>
 </html>
