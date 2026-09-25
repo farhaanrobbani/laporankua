@@ -241,7 +241,7 @@
                 $isL1Report = ($layout['type'] ?? '') === 'laporan_l1';
                 $isNtcrReport = ($layout['type'] ?? '') === 'rekap_ntcr';
                 $isNbReport = ($layout['type'] ?? '') === 'laporan_nb';
-                if ($isLaporanNA && ($hariName === '-' || $tanggalFormatted === '-')) {
+                if (($isLaporanNA || $isNbReport) && ($hariName === '-' || $tanggalFormatted === '-')) {
                     $filterMonth = (int) ($dataset['filter_month'] ?? 0);
                     $filterYear = (int) ($dataset['filter_year'] ?? 0);
                     if ($filterMonth > 0 && $filterYear > 0) {
