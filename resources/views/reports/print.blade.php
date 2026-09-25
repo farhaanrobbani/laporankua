@@ -1059,11 +1059,11 @@
                                 @endif
                             @endforeach
                         @endforeach
-                        {{-- Jumlah dipindahkan row --}}
+                        {{-- Jumlah row --}}
                         <tr>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                             <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah dipindahkan</td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalMasuk ?: '' }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalKeluar }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisa }}</td>
@@ -1489,11 +1489,10 @@
             const tr = document.createElement('tr');
             tr.className = carryoverClass;
             tr.setAttribute('data-carryover', '1');
-            tr.style.pageBreakAfter = 'always';
             tr.innerHTML =
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
-                '<td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;font-size:10px;">Jumlah Dipindahkan</td>' +
+                '<td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;font-size:10px;">Jumlah</td>' +
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;"></td>' +
                 '<td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;font-size:10px;">' + sisaVal + '</td>' +
