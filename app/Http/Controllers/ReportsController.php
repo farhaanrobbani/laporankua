@@ -1228,6 +1228,7 @@ class ReportsController extends Controller
             $count = count($entries);
             $nomorDaftars = array_map(fn ($r) => trim((string) ($r['Nomor Daftar'] ?? '')), $entries);
             $nomorDaftars = array_values(array_filter($nomorDaftars));
+            sort($nomorDaftars, SORT_NATURAL);
 
             if (count($nomorDaftars) > 1) {
                 $pengeluaran = $nomorDaftars[0].' - '.end($nomorDaftars);
