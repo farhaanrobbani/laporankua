@@ -369,10 +369,13 @@
                         </div>
                     </div>
                 @elseif ($isNbReport)
-                    <div class="text-center mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px;">LAPORAN NB</h1>
-                        <p class="uppercase" style="font-size: 12px;">KANTOR URUSAN AGAMA KECAMATAN {{ strtoupper($dataset['kecamatan'] ?? '') }}</p>
-                        <p style="font-size: 12px;">BULAN {{ strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? '') }} {{ $dataset['filter_year'] ?? $tahunName }}</p>
+                    <div class="mb-3">
+                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 90px;">BUKU STOK KHUSUS</h1>
+                        <p style="font-size: 12px; padding-left: 90px;">Bulan : {{ strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? '') }}</p>
+                        <div style="font-size: 12px; padding-left: 90px; padding-right: 90px; display: flex; justify-content: space-between;">
+                            <span>Tahun : {{ $dataset['filter_year'] ?? $tahunName }}</span>
+                            <span>Model : NB</span>
+                        </div>
                     </div>
                 @else
                         @if (! empty($dataset['logo_kantor']))
