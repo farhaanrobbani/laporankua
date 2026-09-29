@@ -1596,7 +1596,7 @@
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-center gap-32">
+                            <div class="flex justify-center gap-40">
                                 <div class="text-center">
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
@@ -1617,7 +1617,7 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8 flex justify-center gap-32">
+                            <div class="mt-8 flex justify-center gap-40">
                                 <div class="flex gap-4">
                                     <p class="font-medium">Anggota:</p>
                                     <div>
@@ -1716,7 +1716,7 @@
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-center gap-32">
+                            <div class="flex justify-center gap-40">
                                 <div class="text-center">
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
@@ -1737,7 +1737,7 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8 flex justify-center gap-32">
+                            <div class="mt-8 flex justify-center gap-40">
                                 <div class="flex gap-4">
                                     <p class="font-medium">Anggota:</p>
                                     <div>
@@ -1816,7 +1816,7 @@
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-center gap-32">
+                            <div class="flex justify-center gap-40">
                                 <div class="text-center">
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
@@ -1837,7 +1837,7 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8 flex justify-center gap-32">
+                            <div class="mt-8 flex justify-center gap-40">
                                 <div class="flex gap-4">
                                     <p class="font-medium">Anggota:</p>
                                     <div>
