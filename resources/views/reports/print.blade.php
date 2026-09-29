@@ -981,17 +981,18 @@
                             $totalKeluarVal = count($rows);
                         @endphp
                         @foreach ($flatRows as $fi => $flatRow)
-                            @if ($needsPageBreak)
-                                @php
-                                    $pageNumber++;
-                                    $pageRows = 32;
-                                    $pageIndex = 0;
-                                    $needsPageBreak = false;
-                                    $prevPageSisa = $totalSisaVal;
-                                    $prevPageMasuk = $runningMasuk;
-                                    $prevPageKeluar = $runningKeluar;
-                                @endphp
-                                {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
+                                @if ($needsPageBreak)
+                                    @php
+                                        $pageNumber++;
+                                        $pageRows = 32;
+                                        $pageIndex = 0;
+                                        $needsPageBreak = false;
+                                        $prevPageSisa = $totalSisaVal;
+                                        $prevPageMasuk = $runningMasuk;
+                                        $prevPageKeluar = $runningKeluar;
+                                    @endphp
+                                    <div style="page-break-before: always;"></div>
+                                    {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                 <tr>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                     <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
@@ -1042,7 +1043,7 @@
                                 @endphp
                                 @if ($needsPageBreak)
                                     {{-- Jumlah Dipindahkan row (bottom of current page) --}}
-                                    <tr class="break-after-page">
+                                    <tr>
                                         <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
                                         <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
                                         <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Dipindahkan</td>
