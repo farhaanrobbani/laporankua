@@ -1595,29 +1595,45 @@
                         <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $totalSisaVal }}</strong> buku.</p>
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
-                        <div class="flex flex-wrap justify-center gap-x-16 gap-y-8 mt-6">
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
-                            </div>
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala Kantor Kemenag</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
-                            </div>
-                            @foreach (($dataset['config_json']['monev_members'] ?? []) as $member)
+                        <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
                                 <div class="text-center">
-                                    <br>
-                                    <p>Anggota</p>
+                                    <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
-                                    <p class="font-semibold">{{ $member }}</p>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
                                 </div>
-                            @endforeach
+                                <div class="text-center">
+                                    <p>Mengetahui,</p>
+                                    <p>Kasi Bimas Islam</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                                </div>
+                            </div>
+                            @php
+                                $monevMembers = $dataset['config_json']['monev_members'] ?? [];
+                                $monevHalf = ceil(count($monevMembers) / 2);
+                                $monevLeft = array_slice($monevMembers, 0, $monevHalf);
+                                $monevRight = array_slice($monevMembers, $monevHalf);
+                            @endphp
+                            <div class="mt-8" style="padding-left: 90px; padding-right: 90px;">
+                                <div class="flex justify-between">
+                                    <div class="flex gap-4">
+                                        <p class="font-medium">Anggota:</p>
+                                        <div>
+                                            @foreach ($monevLeft as $i => $member)
+                                                <p>{{ $i + 1 }}. {{ $member }}</p>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @foreach ($monevRight as $i => $member)
+                                            <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
@@ -1701,29 +1717,45 @@
                         <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
-                        <div class="flex flex-wrap justify-center gap-x-16 gap-y-8 mt-6">
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
-                            </div>
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala Kantor Kemenag</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
-                            </div>
-                            @foreach (($dataset['config_json']['monev_members'] ?? []) as $member)
+                        <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
                                 <div class="text-center">
-                                    <br>
-                                    <p>Anggota</p>
+                                    <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
-                                    <p class="font-semibold">{{ $member }}</p>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
                                 </div>
-                            @endforeach
+                                <div class="text-center">
+                                    <p>Mengetahui,</p>
+                                    <p>Kasi Bimas Islam</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                                </div>
+                            </div>
+                            @php
+                                $monevMembers = $dataset['config_json']['monev_members'] ?? [];
+                                $monevHalf = ceil(count($monevMembers) / 2);
+                                $monevLeft = array_slice($monevMembers, 0, $monevHalf);
+                                $monevRight = array_slice($monevMembers, $monevHalf);
+                            @endphp
+                            <div class="mt-8" style="padding-left: 90px; padding-right: 90px;">
+                                <div class="flex justify-between">
+                                    <div class="flex gap-4">
+                                        <p class="font-medium">Anggota:</p>
+                                        <div>
+                                            @foreach ($monevLeft as $i => $member)
+                                                <p>{{ $i + 1 }}. {{ $member }}</p>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @foreach ($monevRight as $i => $member)
+                                            <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
@@ -1787,29 +1819,45 @@
                         <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model N Lembar di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
-                        <div class="flex flex-wrap justify-center gap-x-16 gap-y-8 mt-6">
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
-                            </div>
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala Kantor Kemenag</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
-                            </div>
-                            @foreach (($dataset['config_json']['monev_members'] ?? []) as $member)
+                        <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
                                 <div class="text-center">
-                                    <br>
-                                    <p>Anggota</p>
+                                    <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
-                                    <p class="font-semibold">{{ $member }}</p>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
                                 </div>
-                            @endforeach
+                                <div class="text-center">
+                                    <p>Mengetahui,</p>
+                                    <p>Kasi Bimas Islam</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                                </div>
+                            </div>
+                            @php
+                                $monevMembers = $dataset['config_json']['monev_members'] ?? [];
+                                $monevHalf = ceil(count($monevMembers) / 2);
+                                $monevLeft = array_slice($monevMembers, 0, $monevHalf);
+                                $monevRight = array_slice($monevMembers, $monevHalf);
+                            @endphp
+                            <div class="mt-8" style="padding-left: 90px; padding-right: 90px;">
+                                <div class="flex justify-between">
+                                    <div class="flex gap-4">
+                                        <p class="font-medium">Anggota:</p>
+                                        <div>
+                                            @foreach ($monevLeft as $i => $member)
+                                                <p>{{ $i + 1 }}. {{ $member }}</p>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @foreach ($monevRight as $i => $member)
+                                            <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
