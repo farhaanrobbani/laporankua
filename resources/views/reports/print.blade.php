@@ -963,7 +963,7 @@
 
                             $rowNum = 1;
                             $pageIndex = 0;
-                            $pageRows = 17;
+                            $pageRows = 28;
                             $pageNumber = 1;
                             $prevPageSisa = null;
                             $prevPageMasuk = null;
@@ -1058,7 +1058,7 @@
                                     $pageIndex++;
                                     $runningMasuk += $sblMasuk;
                                     $runningKeluar += $sblKeluar;
-                                    if ($pageIndex >= $pageRows && $fi < $flatCount - 1) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > 17 && $flatCount <= 28)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1123,7 +1123,7 @@
                                     $pageIndex++;
                                     $runningKeluar += $keluarBD;
                                     $sisaState[$flatRow['pf']] = $sisaBD;
-                                    if ($pageIndex >= $pageRows && $fi < $flatCount - 1) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > 17 && $flatCount <= 28)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1179,7 +1179,7 @@
                                     $pageIndex++;
                                     $runningKeluar += $keluarD;
                                     $sisaState[$flatRow['pf']] = $sisaD;
-                                    if ($pageIndex >= $pageRows && $fi < $flatCount - 1) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > 17 && $flatCount <= 28)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1203,6 +1203,56 @@
                                 @endif
                             @endif
                         @endforeach
+                        {{-- Buka halaman baru jika break terjadi di baris terakhir (data 18-28 baris) --}}
+                        @if ($needsPageBreak)
+                            @php
+                                $pageNumber++;
+                                $pageRows = 32;
+                                $pageIndex = 0;
+                                $needsPageBreak = false;
+                                $prevPageSisa = $totalSisaVal;
+                                $prevPageMasuk = $runningMasuk;
+                                $prevPageKeluar = $runningKeluar;
+                            @endphp
+                            </tbody></table>
+                            <div style="page-break-before: always;"></div>
+                            <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tanggal</th>
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Uraian</th>
+                                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
+                                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">NA, RA, atau DN</th>
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
+                                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
+                                    </tr>
+                                    <tr class="bg-gray-100">
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Masuk</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keluar</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Sisa</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Model</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Seri/Nomor</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Penerimaan</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="font-size: 11px;">
+                                    {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
+                                    <tr>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Pindahan dari halaman sebelumnya</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageSisa }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    </tr>
+                        @endif
                         {{-- Final Jumlah row (always at the end) --}}
                         @php
                             $totalSisaVal = max(0, array_sum($sisaState));
