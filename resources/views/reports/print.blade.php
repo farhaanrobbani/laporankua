@@ -1596,7 +1596,7 @@
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-between" style="padding-left: 20px; padding-right: 20px;">
+                            <div class="flex justify-center gap-24">
                                 <div class="text-center">
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
@@ -1617,21 +1617,19 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8" style="padding-left: 20px; padding-right: 20px;">
-                                <div class="flex justify-between">
-                                    <div class="flex gap-4">
-                                        <p class="font-medium">Anggota:</p>
-                                        <div>
-                                            @foreach ($monevLeft as $i => $member)
-                                                <p>{{ $i + 1 }}. {{ $member }}</p>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                            <div class="mt-8 flex justify-center gap-24">
+                                <div class="flex gap-4">
+                                    <p class="font-medium">Anggota:</p>
                                     <div>
-                                        @foreach ($monevRight as $i => $member)
-                                            <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                        @foreach ($monevLeft as $i => $member)
+                                            <p>{{ $i + 1 }}. {{ $member }}</p>
                                         @endforeach
                                     </div>
+                                </div>
+                                <div>
+                                    @foreach ($monevRight as $i => $member)
+                                        <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
@@ -1718,7 +1716,7 @@
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-between" style="padding-left: 20px; padding-right: 20px;">
+                            <div class="flex justify-center gap-24">
                                 <div class="text-center">
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
@@ -1739,21 +1737,19 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8" style="padding-left: 20px; padding-right: 20px;">
-                                <div class="flex justify-between">
-                                    <div class="flex gap-4">
-                                        <p class="font-medium">Anggota:</p>
-                                        <div>
-                                            @foreach ($monevLeft as $i => $member)
-                                                <p>{{ $i + 1 }}. {{ $member }}</p>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                            <div class="mt-8 flex justify-center gap-24">
+                                <div class="flex gap-4">
+                                    <p class="font-medium">Anggota:</p>
                                     <div>
-                                        @foreach ($monevRight as $i => $member)
-                                            <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                        @foreach ($monevLeft as $i => $member)
+                                            <p>{{ $i + 1 }}. {{ $member }}</p>
                                         @endforeach
                                     </div>
+                                </div>
+                                <div>
+                                    @foreach ($monevRight as $i => $member)
+                                        <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
@@ -1820,7 +1816,7 @@
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-between" style="padding-left: 20px; padding-right: 20px;">
+                            <div class="flex justify-center gap-24">
                                 <div class="text-center">
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
@@ -1841,21 +1837,19 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8" style="padding-left: 20px; padding-right: 20px;">
-                                <div class="flex justify-between">
-                                    <div class="flex gap-4">
-                                        <p class="font-medium">Anggota:</p>
-                                        <div>
-                                            @foreach ($monevLeft as $i => $member)
-                                                <p>{{ $i + 1 }}. {{ $member }}</p>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                            <div class="mt-8 flex justify-center gap-24">
+                                <div class="flex gap-4">
+                                    <p class="font-medium">Anggota:</p>
                                     <div>
-                                        @foreach ($monevRight as $i => $member)
-                                            <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                        @foreach ($monevLeft as $i => $member)
+                                            <p>{{ $i + 1 }}. {{ $member }}</p>
                                         @endforeach
                                     </div>
+                                </div>
+                                <div>
+                                    @foreach ($monevRight as $i => $member)
+                                        <p>{{ $i + 1 + count($monevLeft) }}. {{ $member }}</p>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
