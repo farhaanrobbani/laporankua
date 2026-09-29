@@ -1046,9 +1046,15 @@
                                     $sblSampai = preg_replace('/^JT\s*/i', '', trim((string) ($sblEntry['seri_sampai'] ?? '')));
                                     $sblSeriDisplay = $sblDari ? 'JT '.$sblDari.($sblSampai && $sblSampai !== $sblDari ? ' - '.$sblSampai : '') : '';
                                 @endphp
+                                @php
+                                    $sblDate = '01/'.str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT).'/'.($dataset['filter_year'] ?? '');
+                                    if (!empty($dataset['filter_date_from'])) {
+                                        try { $sblDate = \Carbon\Carbon::parse($dataset['filter_date_from'])->format('d/m/Y'); } catch (\Exception $e) {}
+                                    }
+                                @endphp
                                 <tr>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblDate }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $sblEntry['uraian'] !== '' && $sblEntry['uraian'] !== null ? $sblEntry['uraian'] : 'Sisa bulan lalu' }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['masuk'] ?? '' }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['keluar'] ?? '' }}</td>
@@ -1365,7 +1371,13 @@
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
                                 @if ($row['is_manual'] ?? false)
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
+                                    @php
+                                        $sblDate = '01/'.str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT).'/'.($dataset['filter_year'] ?? '');
+                                        if (!empty($dataset['filter_date_from'])) {
+                                            try { $sblDate = \Carbon\Carbon::parse($dataset['filter_date_from'])->format('d/m/Y'); } catch (\Exception $e) {}
+                                        }
+                                    @endphp
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sblDate }}</td>
                                 @else
                                     <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] ?? '' }}</td>
                                 @endif
@@ -1406,7 +1418,13 @@
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
                                 @if ($row['is_manual'] ?? false)
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
+                                    @php
+                                        $sblDate = '01/'.str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT).'/'.($dataset['filter_year'] ?? '');
+                                        if (!empty($dataset['filter_date_from'])) {
+                                            try { $sblDate = \Carbon\Carbon::parse($dataset['filter_date_from'])->format('d/m/Y'); } catch (\Exception $e) {}
+                                        }
+                                    @endphp
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $sblDate }}</td>
                                 @else
                                     <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] ?? '' }}</td>
                                 @endif

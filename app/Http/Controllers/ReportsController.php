@@ -281,6 +281,8 @@ class ReportsController extends Controller
             }
             $dataset['filter_month'] = $filterMonth;
             $dataset['filter_year'] = $filterYear;
+            $dataset['filter_date_from'] = $filterDateFrom;
+            $dataset['filter_date_to'] = $filterDateTo;
         }
 
         $user = $report->user;
