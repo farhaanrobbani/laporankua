@@ -72,6 +72,8 @@ new class extends Component
 
     public string $closureReason = 'akhir_bulan';
 
+    public string $gantiKepalaSk = '';
+
     /** @var array<int, array{nama: string}> */
     public array $monevMembers = [];
 
@@ -1015,6 +1017,7 @@ new class extends Component
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
+                'ganti_kepala_sk' => $this->closureReason === 'ganti_kepala' ? $this->gantiKepalaSk : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1083,6 +1086,7 @@ new class extends Component
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
+                'ganti_kepala_sk' => $this->closureReason === 'ganti_kepala' ? $this->gantiKepalaSk : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1549,6 +1553,13 @@ new class extends Component
                             </button>
                         </div>
                     @endif
+                    @if ($closureReason === 'ganti_kepala')
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SK Serah Terima Jabatan</label>
+                            <input type="text" wire:model="gantiKepalaSk" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" placeholder="SK Kepala Kanwil ... nomor: ... Tanggal: ..." />
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: SK Kepala Kanwil Jawa Timur nomor: 914.46/KW.13.01/KP.07.6 Tanggal: 31 Juli 2026</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         @endif
@@ -1730,6 +1741,13 @@ new class extends Component
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 Tambah Anggota
                             </button>
+                        </div>
+                    @endif
+                    @if ($closureReason === 'ganti_kepala')
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SK Serah Terima Jabatan</label>
+                            <input type="text" wire:model="gantiKepalaSk" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" placeholder="SK Kepala Kanwil ... nomor: ... Tanggal: ..." />
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: SK Kepala Kanwil Jawa Timur nomor: 914.46/KW.13.01/KP.07.6 Tanggal: 31 Juli 2026</p>
                         </div>
                     @endif
                 </div>
