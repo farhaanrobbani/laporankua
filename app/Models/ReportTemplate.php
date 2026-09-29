@@ -50,7 +50,7 @@ class ReportTemplate extends Model
         return $this->hasMany(Report::class);
     }
 
-    public function scopeForPlan($query, string $plan)
+    public function scopeForPlan($query, ?string $plan)
     {
         if ($plan === 'premium') {
             return $query;
