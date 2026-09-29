@@ -1415,7 +1415,9 @@ new class extends Component
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">{{ $i + 1 }}</td>
                                     @if ($isSisaBL)
-                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">Sisa bulan lalu</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Sisa bulan lalu" />
+                                        </td>
                                     @else
                                         <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                             <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />
@@ -1598,7 +1600,9 @@ new class extends Component
                                         </td>
                                     @endif
                                     @if ($isSisaBL)
-                                        <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300">Sisa bulan lalu</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                            <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Sisa bulan lalu" />
+                                        </td>
                                     @else
                                         <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                             <input type="text" wire:model.live="manualData.{{ $i }}.uraian" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="Uraian" />

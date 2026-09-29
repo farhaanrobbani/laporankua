@@ -986,7 +986,7 @@
                                 <tr>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">01/{{ str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT) }}/{{ $dataset['filter_year'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Sisa bulan lalu</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $sblEntry['uraian'] !== '' && $sblEntry['uraian'] !== null ? $sblEntry['uraian'] : 'Sisa bulan lalu' }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['masuk'] ?? '' }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['keluar'] ?? '' }}</td>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSisa }}</td>
