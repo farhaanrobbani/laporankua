@@ -82,7 +82,9 @@ class ReportsController extends Controller
 
         $filterMonth = $config['filter_month'] ?? null;
         $filterYear = $config['filter_year'] ?? null;
-        $hasDateFilter = ($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '');
+        $filterDateFrom = $config['filter_date_from'] ?? null;
+        $filterDateTo = $config['filter_date_to'] ?? null;
+        $hasDateFilter = ($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '') || ($filterDateFrom !== null && $filterDateFrom !== '') || ($filterDateTo !== null && $filterDateTo !== '');
         $dateFilterField = $config['table_layout']['aggregation']['date_filter_field'] ?? 'Tanggal Nikah';
 
         if (! empty($config['is_merged']) && ! empty($config['merged_import_ids'])) {
@@ -237,7 +239,7 @@ class ReportsController extends Controller
             }
 
             if ($tanggalNikahField !== null) {
-                $dataset['rows'] = array_values(array_filter($dataset['rows'], function ($row) use ($tanggalNikahField, $filterMonth, $filterYear) {
+                $dataset['rows'] = array_values(array_filter($dataset['rows'], function ($row) use ($tanggalNikahField, $filterMonth, $filterYear, $filterDateFrom, $filterDateTo) {
                     $dateVal = $row[$tanggalNikahField] ?? null;
                     if ($dateVal === null || $dateVal === '') {
                         return false;
@@ -252,6 +254,18 @@ class ReportsController extends Controller
                     }
                     if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
                         return false;
+                    }
+                    if ($filterDateFrom !== null && $filterDateFrom !== '') {
+                        $from = Carbon::parse($filterDateFrom)->startOfDay();
+                        if ($date->lt($from)) {
+                            return false;
+                        }
+                    }
+                    if ($filterDateTo !== null && $filterDateTo !== '') {
+                        $to = Carbon::parse($filterDateTo)->endOfDay();
+                        if ($date->gt($to)) {
+                            return false;
+                        }
                     }
 
                     return true;
@@ -295,7 +309,7 @@ class ReportsController extends Controller
         $dataset['config_json'] = $config;
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_l1') {
-            $rows = $this->buildL1Data($config, $user, $filterMonth, $filterYear);
+            $rows = $this->buildL1Data($config, $user, $filterMonth, $filterYear, $filterDateFrom, $filterDateTo);
             $dataset['rows'] = $this->mergeL1ManualData($config, $rows);
         }
 
@@ -404,12 +418,12 @@ class ReportsController extends Controller
         }
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_nb') {
-            $dataset['rows'] = $this->buildNbData($config, $user, $filterMonth, $filterYear);
+            $dataset['rows'] = $this->buildNbData($config, $user, $filterMonth, $filterYear, $filterDateFrom, $filterDateTo);
             $dataset['config_json']['manual_data'] = $this->buildNbManualData($config);
         }
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_n') {
-            $dataset['rows'] = $this->buildNData($config, $user, $filterMonth, $filterYear);
+            $dataset['rows'] = $this->buildNData($config, $user, $filterMonth, $filterYear, $filterDateFrom, $filterDateTo);
             $dataset['config_json']['manual_data'] = $this->buildNManualData($config);
         }
 
@@ -634,7 +648,7 @@ class ReportsController extends Controller
         return ['sisa_bulan_lalu' => $saved['sisa_bulan_lalu'] ?? []];
     }
 
-    private function buildL1Data(array $config, ?User $user, ?string $filterMonth = null, ?string $filterYear = null): array
+    private function buildL1Data(array $config, ?User $user, ?string $filterMonth = null, ?string $filterYear = null, ?string $filterDateFrom = null, ?string $filterDateTo = null): array
     {
         $importIds = $config['merged_import_ids'] ?? [];
         $daftarDesa = $user?->daftar_desa ?? [];
@@ -653,8 +667,8 @@ class ReportsController extends Controller
         }
 
         // Filter peristiwa nikah by Tanggal Nikah if month/year filter is set
-        if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '')) {
-            $pnRows = array_values(array_filter($pnRows, function ($row) use ($filterMonth, $filterYear) {
+        if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '') || ($filterDateFrom !== null && $filterDateFrom !== '') || ($filterDateTo !== null && $filterDateTo !== '')) {
+            $pnRows = array_values(array_filter($pnRows, function ($row) use ($filterMonth, $filterYear, $filterDateFrom, $filterDateTo) {
                 $dateVal = $row['Tanggal Nikah'] ?? null;
                 if ($dateVal === null || $dateVal === '') {
                     return false;
@@ -669,6 +683,18 @@ class ReportsController extends Controller
                 }
                 if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
                     return false;
+                }
+                if ($filterDateFrom !== null && $filterDateFrom !== '') {
+                    $from = Carbon::parse($filterDateFrom)->startOfDay();
+                    if ($date->lt($from)) {
+                        return false;
+                    }
+                }
+                if ($filterDateTo !== null && $filterDateTo !== '') {
+                    $to = Carbon::parse($filterDateTo)->endOfDay();
+                    if ($date->gt($to)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -1129,7 +1155,7 @@ class ReportsController extends Controller
         return $rows;
     }
 
-    private function buildNbData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear): array
+    private function buildNbData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear, ?string $filterDateFrom = null, ?string $filterDateTo = null): array
     {
         $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
             ->where('status', 'success')
@@ -1168,6 +1194,18 @@ class ReportsController extends Controller
             }
             if ($filterMonth !== null && $filterMonth !== '' && (string) $d->month !== $filterMonth) {
                 continue;
+            }
+            if ($filterDateFrom !== null && $filterDateFrom !== '') {
+                $from = Carbon::parse($filterDateFrom)->startOfDay();
+                if ($d->lt($from)) {
+                    continue;
+                }
+            }
+            if ($filterDateTo !== null && $filterDateTo !== '') {
+                $to = Carbon::parse($filterDateTo)->endOfDay();
+                if ($d->gt($to)) {
+                    continue;
+                }
             }
             $filtered[] = $row;
         }
@@ -1333,7 +1371,7 @@ class ReportsController extends Controller
         return $savedManual;
     }
 
-    private function buildNData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear): array
+    private function buildNData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear, ?string $filterDateFrom = null, ?string $filterDateTo = null): array
     {
         $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
             ->where('status', 'success')
@@ -1372,6 +1410,18 @@ class ReportsController extends Controller
             }
             if ($filterMonth !== null && $filterMonth !== '' && (string) $d->month !== $filterMonth) {
                 continue;
+            }
+            if ($filterDateFrom !== null && $filterDateFrom !== '') {
+                $from = Carbon::parse($filterDateFrom)->startOfDay();
+                if ($d->lt($from)) {
+                    continue;
+                }
+            }
+            if ($filterDateTo !== null && $filterDateTo !== '') {
+                $to = Carbon::parse($filterDateTo)->endOfDay();
+                if ($d->gt($to)) {
+                    continue;
+                }
             }
             $filtered[] = $row;
         }

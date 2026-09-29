@@ -41,6 +41,10 @@ new class extends Component
 
     public string $filterYear = '';
 
+    public string $filterDateFrom = '';
+
+    public string $filterDateTo = '';
+
     /** @var array{headings: string[], rows: array, total: int}|null */
     public ?array $preview = null;
 
@@ -310,6 +314,8 @@ new class extends Component
 
         $filterMonth = $this->filterMonth !== '' ? (int) $this->filterMonth : null;
         $filterYear = $this->filterYear !== '' ? (int) $this->filterYear : null;
+        $filterDateFrom = $this->filterDateFrom;
+        $filterDateTo = $this->filterDateTo;
 
         foreach ($allRows as $row) {
             $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
@@ -329,6 +335,18 @@ new class extends Component
                     }
                     if ($filterYear !== null && (int) $date->year !== $filterYear) {
                         continue;
+                    }
+                    if ($filterDateFrom !== '') {
+                        $from = \Carbon\Carbon::parse($filterDateFrom)->startOfDay();
+                        if ($date->lt($from)) {
+                            continue;
+                        }
+                    }
+                    if ($filterDateTo !== '') {
+                        $to = \Carbon\Carbon::parse($filterDateTo)->endOfDay();
+                        if ($date->gt($to)) {
+                            continue;
+                        }
                     }
                 } catch (\Exception $e) {
                     continue;
@@ -932,10 +950,12 @@ new class extends Component
 
         $filterMonth = $this->filterMonth;
         $filterYear = $this->filterYear;
+        $filterDateFrom = $this->filterDateFrom;
+        $filterDateTo = $this->filterDateTo;
 
         $this->preview['rows'] = array_values(array_filter(
             $this->preview['rows'],
-            function ($row) use ($tanggalNikahField, $filterMonth, $filterYear) {
+            function ($row) use ($tanggalNikahField, $filterMonth, $filterYear, $filterDateFrom, $filterDateTo) {
                 $dateVal = $row[$tanggalNikahField] ?? null;
                 if ($dateVal === null || $dateVal === '') {
                     return false;
@@ -950,6 +970,22 @@ new class extends Component
                 }
                 if ($filterYear !== '' && (int) $date->year !== (int) $filterYear) {
                     return false;
+                }
+                if ($filterDateFrom !== '') {
+                    try {
+                        $from = \Carbon\Carbon::parse($filterDateFrom)->startOfDay();
+                        if ($date->lt($from)) {
+                            return false;
+                        }
+                    } catch (\Exception $e) {}
+                }
+                if ($filterDateTo !== '') {
+                    try {
+                        $to = \Carbon\Carbon::parse($filterDateTo)->endOfDay();
+                        if ($date->gt($to)) {
+                            return false;
+                        }
+                    } catch (\Exception $e) {}
                 }
 
                 return true;
@@ -1013,6 +1049,8 @@ new class extends Component
                 'orientation' => $this->orientation,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
+                'filter_date_from' => $this->filterDateFrom ?: null,
+                'filter_date_to' => $this->filterDateTo ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
@@ -1083,6 +1121,8 @@ new class extends Component
                 'merged_import_ids' => $this->mergeImportIds,
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
+                'filter_date_from' => $this->filterDateFrom ?: null,
+                'filter_date_to' => $this->filterDateTo ?: null,
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
@@ -1260,6 +1300,14 @@ new class extends Component
                                 @endfor
                             </select>
                         </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter Tanggal (Rentang)</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="date" wire:model.live="filterDateFrom" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" />
+                            <input type="date" wire:model.live="filterDateTo" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" />
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Kosongkan untuk memakai seluruh bulan. Isi untuk membatasi rentang tanggal.</p>
                     </div>
                 @endif
                 <button type="button" wire:click="loadPreview" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">Muat Pratinjau</button>
@@ -1557,7 +1605,7 @@ new class extends Component
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SK Serah Terima Jabatan</label>
                             <input type="text" wire:model="gantiKepalaSk" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" placeholder="SK Kepala Kanwil ... nomor: ... Tanggal: ..." />
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: SK Kepala Kanwil Jawa Timur nomor: 914.46/KW.13.01/KP.07.6 Tanggal: 31 Juli 2026</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: SK Kepala Kanwil [Kota] nomor: [nomor SK] Tanggal: [tanggal SK]</p>
                         </div>
                     @endif
                 </div>
@@ -1747,7 +1795,7 @@ new class extends Component
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SK Serah Terima Jabatan</label>
                             <input type="text" wire:model="gantiKepalaSk" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" placeholder="SK Kepala Kanwil ... nomor: ... Tanggal: ..." />
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: SK Kepala Kanwil Jawa Timur nomor: 914.46/KW.13.01/KP.07.6 Tanggal: 31 Juli 2026</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: SK Kepala Kanwil [Kota] nomor: [nomor SK] Tanggal: [tanggal SK]</p>
                         </div>
                     @endif
                 </div>
