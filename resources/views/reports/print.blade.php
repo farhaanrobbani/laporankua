@@ -583,27 +583,6 @@
                         <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
                     </tr>
                 </thead>
-                @elseif ($isLaporanNA)
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tanggal</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Uraian</th>
-                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
-                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">NA, RA, atau DN</th>
-                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
-                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
-                    </tr>
-                    <tr class="bg-gray-100">
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Masuk</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keluar</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Sisa</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Model</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Seri/Nomor</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Penerimaan</th>
-                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
-                    </tr>
-                </thead>
                 @else
                 <thead>
                     <tr class="bg-gray-100">
