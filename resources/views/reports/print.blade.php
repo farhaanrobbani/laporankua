@@ -232,6 +232,11 @@
                 $countAll = $countK + $countLK;
                 $hariName = $lastDate ? $monthDays[$lastDate->dayOfWeek] : '-';
                 $tanggalFormatted = $lastDate ? $lastDate->day . ' ' . $monthNames[$lastDate->month] . ' ' . $lastDate->year : '-';
+                $closureReasonText = match ($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') {
+                    'monev' => 'ada monev',
+                    'ganti_kepala' => 'ganti kepala',
+                    default => 'akhir bulan',
+                };
                 $bulanName = $dataset['bulan_override'] ?? ($lastDate ? $monthNames[$lastDate->month] : '-');
                 $tahunName = $dataset['tahun_override'] ?? ($lastDate ? $lastDate->year : '-');
                 $isL2Report = !empty($dataset['table_layout']['aggregation']) && empty($dataset['table_layout']['aggregation']['date_filter_field']) && ($layout['type'] ?? '') !== 'grouped_detail' && ($layout['type'] ?? '') !== 'formulir' && ($layout['type'] ?? '') !== 'laporan_na' && ($layout['type'] ?? '') !== 'laporan_l1' && ($layout['type'] ?? '') !== 'rekap_ntcr' && ($layout['type'] ?? '') !== 'laporan_nb';
@@ -1566,23 +1571,74 @@
                 </div>
             @elseif ($isLaporanNA)
                 <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
-                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisaVal }}</strong> buku.</p>
-                    <div class="flex justify-between mt-6" style="padding-left: 90px; padding-right: 90px;">
-                        <div class="text-center">
-                            <p>Mengetahui,</p>
-                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                            <div class="h-16"></div>
-                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $totalSisaVal }}</strong> buku.</p>
+                    @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
+                        <div class="flex flex-wrap justify-center gap-x-16 gap-y-8 mt-6">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala Kantor Kemenag</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            </div>
+                            @foreach (($dataset['config_json']['monev_members'] ?? []) as $member)
+                                <div class="text-center">
+                                    <br>
+                                    <p>Anggota</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $member }}</p>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="text-center">
-                            <br>
-                            <p>Petugas Stok</p>
-                            <div class="h-16"></div>
-                            <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
-                            <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                    @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
+                        <div class="flex justify-between mt-6" style="padding-left: 60px; padding-right: 60px;">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA Lama</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Kepala KUA</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Kepala Kantor Kemenag</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="flex justify-between mt-6" style="padding-left: 90px; padding-right: 90px;">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Petugas Stok</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @elseif ($isL1Report)
                 <div class="mt-4 flex justify-end" style="font-size: 12px; page-break-inside: avoid;">
@@ -1614,23 +1670,74 @@
                     }
                 @endphp
                 <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
-                    <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
-                        <div class="text-center">
-                            <p>Mengetahui,</p>
-                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                            <div class="h-16"></div>
-                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
+                    @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
+                        <div class="flex flex-wrap justify-center gap-x-16 gap-y-8 mt-6">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala Kantor Kemenag</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            </div>
+                            @foreach (($dataset['config_json']['monev_members'] ?? []) as $member)
+                                <div class="text-center">
+                                    <br>
+                                    <p>Anggota</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $member }}</p>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="text-center">
-                            <br>
-                            <p>Petugas Stok</p>
-                            <div class="h-16"></div>
-                            <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
-                            <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                    @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
+                        <div class="flex justify-between mt-6" style="padding-left: 60px; padding-right: 60px;">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA Lama</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Kepala KUA</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Kepala Kantor Kemenag</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Petugas Stok</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @elseif ($isNReport)
                 @php
@@ -1642,23 +1749,74 @@
                     }
                 @endphp
                 <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model N Lembar di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
-                    <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
-                        <div class="text-center">
-                            <p>Mengetahui,</p>
-                            <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
-                            <div class="h-16"></div>
-                            <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                            <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                    <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model N Lembar di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
+                    @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
+                        <div class="flex flex-wrap justify-center gap-x-16 gap-y-8 mt-6">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala Kantor Kemenag</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            </div>
+                            @foreach (($dataset['config_json']['monev_members'] ?? []) as $member)
+                                <div class="text-center">
+                                    <br>
+                                    <p>Anggota</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $member }}</p>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="text-center">
-                            <br>
-                            <p>Petugas Stok</p>
-                            <div class="h-16"></div>
-                            <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
-                            <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                    @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
+                        <div class="flex justify-between mt-6" style="padding-left: 60px; padding-right: 60px;">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA Lama</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Kepala KUA</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Kepala Kantor Kemenag</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                            <div class="text-center">
+                                <p>Mengetahui,</p>
+                                <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                            </div>
+                            <div class="text-center">
+                                <br>
+                                <p>Petugas Stok</p>
+                                <div class="h-16"></div>
+                                <p class="font-semibold">{{ $dataset['nama_petugas_stok'] ?? '-' }}</p>
+                                <p>NIP {{ $dataset['nip_petugas_stok'] ?? '-' }}</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @else
                     <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>

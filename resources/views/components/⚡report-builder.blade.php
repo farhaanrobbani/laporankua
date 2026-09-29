@@ -70,6 +70,11 @@ new class extends Component
     /** @var array<int, array{masuk_jumlah: string, masuk_seri: string, keluar_jumlah: string, keluar_seri: string, sisa_jumlah: string, sisa_seri: string, keterangan: string}> */
     public array $manualData = [];
 
+    public string $closureReason = 'akhir_bulan';
+
+    /** @var array<int, array{nama: string}> */
+    public array $monevMembers = [];
+
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
@@ -602,6 +607,18 @@ new class extends Component
         }
     }
 
+    public function addMonevMember(): void
+    {
+        $this->monevMembers[] = ['nama' => ''];
+    }
+
+    public function removeMonevMember(int $index): void
+    {
+        if (isset($this->monevMembers[$index])) {
+            array_splice($this->monevMembers, $index, 1);
+        }
+    }
+
     private function buildSeriRange(string $awal, string $akhir): string
     {
         if ($awal === '' && $akhir === '') {
@@ -996,6 +1013,8 @@ new class extends Component
                 'filter_year' => $this->filterYear ?: null,
                 'merged_import_ids' => $this->selectedImportIds,
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
+                'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
+                'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1062,6 +1081,8 @@ new class extends Component
                 'filter_month' => $this->filterMonth ?: null,
                 'filter_year' => $this->filterYear ?: null,
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
+                'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
+                'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
             'generated_at' => $this->format === 'print' ? now() : null,
@@ -1107,6 +1128,10 @@ new class extends Component
             'font_size_kop_kantor' => $user->font_size_kop_kantor ?? null,
             'font_size_kop_alamat' => $user->font_size_kop_alamat ?? null,
             'font_size_kop_kontak' => $user->font_size_kop_kontak ?? null,
+            'nama_kepala_kua_lama' => $user->nama_kepala_kua_lama ?? null,
+            'nip_kepala_lama' => $user->nip_kepala_lama ?? null,
+            'nama_kepala_kemenag' => $user->nama_kepala_kemenag ?? null,
+            'nip_kepala_kemenag' => $user->nip_kepala_kemenag ?? null,
         ];
     }
 };
@@ -1488,6 +1513,42 @@ new class extends Component
                             </tr>
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Tutup Buku</label>
+                        <select wire:model.live="closureReason" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-64">
+                            <option value="akhir_bulan">Akhir Bulan</option>
+                            <option value="monev">Ada Monev</option>
+                            <option value="ganti_kepala">Ganti Kepala</option>
+                        </select>
+                    </div>
+                    @if ($closureReason === 'monev')
+                        <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded-md p-4">
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Penandatangan Monev</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p class="font-medium text-gray-700 dark:text-gray-300">Kepala KUA</p>
+                                    <p>{{ auth()->user()->nama_kepala_kua ?? '-' }}</p>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p class="font-medium text-gray-700 dark:text-gray-300">Kepala Kantor Kemenag</p>
+                                    <p>{{ auth()->user()->nama_kepala_kemenag ?? '-' }}</p>
+                                </div>
+                            </div>
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Anggota Monev</label>
+                            @foreach ($monevMembers as $i => $member)
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="text" wire:model.live="monevMembers.{{ $i }}.nama" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1" placeholder="Nama anggota" />
+                                    <button wire:click="removeMonevMember({{ $i }})" type="button" class="text-red-400 hover:text-red-600 shrink-0" title="Hapus">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                            <button wire:click="addMonevMember" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 mt-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Tambah Anggota
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         @endif
@@ -1635,6 +1696,42 @@ new class extends Component
                             </tr>
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Tutup Buku</label>
+                        <select wire:model.live="closureReason" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-64">
+                            <option value="akhir_bulan">Akhir Bulan</option>
+                            <option value="monev">Ada Monev</option>
+                            <option value="ganti_kepala">Ganti Kepala</option>
+                        </select>
+                    </div>
+                    @if ($closureReason === 'monev')
+                        <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded-md p-4">
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Penandatangan Monev</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p class="font-medium text-gray-700 dark:text-gray-300">Kepala KUA</p>
+                                    <p>{{ auth()->user()->nama_kepala_kua ?? '-' }}</p>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p class="font-medium text-gray-700 dark:text-gray-300">Kepala Kantor Kemenag</p>
+                                    <p>{{ auth()->user()->nama_kepala_kemenag ?? '-' }}</p>
+                                </div>
+                            </div>
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Anggota Monev</label>
+                            @foreach ($monevMembers as $i => $member)
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="text" wire:model.live="monevMembers.{{ $i }}.nama" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1" placeholder="Nama anggota" />
+                                    <button wire:click="removeMonevMember({{ $i }})" type="button" class="text-red-400 hover:text-red-600 shrink-0" title="Hapus">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                            <button wire:click="addMonevMember" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 mt-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Tambah Anggota
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         @endif

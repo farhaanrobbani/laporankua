@@ -63,6 +63,29 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="nama_kepala_kua_lama" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kepala KUA Lama</label>
+                    <input type="text" id="nama_kepala_kua_lama" name="nama_kepala_kua_lama" value="{{ old('nama_kepala_kua_lama', $user->nama_kepala_kua_lama) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                    @error('nama_kepala_kua_lama') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nip_kepala_lama" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NIP Kepala KUA Lama</label>
+                    <input type="text" id="nip_kepala_lama" name="nip_kepala_lama" value="{{ old('nip_kepala_lama', $user->nip_kepala_lama) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                    @error('nip_kepala_lama') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nama_kepala_kemenag" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kepala Kantor Kemenag</label>
+                    <input type="text" id="nama_kepala_kemenag" name="nama_kepala_kemenag" value="{{ old('nama_kepala_kemenag', $user->nama_kepala_kemenag) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                    @error('nama_kepala_kemenag') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nip_kepala_kemenag" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NIP Kepala Kantor Kemenag</label>
+                    <input type="text" id="nip_kepala_kemenag" name="nip_kepala_kemenag" value="{{ old('nip_kepala_kemenag', $user->nip_kepala_kemenag) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                    @error('nip_kepala_kemenag') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             <div class="flex items-center gap-4 pt-2">
                 <button type="submit" style="background-color: #111827; color: #fff;" class="px-4 py-2 text-sm font-semibold rounded-md hover:opacity-90">Simpan Perubahan</button>
                 @if (session('status') === 'profile-updated')
