@@ -1447,6 +1447,45 @@
                     </div>
                 </div>
             @elseif ($isLaporanNA)
+                @if (count($flatRows) > 17)
+                <table class="w-full border-collapse border border-gray-700" style="font-size: 10px; margin-top: 12px; margin-bottom: 12px;">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
+                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tanggal</th>
+                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Uraian</th>
+                            <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
+                            <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">NA, RA, atau DN</th>
+                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
+                            <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
+                        </tr>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Masuk</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keluar</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Sisa</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Model</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Seri/Nomor</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Penerimaan</th>
+                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Pindahan</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageMasuk }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageKeluar }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageSisa }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                @endif
                 <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NA di tutup karena akhir bulan dengan keadaan mengurus <strong>{{ $totalSisaVal }}</strong> buku.</p>
                     <div class="flex justify-between mt-6" style="padding-left: 90px; padding-right: 90px;">
