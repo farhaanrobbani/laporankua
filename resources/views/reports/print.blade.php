@@ -944,6 +944,8 @@
                             $pageRows = 28;
                             $pageNumber = 1;
                             $prevPageSisa = null;
+                            $prevPageMasuk = null;
+                            $prevPageKeluar = null;
                             $needsPageBreak = false;
                             $flatCount = count($flatRows);
 
