@@ -941,7 +941,7 @@
 
                             $rowNum = 1;
                             $pageIndex = 0;
-                            $pageRows = 28;
+                            $pageRows = 17;
                             $pageNumber = 1;
                             $prevPageSisa = null;
                             $prevPageMasuk = null;
