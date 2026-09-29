@@ -295,6 +295,7 @@ class ReportsController extends Controller
         $dataset['nip_kepala_lama'] = $config['nip_kepala_lama'] ?? $user?->nip_kepala_lama;
         $dataset['nama_kepala_kemenag'] = $config['nama_kepala_kemenag'] ?? $user?->nama_kepala_kemenag;
         $dataset['nip_kepala_kemenag'] = $config['nip_kepala_kemenag'] ?? $user?->nip_kepala_kemenag;
+        $dataset['kota_kabupaten'] = $config['kota_kabupaten'] ?? $user?->kota_kabupaten;
         $dataset['nama_kementerian'] = $config['nama_kementerian'] ?? null;
         $dataset['nama_kantor_kota'] = $config['nama_kantor_kota'] ?? null;
         $dataset['nama_kantor'] = $config['nama_kantor'] ?? null;

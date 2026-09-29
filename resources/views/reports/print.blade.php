@@ -1620,27 +1620,30 @@
                             @endforeach
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
-                        <div class="flex justify-between mt-6" style="padding-left: 60px; padding-right: 60px;">
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala KUA Lama</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                        <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                                <div class="text-center">
+                                    <p>Yang menerima,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p>Yang menyerahkan,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <br>
-                                <p>Kepala KUA</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
-                            </div>
-                            <div class="text-center">
-                                <br>
-                                <p>Kepala Kantor Kemenag</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            <div class="flex justify-center mt-8">
+                                <div class="text-center">
+                                    <p>Mengetahui,</p>
+                                    <p>A.n. Kepala Kankemenag {{ $dataset['kota_kabupaten'] ?? '' }}</p>
+                                    <p>Kasi Bimas Islam</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                                </div>
                             </div>
                         </div>
                     @else
@@ -1723,27 +1726,30 @@
                             @endforeach
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
-                        <div class="flex justify-between mt-6" style="padding-left: 60px; padding-right: 60px;">
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala KUA Lama</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                        <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                                <div class="text-center">
+                                    <p>Yang menerima,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p>Yang menyerahkan,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <br>
-                                <p>Kepala KUA</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
-                            </div>
-                            <div class="text-center">
-                                <br>
-                                <p>Kepala Kantor Kemenag</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            <div class="flex justify-center mt-8">
+                                <div class="text-center">
+                                    <p>Mengetahui,</p>
+                                    <p>A.n. Kepala Kankemenag {{ $dataset['kota_kabupaten'] ?? '' }}</p>
+                                    <p>Kasi Bimas Islam</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                                </div>
                             </div>
                         </div>
                     @else
@@ -1806,27 +1812,30 @@
                             @endforeach
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
-                        <div class="flex justify-between mt-6" style="padding-left: 60px; padding-right: 60px;">
-                            <div class="text-center">
-                                <p>Mengetahui,</p>
-                                <p>Kepala KUA Lama</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                        <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
+                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                                <div class="text-center">
+                                    <p>Yang menerima,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p>Yang menyerahkan,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kua_lama'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_lama'] ?? '-' }}</p>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <br>
-                                <p>Kepala KUA</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala'] ?? '-' }}</p>
-                            </div>
-                            <div class="text-center">
-                                <br>
-                                <p>Kepala Kantor Kemenag</p>
-                                <div class="h-16"></div>
-                                <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
-                                <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                            <div class="flex justify-center mt-8">
+                                <div class="text-center">
+                                    <p>Mengetahui,</p>
+                                    <p>A.n. Kepala Kankemenag {{ $dataset['kota_kabupaten'] ?? '' }}</p>
+                                    <p>Kasi Bimas Islam</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-semibold">{{ $dataset['nama_kepala_kemenag'] ?? '-' }}</p>
+                                    <p>NIP {{ $dataset['nip_kepala_kemenag'] ?? '-' }}</p>
+                                </div>
                             </div>
                         </div>
                     @else

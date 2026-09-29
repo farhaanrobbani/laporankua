@@ -1176,6 +1176,7 @@ new class extends Component
             'nip_kepala_lama' => $user->nip_kepala_lama ?? null,
             'nama_kepala_kemenag' => $user->nama_kepala_kemenag ?? null,
             'nip_kepala_kemenag' => $user->nip_kepala_kemenag ?? null,
+            'kota_kabupaten' => $user->kota_kabupaten ?? null,
         ];
     }
 };

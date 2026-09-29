@@ -103,6 +103,7 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'kecamatan' => ['nullable', 'string', 'max:255'],
+            'kota_kabupaten' => ['nullable', 'string', 'max:255'],
             'daftar_desa' => ['nullable', 'string'],
         ]);
 
@@ -110,6 +111,7 @@ class ProfileController extends Controller
 
         $request->user()->fill([
             'kecamatan' => $validated['kecamatan'] ?: null,
+            'kota_kabupaten' => $validated['kota_kabupaten'] ?: null,
             'daftar_desa' => empty($desa) ? null : $desa,
         ])->save();
 

@@ -17,6 +17,12 @@
             </div>
 
             <div>
+                <label for="kota_kabupaten" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kota/Kabupaten</label>
+                <input type="text" id="kota_kabupaten" name="kota_kabupaten" value="{{ old('kota_kabupaten', $user->kota_kabupaten) }}" placeholder="Contoh: Kab. Malang" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
+                @error('kota_kabupaten') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @error
+            </div>
+
+            <div>
                 <label for="daftar_desa" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Daftar Desa (satu per baris)</label>
                 <textarea id="daftar_desa" name="daftar_desa" rows="12" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm font-mono text-xs">{{ is_array($user->daftar_desa) ? implode("\n", $user->daftar_desa) : '' }}</textarea>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contoh: Masukkan satu nama desa per baris. Desa akan muncul di laporan meskipun tidak ada data pernikahan di bulan tersebut.</p>
