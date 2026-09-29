@@ -39,7 +39,7 @@
                                         @if ($report->output_format === 'print')
                                             <a href="{{ route('reports.print', $report) }}" target="_blank" class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium">Print</a>
                                         @endif
-                                        <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-delete-report-{{ $report->id }}')">Hapus</x-danger-button>
+                                        <a href="#" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-delete-report-{{ $report->id }}')" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium">Hapus</a>
 
                                         <x-modal name="confirm-delete-report-{{ $report->id }}" :show="false" focusable>
                                             <form method="POST" action="{{ route('reports.destroy', $report) }}" class="p-6">
