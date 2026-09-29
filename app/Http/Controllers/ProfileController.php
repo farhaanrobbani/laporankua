@@ -54,7 +54,7 @@ class ProfileController extends Controller
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $validated = $request->only(['name', 'email', 'kecamatan', 'nama_kepala_kua', 'nip_kepala', 'nama_petugas_stok', 'nip_petugas_stok', 'nama_kepala_kua_lama', 'nip_kepala_lama', 'nama_kepala_kemenag', 'nip_kepala_kemenag']);
+        $validated = $request->only(['name', 'email', 'nama_kepala_kua', 'nip_kepala', 'nama_petugas_stok', 'nip_petugas_stok', 'nama_kepala_kua_lama', 'nip_kepala_lama', 'nama_kepala_kemenag', 'nip_kepala_kemenag']);
 
         $request->user()->fill($validated);
 
@@ -102,12 +102,14 @@ class ProfileController extends Controller
     public function updateDesa(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'kecamatan' => ['nullable', 'string', 'max:255'],
             'daftar_desa' => ['nullable', 'string'],
         ]);
 
         $desa = array_values(array_filter(array_map('trim', explode("\n", $validated['daftar_desa']))));
 
         $request->user()->fill([
+            'kecamatan' => $validated['kecamatan'] ?: null,
             'daftar_desa' => empty($desa) ? null : $desa,
         ])->save();
 

@@ -32,12 +32,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="kecamatan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kecamatan</label>
-                    <input type="text" id="kecamatan" name="kecamatan" value="{{ old('kecamatan', $user->kecamatan) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
-                    @error('kecamatan') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="nama_kepala_kua" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kepala KUA</label>
                     <input type="text" id="nama_kepala_kua" name="nama_kepala_kua" value="{{ old('nama_kepala_kua', $user->nama_kepala_kua) }}" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
