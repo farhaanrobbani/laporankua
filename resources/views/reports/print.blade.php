@@ -969,6 +969,8 @@
                             $rowNum = 1;
                             $pageIndex = 0;
                             $pageRows = 28;
+                            $isMonev = ($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev';
+                            $extraPageThreshold = $isMonev ? 8 : 17;
                             $pageNumber = 1;
                             $prevPageSisa = null;
                             $prevPageMasuk = null;
@@ -1069,7 +1071,7 @@
                                     $pageIndex++;
                                     $runningMasuk += $sblMasuk;
                                     $runningKeluar += $sblKeluar;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > 17 && $flatCount <= 28)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 28)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1134,7 +1136,7 @@
                                     $pageIndex++;
                                     $runningKeluar += $keluarBD;
                                     $sisaState[$flatRow['pf']] = $sisaBD;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > 17 && $flatCount <= 28)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 28)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1190,7 +1192,7 @@
                                     $pageIndex++;
                                     $runningKeluar += $keluarD;
                                     $sisaState[$flatRow['pf']] = $sisaD;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > 17 && $flatCount <= 28)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 28)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
