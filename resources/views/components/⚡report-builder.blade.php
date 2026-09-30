@@ -78,6 +78,8 @@ new class extends Component
 
     public string $gantiKepalaSk = '';
 
+    public string $monevStNumber = '';
+
     /** @var array<int, array{nama: string}> */
     public array $monevMembers = [];
 
@@ -1055,6 +1057,7 @@ new class extends Component
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
+                'monev_st_number' => $this->closureReason === 'monev' ? $this->monevStNumber : null,
                 'ganti_kepala_sk' => $this->closureReason === 'ganti_kepala' ? $this->gantiKepalaSk : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
@@ -1126,6 +1129,7 @@ new class extends Component
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
+                'monev_st_number' => $this->closureReason === 'monev' ? $this->monevStNumber : null,
                 'ganti_kepala_sk' => $this->closureReason === 'ganti_kepala' ? $this->gantiKepalaSk : null,
             ], $this->tableLayout ? ['table_layout' => $this->tableLayout] : []),
             'status' => $this->format === 'print' ? 'generated' : 'pending',
@@ -1602,6 +1606,12 @@ new class extends Component
                             </button>
                         </div>
                     @endif
+                    @if ($closureReason === 'monev')
+                        <div class="mt-3">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor ST</label>
+                            <input type="text" wire:model="monevStNumber" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" placeholder="Nomor Surat Tugas" />
+                        </div>
+                    @endif
                     @if ($closureReason === 'ganti_kepala')
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SK Serah Terima Jabatan</label>
@@ -1790,6 +1800,12 @@ new class extends Component
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 Tambah Anggota
                             </button>
+                        </div>
+                    @endif
+                    @if ($closureReason === 'monev')
+                        <div class="mt-3">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor ST</label>
+                            <input type="text" wire:model="monevStNumber" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full" placeholder="Nomor Surat Tugas" />
                         </div>
                     @endif
                     @if ($closureReason === 'ganti_kepala')
