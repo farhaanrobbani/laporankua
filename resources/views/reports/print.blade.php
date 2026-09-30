@@ -1920,6 +1920,7 @@
                     @endif
                 </div>
             @else
+                <div class="mt-6 leading-relaxed" style="font-size: 12px; page-break-inside: avoid;">
                     <p>Pada hari ini <strong>{{ $hariName }}</strong>, tanggal <strong>{{ $tanggalFormatted }}</strong>, buku rekap pendaftaran di tutup dengan keadaan sebagai berikut :</p>
                     <p class="mt-2 ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Kantor</span> : <strong>{{ $countK }}</strong> N</p>
                     <p class="ml-4"><span style="display:inline-block; width:25ch;">Jumlah Nikah Luar Kantor</span> : <strong>{{ $countLK }}</strong> N</p>
