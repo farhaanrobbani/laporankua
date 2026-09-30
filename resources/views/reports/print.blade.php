@@ -338,14 +338,15 @@
                         </div>
                     </div>
                 @elseif ($isLaporanNA)
-                    <div class="mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 90px;">BUKU STOK KHUSUS</h1>
-                        <p style="font-size: 12px; padding-left: 90px;">Bulan : {{ strtoupper($bulanName) }}</p>
-                        <div style="font-size: 12px; padding-left: 90px; padding-right: 90px; display: flex; justify-content: space-between;">
-                            <span>Tahun : {{ $tahunName }}</span>
-                            <span>Model : NA</span>
-                        </div>
-                    </div>
+                    @php
+                        $bukuStokPageStart = (int) ($dataset['config_json']['page_start'] ?? 1) ?: 1;
+                    @endphp
+                    @include('reports.partials.buku-stok-header', [
+                        'bulan' => strtoupper($bulanName),
+                        'tahun' => $tahunName,
+                        'model' => 'NA',
+                        'pageDisplay' => $bukuStokPageStart + (isset($pageNumber) ? $pageNumber - 1 : 0),
+                    ])
                 @elseif ($isL4Report)
                     <div class="flex items-start mb-3">
                         <span style="font-size: 21px; font-weight: bold;">L4</span>
@@ -375,23 +376,25 @@
                         </div>
                     </div>
                 @elseif ($isNbReport)
-                    <div class="mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 90px;">BUKU STOK KHUSUS</h1>
-                        <p style="font-size: 12px; padding-left: 90px;">Bulan : {{ strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? '') }}</p>
-                        <div style="font-size: 12px; padding-left: 90px; padding-right: 90px; display: flex; justify-content: space-between;">
-                            <span>Tahun : {{ $dataset['filter_year'] ?? $tahunName }}</span>
-                            <span>Model : NB</span>
-                        </div>
-                    </div>
+                    @php
+                        $bukuStokPageStart = (int) ($dataset['config_json']['page_start'] ?? 1) ?: 1;
+                    @endphp
+                    @include('reports.partials.buku-stok-header', [
+                        'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
+                        'tahun' => $dataset['filter_year'] ?? $tahunName,
+                        'model' => 'NB',
+                        'pageDisplay' => $bukuStokPageStart,
+                    ])
                 @elseif ($isNReport)
-                    <div class="mb-3">
-                        <h1 class="font-bold uppercase" style="font-size: 14px; text-align: left; padding-left: 90px;">BUKU STOK KHUSUS</h1>
-                        <p style="font-size: 12px; padding-left: 90px;">Bulan : {{ strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? '') }}</p>
-                        <div style="font-size: 12px; padding-left: 90px; padding-right: 90px; display: flex; justify-content: space-between;">
-                            <span>Tahun : {{ $dataset['filter_year'] ?? $tahunName }}</span>
-                            <span>Model : N (Lembar)</span>
-                        </div>
-                    </div>
+                    @php
+                        $bukuStokPageStart = (int) ($dataset['config_json']['page_start'] ?? 1) ?: 1;
+                    @endphp
+                    @include('reports.partials.buku-stok-header', [
+                        'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
+                        'tahun' => $dataset['filter_year'] ?? $tahunName,
+                        'model' => 'N (Lembar)',
+                        'pageDisplay' => $bukuStokPageStart,
+                    ])
                 @else
                         @if (! empty($dataset['logo_kantor']))
                             <table class="w-full mb-1" cellpadding="0" cellspacing="0" border="0">
@@ -1001,6 +1004,12 @@
                                     @endphp
                             </tbody></table>
                             <div style="page-break-before: always;"></div>
+                            @include('reports.partials.buku-stok-header', [
+                                'bulan' => strtoupper($bulanName),
+                                'tahun' => $tahunName,
+                                'model' => 'NA',
+                                'pageDisplay' => $bukuStokPageStart + $pageNumber - 1,
+                            ])
                             <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
                                 <thead>
                                     <tr class="bg-gray-100">
@@ -1229,6 +1238,12 @@
                             @endphp
                             </tbody></table>
                             <div style="page-break-before: always;"></div>
+                            @include('reports.partials.buku-stok-header', [
+                                'bulan' => strtoupper($bulanName),
+                                'tahun' => $tahunName,
+                                'model' => 'NA',
+                                'pageDisplay' => $bukuStokPageStart + $pageNumber - 1,
+                            ])
                             <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
                                 <thead>
                                     <tr class="bg-gray-100">

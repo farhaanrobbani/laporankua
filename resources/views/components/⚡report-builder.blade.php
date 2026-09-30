@@ -80,6 +80,8 @@ new class extends Component
 
     public string $monevStNumber = '';
 
+    public string $pageStart = '1';
+
     /** @var array<int, array{nama: string}> */
     public array $monevMembers = [];
 
@@ -1056,6 +1058,7 @@ new class extends Component
                 'merged_import_ids' => $this->selectedImportIds,
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
+                'page_start' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? ($this->pageStart !== '' ? $this->pageStart : '1') : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
                 'monev_st_number' => $this->closureReason === 'monev' ? $this->monevStNumber : null,
                 'ganti_kepala_sk' => $this->closureReason === 'ganti_kepala' ? $this->gantiKepalaSk : null,
@@ -1128,6 +1131,7 @@ new class extends Component
                 'filter_date_to' => $this->filterDateTo ?: null,
                 'manual_data' => in_array($this->tableLayout['type'] ?? '', ['formulir', 'laporan_na', 'laporan_l1', 'rekap_ntcr', 'laporan_nb', 'laporan_n']) ? $this->buildManualDataForSave() : null,
                 'closure_reason' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? $this->closureReason : null,
+                'page_start' => in_array($this->tableLayout['type'] ?? '', ['laporan_na', 'laporan_nb', 'laporan_n']) ? ($this->pageStart !== '' ? $this->pageStart : '1') : null,
                 'monev_members' => $this->closureReason === 'monev' ? array_values(array_filter(array_map(fn ($m) => trim((string) ($m['nama'] ?? '')), $this->monevMembers))) : null,
                 'monev_st_number' => $this->closureReason === 'monev' ? $this->monevStNumber : null,
                 'ganti_kepala_sk' => $this->closureReason === 'ganti_kepala' ? $this->gantiKepalaSk : null,
@@ -1571,6 +1575,11 @@ new class extends Component
                         </tbody>
                     </table>
                     <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor Halaman Awal</label>
+                        <input type="text" wire:model="pageStart" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-64" placeholder="1" />
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nomor halaman pertama. Jika laporan lebih dari 1 halaman, halaman berikutnya otomatis +1.</p>
+                    </div>
+                    <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Tutup Buku</label>
                         <select wire:model.live="closureReason" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-64">
                             <option value="akhir_bulan">Akhir Bulan</option>
@@ -1766,6 +1775,11 @@ new class extends Component
                             </tr>
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor Halaman Awal</label>
+                        <input type="text" wire:model="pageStart" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-64" placeholder="1" />
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nomor halaman pertama. Jika laporan lebih dari 1 halaman, halaman berikutnya otomatis +1.</p>
+                    </div>
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan Tutup Buku</label>
                         <select wire:model.live="closureReason" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-64">
