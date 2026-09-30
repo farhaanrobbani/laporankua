@@ -1082,7 +1082,7 @@
                                     $pageIndex++;
                                     $runningMasuk += $sblMasuk;
                                     $runningKeluar += $sblKeluar;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 25)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $pageIndex > $extraPageThreshold && $pageIndex <= 25)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1147,7 +1147,7 @@
                                     $pageIndex++;
                                     $runningKeluar += $keluarBD;
                                     $sisaState[$flatRow['pf']] = $sisaBD;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 25)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $pageIndex > $extraPageThreshold && $pageIndex <= 25)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1203,7 +1203,7 @@
                                     $pageIndex++;
                                     $runningKeluar += $keluarD;
                                     $sisaState[$flatRow['pf']] = $sisaD;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 25)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $pageIndex > $extraPageThreshold && $pageIndex <= 25)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1482,7 +1482,7 @@
                                 if (isset($row['sisa']) && $row['sisa'] !== '') {
                                     $runningSisa = $row['sisa'];
                                 }
-                                if (($pageIndex >= $pageRows && $ri < $nbRowCount - 1) || ($ri === $nbRowCount - 1 && $nbRowCount > $extraPageThreshold && $nbRowCount <= 25)) {
+                                if (($pageIndex >= $pageRows && $ri < $nbRowCount - 1) || ($ri === $nbRowCount - 1 && $pageIndex > $extraPageThreshold && $pageIndex <= 25)) {
                                     $needsPageBreak = true;
                                 }
                             @endphp
