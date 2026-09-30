@@ -1617,7 +1617,7 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8 flex justify-between max-w-xl mx-auto">
+                            <div class="mt-8 flex justify-between max-w-sm mx-auto">
                                 <div class="flex gap-4">
                                     <p class="font-medium">Anggota:</p>
                                     <div>
@@ -1737,7 +1737,7 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8 flex justify-between max-w-xl mx-auto">
+                            <div class="mt-8 flex justify-between max-w-sm mx-auto">
                                 <div class="flex gap-4">
                                     <p class="font-medium">Anggota:</p>
                                     <div>
@@ -1837,7 +1837,7 @@
                                 $monevLeft = array_slice($monevMembers, 0, $monevHalf);
                                 $monevRight = array_slice($monevMembers, $monevHalf);
                             @endphp
-                            <div class="mt-8 flex justify-between max-w-xl mx-auto">
+                            <div class="mt-8 flex justify-between max-w-sm mx-auto">
                                 <div class="flex gap-4">
                                     <p class="font-medium">Anggota:</p>
                                     <div>
