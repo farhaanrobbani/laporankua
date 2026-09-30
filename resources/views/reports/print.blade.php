@@ -1638,7 +1638,7 @@
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                            <div class="flex justify-between max-w-2xl mx-auto">
                                 <div class="text-center">
                                     <p>Yang menerima,</p>
                                     <div class="h-16"></div>
@@ -1759,7 +1759,7 @@
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                            <div class="flex justify-between max-w-2xl mx-auto">
                                 <div class="text-center">
                                     <p>Yang menerima,</p>
                                     <div class="h-16"></div>
@@ -1860,7 +1860,7 @@
                         </div>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
-                            <div class="flex justify-between" style="padding-left: 90px; padding-right: 90px;">
+                            <div class="flex justify-between max-w-2xl mx-auto">
                                 <div class="text-center">
                                     <p>Yang menerima,</p>
                                     <div class="h-16"></div>
