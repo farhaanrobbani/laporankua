@@ -383,6 +383,8 @@
                         'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
                         'tahun' => $dataset['filter_year'] ?? $tahunName,
                         'model' => 'NB',
+                        'bookTitle' => 'BUKU STOK UMUM',
+                        'bsModel' => 'BS 2',
                         'pageDisplay' => $bukuStokPageStart + (isset($pageNumber) ? $pageNumber - 1 : 0),
                     ])
                 @elseif ($isNReport)
@@ -1416,6 +1418,8 @@
                                     'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
                                     'tahun' => $dataset['filter_year'] ?? $tahunName,
                                     'model' => 'NB',
+                                    'bookTitle' => 'BUKU STOK UMUM',
+                                    'bsModel' => 'BS 2',
                                     'pageDisplay' => $bukuStokPageStart + $pageNumber - 1,
                                 ])
                                 <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
@@ -1514,6 +1518,8 @@
                                 'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
                                 'tahun' => $dataset['filter_year'] ?? $tahunName,
                                 'model' => 'NB',
+                                'bookTitle' => 'BUKU STOK UMUM',
+                                'bsModel' => 'BS 2',
                                 'pageDisplay' => $bukuStokPageStart + $pageNumber - 1,
                             ])
                             <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
@@ -1871,11 +1877,11 @@
                 @endphp
                 <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'ganti_kepala')
-                        <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena adanya Serah Terima Jabatan berdasarkan <strong>{{ $dataset['config_json']['ganti_kepala_sk'] ?? '' }}</strong> dengan sisa <strong>{{ $lastSisa }}</strong> lembar.</p>
+                        <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Umum Model NB di tutup karena adanya Serah Terima Jabatan berdasarkan <strong>{{ $dataset['config_json']['ganti_kepala_sk'] ?? '' }}</strong> dengan sisa <strong>{{ $lastSisa }}</strong> lembar.</p>
                     @elseif (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
-                        <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena adanya Pemeriksaan berdasarkan ST nomor: <strong>{{ $dataset['config_json']['monev_st_number'] ?? '' }}</strong> dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
+                        <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Umum Model NB di tutup karena adanya Pemeriksaan berdasarkan ST nomor: <strong>{{ $dataset['config_json']['monev_st_number'] ?? '' }}</strong> dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
                     @else
-                        <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Khusus Model NB di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
+                        <p class="mb-4">Pada hari ini <strong>{{ $hariName }}</strong> tanggal <strong>{{ $tanggalFormatted }}</strong> Buku Stok Umum Model NB di tutup karena {{ $closureReasonText }} dengan keadaan mengurus <strong>{{ $lastSisa }}</strong> lembar.</p>
                     @endif
                     @if (($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev')
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
