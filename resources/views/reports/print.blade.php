@@ -1569,7 +1569,7 @@
                         <tr style="font-weight: bold;">
                             <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
+                            <td class="border border-gray-700 px-1 py-0.5">Jumlah</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $totalMasuk }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $totalKeluar }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $lastSisa }}</td>
@@ -1616,7 +1616,7 @@
                         <tr style="font-weight: bold;">
                             <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center">Jumlah</td>
+                            <td class="border border-gray-700 px-1 py-0.5">Jumlah</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $totalMasuk }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $totalKeluar }}</td>
                             <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $lastSisa }}</td>
