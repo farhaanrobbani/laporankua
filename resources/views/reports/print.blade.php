@@ -973,7 +973,7 @@
 
                             $rowNum = 1;
                             $pageIndex = 0;
-                            $pageRows = 28;
+                            $pageRows = 25;
                             $closureReason = $dataset['config_json']['closure_reason'] ?? 'akhir_bulan';
                             $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 17;
                             $pageNumber = 1;
@@ -997,7 +997,7 @@
                                 @if ($needsPageBreak)
                                     @php
                                         $pageNumber++;
-                                        $pageRows = 32;
+                                        $pageRows = 24;
                                         $pageIndex = 0;
                                         $needsPageBreak = false;
                                         $prevPageSisa = $totalSisaVal;
@@ -1036,17 +1036,17 @@
                                 <tbody style="font-size: 11px;">
                                     {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                 <tr>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Pindahan dari halaman sebelumnya</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageMasuk }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageKeluar }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageSisa }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah Pindahan dari halaman sebelumnya</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $prevPageMasuk }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $prevPageKeluar }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $prevPageSisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                                 </tr>
                             @endif
                             @if ($flatRow['type'] === 'sbl')
@@ -1066,23 +1066,23 @@
                                     }
                                 @endphp
                                 <tr>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblDate }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $sblEntry['uraian'] !== '' && $sblEntry['uraian'] !== null ? $sblEntry['uraian'] : 'Sisa bulan lalu' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['masuk'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['keluar'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSisa }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblSeriDisplay }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['penerimaan'] ?? '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $sblEntry['pengeluaran'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblDate }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >{{ $sblEntry['uraian'] !== '' && $sblEntry['uraian'] !== null ? $sblEntry['uraian'] : 'Sisa bulan lalu' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblEntry['masuk'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblEntry['keluar'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblSisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblSeriDisplay }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblEntry['penerimaan'] ?? '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $sblEntry['pengeluaran'] ?? '' }}</td>
                                 </tr>
                                 @php
                                     $pageIndex++;
                                     $runningMasuk += $sblMasuk;
                                     $runningKeluar += $sblKeluar;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 28)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 25)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1091,17 +1091,17 @@
                                 @if ($needsPageBreak)
                                     {{-- Jumlah Dipindahkan row (bottom of current page) --}}
                                     <tr>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Dipindahkan</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $runningMasuk }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $runningKeluar }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisaVal }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah Dipindahkan</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalSisaVal }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                                     </tr>
                                 @endif
                             @elseif ($flatRow['type'] === 'bd')
@@ -1131,23 +1131,23 @@
                                     $uraian = count($names) > 1 ? $names[0].' Cs.' : ($names[0] ?? '');
                                 @endphp
                                 <tr>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $flatRow['date'] }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $uraian }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarBD ?: '' }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaBD < 0 ? 0 : $sisaBD }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $seriRange }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $aktaRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >{{ $flatRow['date'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >{{ $uraian }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $keluarBD ?: '' }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $sisaBD < 0 ? 0 : $sisaBD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $seriRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $aktaRange }}</td>
                                 </tr>
                                 @php
                                     $pageIndex++;
                                     $runningKeluar += $keluarBD;
                                     $sisaState[$flatRow['pf']] = $sisaBD;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 28)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 25)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1156,17 +1156,17 @@
                                 @if ($needsPageBreak)
                                     {{-- Jumlah Dipindahkan row --}}
                                     <tr>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Dipindahkan</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $runningMasuk }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $runningKeluar }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisaVal }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah Dipindahkan</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalSisaVal }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                                     </tr>
                                 @endif
                             @elseif ($flatRow['type'] === 'd')
@@ -1187,23 +1187,23 @@
                                     }
                                 @endphp
                                 <tr>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $rowNum++ }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">{{ $flatRow['date'] }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;">Duplikat</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $keluarD }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $sisaD < 0 ? 0 : $sisaD }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">NA</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">{{ $dupliSeriRange }}</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">Buku</td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;">                                    </td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >{{ $flatRow['date'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >Duplikat</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $keluarD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $sisaD < 0 ? 0 : $sisaD }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $dupliSeriRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >                                    </td>
                                 </tr>
                                 @php
                                     $pageIndex++;
                                     $runningKeluar += $keluarD;
                                     $sisaState[$flatRow['pf']] = $sisaD;
-                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 28)) {
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $flatCount > $extraPageThreshold && $flatCount <= 25)) {
                                         $totalSisaVal = max(0, array_sum($sisaState));
                                         $prevPageSisa = $totalSisaVal;
                                         $needsPageBreak = true;
@@ -1212,17 +1212,17 @@
                                 @if ($needsPageBreak)
                                     {{-- Jumlah Dipindahkan row --}}
                                     <tr>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Dipindahkan</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $runningMasuk }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $runningKeluar }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisaVal }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah Dipindahkan</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalSisaVal }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                                     </tr>
                                 @endif
                             @endif
@@ -1231,7 +1231,7 @@
                         @if ($needsPageBreak)
                             @php
                                 $pageNumber++;
-                                $pageRows = 32;
+                                $pageRows = 24;
                                 $pageIndex = 0;
                                 $needsPageBreak = false;
                                 $prevPageSisa = $totalSisaVal;
@@ -1270,17 +1270,17 @@
                                 <tbody style="font-size: 11px;">
                                     {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                     <tr>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah Pindahan dari halaman sebelumnya</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageMasuk }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageKeluar }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $prevPageSisa }}</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah Pindahan dari halaman sebelumnya</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $prevPageMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $prevPageKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $prevPageSisa }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                                     </tr>
                         @endif
                         {{-- Final Jumlah row (always at the end) --}}
@@ -1327,17 +1327,17 @@
                             }
                         @endphp
                         <tr>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5" style="font-size:10px; font-weight:bold;">Jumlah</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalMasukVal ?: '' }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalKeluarVal }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">{{ $totalSisaVal }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">NA</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold; white-space:pre-line;">{{ implode("\n", $remainingRanges) }}</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px; font-weight:bold;">Buku</td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
-                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-size:10px;"></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                            <td class="border border-gray-700 px-1 py-0.5" ></td>
+                            <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalMasukVal ?: '' }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalKeluarVal }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalSisaVal }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold; white-space:pre-line;">{{ implode("\n", $remainingRanges) }}</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                            <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                         </tr>
                     @elseif ($isNtcrReport)
                         @php
@@ -1389,7 +1389,7 @@
                         @php
                             $nbRowCount = count($dataset['rows']);
                             $pageIndex = 0;
-                            $pageRows = 28;
+                            $pageRows = 25;
                             $closureReason = $dataset['config_json']['closure_reason'] ?? 'akhir_bulan';
                             $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 17;
                             $pageNumber = 1;
@@ -1405,7 +1405,7 @@
                             @if ($needsPageBreak)
                                 @php
                                     $pageNumber++;
-                                    $pageRows = 32;
+                                    $pageRows = 24;
                                     $pageIndex = 0;
                                     $needsPageBreak = false;
                                     $prevPageMasuk = $runningMasuk;
@@ -1482,7 +1482,7 @@
                                 if (isset($row['sisa']) && $row['sisa'] !== '') {
                                     $runningSisa = $row['sisa'];
                                 }
-                                if (($pageIndex >= $pageRows && $ri < $nbRowCount - 1) || ($ri === $nbRowCount - 1 && $nbRowCount > $extraPageThreshold && $nbRowCount <= 28)) {
+                                if (($pageIndex >= $pageRows && $ri < $nbRowCount - 1) || ($ri === $nbRowCount - 1 && $nbRowCount > $extraPageThreshold && $nbRowCount <= 25)) {
                                     $needsPageBreak = true;
                                 }
                             @endphp
@@ -1505,7 +1505,7 @@
                         @if ($needsPageBreak)
                             @php
                                 $pageNumber++;
-                                $pageRows = 32;
+                                $pageRows = 24;
                                 $pageIndex = 0;
                                 $needsPageBreak = false;
                                 $prevPageMasuk = $runningMasuk;
