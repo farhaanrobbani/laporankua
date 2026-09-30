@@ -969,8 +969,8 @@
                             $rowNum = 1;
                             $pageIndex = 0;
                             $pageRows = 28;
-                            $isMonev = ($dataset['config_json']['closure_reason'] ?? 'akhir_bulan') === 'monev';
-                            $extraPageThreshold = $isMonev ? 8 : 17;
+                            $closureReason = $dataset['config_json']['closure_reason'] ?? 'akhir_bulan';
+                            $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 17;
                             $pageNumber = 1;
                             $prevPageSisa = null;
                             $prevPageMasuk = null;
