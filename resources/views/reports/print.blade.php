@@ -1600,7 +1600,7 @@
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
                             <div class="flex justify-between max-w-2xl mx-auto">
                                 <div class="text-center">
-                                    <p> </p>
+                                    <p>&nbsp;</p>
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
                                     <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
@@ -1721,7 +1721,7 @@
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
                             <div class="flex justify-between max-w-2xl mx-auto">
                                 <div class="text-center">
-                                    <p> </p>
+                                    <p>&nbsp;</p>
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
                                     <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
@@ -1822,7 +1822,7 @@
                         <div class="mt-6" style="font-size: 12px; page-break-inside: avoid;">
                             <div class="flex justify-between max-w-2xl mx-auto">
                                 <div class="text-center">
-                                    <p> </p>
+                                    <p>&nbsp;</p>
                                     <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
                                     <div class="h-16"></div>
                                     <p class="font-semibold">{{ $dataset['nama_kepala_kua'] ?? '-' }}</p>
