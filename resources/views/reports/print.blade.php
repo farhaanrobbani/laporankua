@@ -1663,7 +1663,7 @@
                             </div>
                         </div>
                     @else
-                        <div class="flex justify-between mt-6" style="padding-left: 90px; padding-right: 90px;">
+                        <div class="flex justify-between max-w-2xl mx-auto mt-6">
                             <div class="text-center">
                                 <p>Mengetahui,</p>
                                 <p>Kepala KUA {{ $dataset['kecamatan'] ?? '' }}</p>
