@@ -671,7 +671,7 @@
                     @endif
                 </thead>
                 @endif
-                <tbody style="font-size: 11px;">
+                <tbody style="font-size: 10px;">
                     @if ($isL4Report)
                         @php $l4GroupNum = 1; @endphp
                         @foreach ($l4Groups as $group)
@@ -1033,7 +1033,7 @@
                                         <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
                                     </tr>
                                 </thead>
-                                <tbody style="font-size: 11px;">
+                                <tbody style="font-size: 10px;">
                                     {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                 <tr>
                                     <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
@@ -1267,7 +1267,7 @@
                                         <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
                                     </tr>
                                 </thead>
-                                <tbody style="font-size: 11px;">
+                                <tbody style="font-size: 10px;">
                                     {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                     <tr>
                                         <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
@@ -1440,7 +1440,7 @@
                                             <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
                                         </tr>
                                     </thead>
-                                    <tbody style="font-size: 11px;">
+                                    <tbody style="font-size: 10px;">
                                         {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                         <tr style="font-weight: bold;">
                                             <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
@@ -1540,7 +1540,7 @@
                                         <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
                                     </tr>
                                 </thead>
-                                <tbody style="font-size: 11px;">
+                                <tbody style="font-size: 10px;">
                                     {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
                                     <tr style="font-weight: bold;">
                                         <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
