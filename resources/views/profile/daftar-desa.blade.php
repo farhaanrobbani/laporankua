@@ -19,7 +19,7 @@
             <div>
                 <label for="kota_kabupaten" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kota/Kabupaten</label>
                 <input type="text" id="kota_kabupaten" name="kota_kabupaten" value="{{ old('kota_kabupaten', $user->kota_kabupaten) }}" placeholder="Contoh: Kab. Malang" class="mt-1 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm w-full" />
-                @error('kota_kabupaten') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @endforeach
+                @error('kota_kabupaten') <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
             </div>
 
             <div>
