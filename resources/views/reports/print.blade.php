@@ -975,7 +975,7 @@
                             $pageIndex = 0;
                             $pageRows = 25;
                             $closureReason = $dataset['config_json']['closure_reason'] ?? 'akhir_bulan';
-                            $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 17;
+                            $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 15;
                             $pageNumber = 1;
                             $prevPageSisa = null;
                             $prevPageMasuk = null;
@@ -1391,7 +1391,7 @@
                             $pageIndex = 0;
                             $pageRows = 25;
                             $closureReason = $dataset['config_json']['closure_reason'] ?? 'akhir_bulan';
-                            $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 17;
+                            $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 15;
                             $pageNumber = 1;
                             $prevPageMasuk = 0;
                             $prevPageKeluar = 0;
