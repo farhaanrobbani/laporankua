@@ -284,8 +284,8 @@
 
                         foreach ($grouped as &$gRows) {
                             usort($gRows, function ($a, $b) {
-                                $dateA = strtotime($a['Tanggal dan Jam Setor'] ?? '') ?: 0;
-                                $dateB = strtotime($b['Tanggal dan Jam Setor'] ?? '') ?: 0;
+                                $dateA = strtotime($a['Tanggal Akad'] ?? '') ?: 0;
+                                $dateB = strtotime($b['Tanggal Akad'] ?? '') ?: 0;
 
                                 return $dateA - $dateB;
                             });

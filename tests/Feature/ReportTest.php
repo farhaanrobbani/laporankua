@@ -369,6 +369,77 @@ class ReportTest extends TestCase
         $this->assertSame(2, $desaA['Duplikat']);
     }
 
+    public function test_l4_filter_menggunakan_tanggal_akad_bukan_tanggal_setor(): void
+    {
+        $user = User::factory()->create();
+
+        $sim = tap(
+            Import::factory()->for($user)->create([
+                'status' => 'success',
+                'table_name' => 'laporan simponi',
+            ]),
+            function (Import $import) {
+                $rows = [
+                    // Akad 5 Sep, setor 25 Sep → tampil.
+                    ['No Pendaftaran' => 'SP-001', 'Nama Kelurahan' => 'DESA A', 'Tanggal dan Jam Setor' => '2026-09-25 10:00:00', 'Tanggal Akad' => '2026-09-05', 'Nama Suami' => 'Penyetor Alpha', 'Nominal Setor' => '600000'],
+                    // Akad 20 Sep, setor 1 Sep → tampil, urut sebelum Alpha jika pakai tanggal setor.
+                    ['No Pendaftaran' => 'SP-002', 'Nama Kelurahan' => 'DESA A', 'Tanggal dan Jam Setor' => '2026-09-01 09:00:00', 'Tanggal Akad' => '2026-09-20', 'Nama Suami' => 'Penyetor Beta', 'Nominal Setor' => '600000'],
+                    // Akad 2 Okt, setor 10 Sep → gugur karena akad di luar bulan filter.
+                    ['No Pendaftaran' => 'SP-003', 'Nama Kelurahan' => 'DESA A', 'Tanggal dan Jam Setor' => '2026-09-10 08:00:00', 'Tanggal Akad' => '2026-10-02', 'Nama Suami' => 'Penyetor Gamma', 'Nominal Setor' => '600000'],
+                ];
+                foreach ($rows as $i => $row) {
+                    ImportData::factory()->for($import)->create([
+                        'row_data' => $row,
+                        'row_number' => $i + 2,
+                    ]);
+                }
+            }
+        );
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $sim->id,
+            'config_json' => [
+                'fields' => ['Nama Kelurahan', 'Tanggal dan Jam Setor', 'Nominal Setor', 'Tanggal Akad', 'Nama Suami'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'table_layout' => [
+                    'type' => 'grouped_detail',
+                    'aggregation' => [
+                        'group_by' => 'Nama Kelurahan',
+                        'date_filter_field' => 'Tanggal Akad',
+                    ],
+                    'columns' => [
+                        ['type' => 'row_number', 'label' => 'No'],
+                        ['type' => 'field', 'field' => 'Nama Kelurahan', 'label' => 'Desa'],
+                        ['type' => 'aggregate_total', 'label' => 'Jumlah Perkawinan'],
+                        ['type' => 'field', 'field' => 'Tanggal dan Jam Setor', 'label' => 'Tanggal Setor', 'format' => 'date_id'],
+                        ['type' => 'static', 'value' => '600000', 'label' => 'Jumlah Setor'],
+                        ['type' => 'field', 'field' => 'Tanggal Akad', 'label' => 'Tanggal Perkawinan', 'format' => 'date_id'],
+                        ['type' => 'field', 'field' => 'Nama Suami', 'label' => 'Penyetor'],
+                    ],
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk()
+            ->assertSee('Penyetor Alpha')
+            ->assertSee('Penyetor Beta')
+            ->assertDontSee('Penyetor Gamma');
+
+        $rows = $response->viewData('dataset')['rows'];
+        $this->assertCount(2, $rows);
+
+        // Urutan dalam grup mengikuti Tanggal Akad (Alpha 5 Sep < Beta 20 Sep),
+        // bukan tanggal setor (Beta 1 Sep < Alpha 25 Sep).
+        $html = $response->getContent();
+        $posAlpha = strpos($html, 'Penyetor Alpha');
+        $posBeta = strpos($html, 'Penyetor Beta');
+        $this->assertNotFalse($posAlpha);
+        $this->assertNotFalse($posBeta);
+        $this->assertLessThan($posBeta, $posAlpha);
+    }
+
     private function reportStatus(Report $report): string
     {
         return $report->fresh()->status;

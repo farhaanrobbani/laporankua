@@ -183,7 +183,7 @@ class TemplateSeeder extends Seeder
                         'type' => 'grouped_detail',
                         'aggregation' => [
                             'group_by' => 'Nama Kelurahan',
-                            'date_filter_field' => 'Tanggal dan Jam Setor',
+                            'date_filter_field' => 'Tanggal Akad',
                         ],
                         'columns' => [
                             ['type' => 'row_number', 'label' => 'No'],
