@@ -771,7 +771,15 @@ class ReportsController extends Controller
                             continue;
                         }
                     }
-                    $desa = mb_strtoupper(trim((string) ($row['Desa/Kelurahan/Kecamatan'] ?? $row['Desa'] ?? $row['Kelurahan'] ?? '')));
+                    $desaVal = '';
+                    foreach (['Desa/Kelurahan/Kecamatan', 'Desa', 'Kelurahan'] as $desaKey) {
+                        $candidate = trim((string) ($row[$desaKey] ?? ''));
+                        if ($candidate !== '') {
+                            $desaVal = $candidate;
+                            break;
+                        }
+                    }
+                    $desa = mb_strtoupper($desaVal);
                     if ($desa !== '') {
                         $duplikatByDesa[$desa] = ($duplikatByDesa[$desa] ?? 0) + 1;
                     }
@@ -863,7 +871,7 @@ class ReportsController extends Controller
                 }
             }
 
-            $duplikat = $duplikatByDesa[$desa] ?? 0;
+            $duplikat = $duplikatByDesa[mb_strtoupper($desa)] ?? 0;
 
             $rows[] = [
                 'Kelurahan' => $desa,

@@ -440,6 +440,76 @@ class ReportTest extends TestCase
         $this->assertLessThan($posBeta, $posAlpha);
     }
 
+    public function test_l1_duplikat_terisi_setelah_desa_diisi_lewat_tab_duplikat(): void
+    {
+        $user = User::factory()->create(['daftar_desa' => ['SONOWANGI']]);
+
+        $pn = tap(
+            Import::factory()->for($user)->create([
+                'status' => 'success',
+                'table_name' => 'laporan peristiwa nikah',
+            ]),
+            function (Import $import) {
+                ImportData::factory()->for($import)->create([
+                    'row_data' => ['Nomor Daftar' => 'PN-L1D-001', 'Tanggal Nikah' => '2026-09-05', 'Kelurahan' => 'SONOWANGI', 'Nama Suami' => 'Suami L1D', 'Nama Istri' => 'Istri L1D'],
+                    'row_number' => 2,
+                ]);
+            }
+        );
+
+        $l3 = tap(
+            Import::factory()->for($user)->create([
+                'status' => 'success',
+                'table_name' => 'laporan model l3',
+            ]),
+            function (Import $import) {
+                ImportData::factory()->for($import)->create([
+                    'row_data' => [
+                        'Nomor Perforasi' => 'PF-L1D-001',
+                        'Keterangan' => 'Duplikat',
+                        'Tanggal Cetak' => '2026-09-01',
+                        // Kolom desa ada tapi kosong → rantai first-non-empty harus jatuh ke 'Desa'.
+                        'Desa/Kelurahan/Kecamatan' => '',
+                    ],
+                    'row_number' => 2,
+                ]);
+            }
+        );
+        $l3Row = $l3->importData()->first();
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $pn->id,
+            'config_json' => [
+                'fields' => ['Kelurahan', 'Jumlah Nikah', 'Duplikat'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'merged_import_ids' => [$pn->id],
+                'table_layout' => ['type' => 'laporan_l1'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+        $sonowangi = collect($response->viewData('dataset')['rows'])->firstWhere('Kelurahan', 'SONOWANGI');
+        $this->assertNotNull($sonowangi);
+        $this->assertSame(0, $sonowangi['Duplikat']);
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$l3->id],
+                'filterColumn' => 'Keterangan',
+                'filterValue' => 'Duplikat',
+                'filterMode' => 'exact',
+                'editableColumns' => ['Desa'],
+            ])
+            ->call('updateCell', $l3Row->id, 'Desa', 'sonowangi');
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+        $sonowangi = collect($response->viewData('dataset')['rows'])->firstWhere('Kelurahan', 'SONOWANGI');
+        $this->assertSame(1, $sonowangi['Duplikat']);
+    }
+
     private function reportStatus(Report $report): string
     {
         return $report->fresh()->status;

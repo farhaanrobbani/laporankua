@@ -37,6 +37,7 @@
                             :filter-column="'Keterangan'"
                             :filter-value="'Duplikat'"
                             :filter-mode="'exact'"
+                            :editable-columns="['Desa']"
                             :key="'duplikat'"
                         />
                     @endif

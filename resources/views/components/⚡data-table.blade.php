@@ -3,6 +3,7 @@
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Services\MergeService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -41,8 +42,21 @@ new class extends Component
     /** @var int[] */
     public array $selected = [];
 
-    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null, ?string $filterMode = null): void
+    /** @var string[] */
+    public array $editableColumns = [];
+
+    /** @var string[] */
+    public array $desaOptions = [];
+
+    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null, ?string $filterMode = null, ?array $editableColumns = null): void
     {
+        if ($importIds !== null && $importIds !== []) {
+            $uniqueIds = array_values(array_unique($importIds));
+            if (Import::whereIn('id', $uniqueIds)->where('user_id', auth()->id())->count() !== count($uniqueIds)) {
+                throw (new ModelNotFoundException)->setModel(Import::class);
+            }
+        }
+
         if ($importIds !== null && count($importIds) >= 2 && $joinColumn !== null && $joinColumn !== '') {
             $this->isMergeMode = true;
             $this->importIds = $importIds;
@@ -73,6 +87,75 @@ new class extends Component
         if ($filterMode !== null) {
             $this->filterMode = $filterMode;
         }
+
+        if ($editableColumns !== null && $editableColumns !== []) {
+            $this->editableColumns = array_values($editableColumns);
+            $this->placeEditableColumns();
+
+            if (in_array('Desa', $this->editableColumns, true)) {
+                $this->desaOptions = auth()->user()->daftar_desa ?? [];
+            }
+        }
+    }
+
+    private function placeEditableColumns(): void
+    {
+        foreach ($this->editableColumns as $editable) {
+            $this->columns = array_values(array_filter($this->columns, fn ($col) => $col !== $editable));
+            $idx = array_search('Keterangan', $this->columns, true);
+            if ($idx !== false) {
+                array_splice($this->columns, $idx + 1, 0, [$editable]);
+            } else {
+                $this->columns[] = $editable;
+            }
+        }
+    }
+
+    public function updateCell(int $recordId, string $column, string $value): void
+    {
+        if (! in_array($column, $this->editableColumns, true)) {
+            return;
+        }
+
+        $record = ImportData::find($recordId);
+        if ($record === null) {
+            return;
+        }
+
+        $import = $record->import;
+        if ($import === null || $import->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $value = mb_substr(trim($value), 0, 255);
+
+        $targets = collect([$record]);
+
+        // Baris duplikat fisik (Nomor Perforasi sama di banyak file) ikut disimpan
+        // agar konsisten dengan dedup last-wins di laporan L1.
+        if ($column === 'Desa') {
+            $perforasi = trim((string) ($record->row_data['Nomor Perforasi'] ?? ''));
+            if ($perforasi !== '') {
+                $l3ImportIds = Import::where('user_id', auth()->id())
+                    ->where('table_name', 'laporan model l3')
+                    ->pluck('id');
+                $siblings = ImportData::whereIn('import_id', $l3ImportIds)
+                    ->where('row_data->Nomor Perforasi', $perforasi)
+                    ->get();
+                if ($siblings->isNotEmpty()) {
+                    $targets = $siblings;
+                }
+            }
+        }
+
+        foreach ($targets as $target) {
+            $row = $target->row_data ?? [];
+            $row[$column] = $value;
+            $target->row_data = $row;
+            $target->save();
+        }
+
+        session()->flash('status', $column.' disimpan untuk '.$targets->count().' baris.');
     }
 
     public function updatingSearch(): void
@@ -196,7 +279,10 @@ new class extends Component
         if ($this->search !== '') {
             $lowerSearch = mb_strtolower($this->search);
             $rows = array_filter($rows, function ($row) use ($lowerSearch) {
-                foreach ($row as $val) {
+                foreach ($row as $key => $val) {
+                    if (is_string($key) && str_starts_with($key, '_')) {
+                        continue;
+                    }
                     if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
                         return true;
                     }
@@ -349,8 +435,19 @@ new class extends Component
                         @foreach ($mergeRows as $record)
                             <tr>
                                 @foreach ($this->columns as $column)
-                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record[$column] ?? '' }}">
-                                        {{ $record[$column] ?? '' }}
+                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64">
+                                        @if (in_array($column, $this->editableColumns, true) && isset($record['_row_id']))
+                                            <input
+                                                type="text"
+                                                list="options-{{ strtolower($column) }}"
+                                                value="{{ $record[$column] ?? '' }}"
+                                                wire:change="updateCell({{ $record['_row_id'] }}, '{{ $column }}', $event.target.value)"
+                                                class="w-36 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1"
+                                                placeholder="Isi {{ $column }}..."
+                                            />
+                                        @else
+                                            <span title="{{ $record[$column] ?? '' }}">{{ $record[$column] ?? '' }}</span>
+                                        @endif
                                     </td>
                                 @endforeach
                             </tr>
@@ -425,8 +522,19 @@ new class extends Component
                             <tr>
                                 <td class="px-3 py-2"><input type="checkbox" wire:model.live="selected" value="{{ $record->id }}" class="rounded" /></td>
                                 @foreach ($this->columns as $column)
-                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate" title="{{ $record->row_data[$column] ?? '' }}">
-                                        {{ $record->row_data[$column] ?? '' }}
+                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64">
+                                        @if (in_array($column, $this->editableColumns, true))
+                                            <input
+                                                type="text"
+                                                list="options-{{ strtolower($column) }}"
+                                                value="{{ $record->row_data[$column] ?? '' }}"
+                                                wire:change="updateCell({{ $record->id }}, '{{ $column }}', $event.target.value)"
+                                                class="w-36 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1"
+                                                placeholder="Isi {{ $column }}..."
+                                            />
+                                        @else
+                                            <span title="{{ $record->row_data[$column] ?? '' }}">{{ $record->row_data[$column] ?? '' }}</span>
+                                        @endif
                                     </td>
                                 @endforeach
                                 <td class="px-3 py-2 text-right whitespace-nowrap">
@@ -440,5 +548,15 @@ new class extends Component
             </div>
             <div class="mt-4">{{ $records->links() }}</div>
         @endif
+    @endif
+
+    @if (! empty($this->editableColumns))
+        @foreach ($this->editableColumns as $editableColumn)
+            <datalist id="options-{{ strtolower($editableColumn) }}">
+                @foreach ($this->desaOptions as $desaOption)
+                    <option value="{{ $desaOption }}"></option>
+                @endforeach
+            </datalist>
+        @endforeach
     @endif
 </div>

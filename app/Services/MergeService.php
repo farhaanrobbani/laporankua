@@ -253,7 +253,10 @@ class MergeService
         if ($search !== null && $search !== '') {
             $lowerSearch = mb_strtolower($search);
             $rows = array_filter($rows, function ($row) use ($lowerSearch) {
-                foreach ($row as $val) {
+                foreach ($row as $key => $val) {
+                    if (is_string($key) && str_starts_with($key, '_')) {
+                        continue;
+                    }
                     if ($val !== null && mb_strpos(mb_strtolower((string) $val), $lowerSearch) !== false) {
                         return true;
                     }
@@ -397,7 +400,10 @@ class MergeService
             $rows = ImportData::where('import_id', $importId)
                 ->orderBy('row_number')
                 ->cursor()
-                ->map(fn (ImportData $record) => $record->row_data ?? [])
+                ->map(fn (ImportData $record) => [
+                    '_row_id' => $record->id,
+                    '_import_id' => $record->import_id,
+                ] + ($record->row_data ?? []))
                 ->all();
 
             foreach ($rows as $row) {
@@ -405,6 +411,8 @@ class MergeService
                 foreach ($allColumns as $col) {
                     $normalizedRow[$col] = $row[$col] ?? null;
                 }
+                $normalizedRow['_row_id'] = $row['_row_id'];
+                $normalizedRow['_import_id'] = $row['_import_id'];
                 $allRows[] = $normalizedRow;
             }
         }

@@ -29,6 +29,23 @@ class DataTest extends TestCase
         return $import;
     }
 
+    private function l3Import(User $user, array $rows, string $status = 'success'): Import
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => $status,
+            'table_name' => 'laporan model l3',
+        ]);
+
+        foreach ($rows as $i => $row) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => $row,
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return $import;
+    }
+
     public function test_guest_tidak_bisa_akses_data(): void
     {
         $this->get('/data/data-import')->assertRedirect('/login');
@@ -212,5 +229,102 @@ class DataTest extends TestCase
         $this->assertSame('Siti', $rows[1][0]);
 
         unlink($tmp);
+    }
+
+    public function test_kolom_desa_muncul_setelah_keterangan(): void
+    {
+        $user = User::factory()->create(['daftar_desa' => ['SONOWANGI']]);
+        $import = $this->l3Import($user, [
+            ['Nomor Perforasi' => 'PF-DT-001', 'Keterangan' => 'Duplikat'],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$import->id],
+                'filterColumn' => 'Keterangan',
+                'filterValue' => 'Duplikat',
+                'filterMode' => 'exact',
+                'editableColumns' => ['Desa'],
+            ])
+            ->assertSeeInOrder(['Keterangan', 'Desa'])
+            ->assertSee('list="options-desa"', false)
+            ->assertSee('SONOWANGI');
+    }
+
+    public function test_update_cell_menyimpan_desa(): void
+    {
+        $user = User::factory()->create(['daftar_desa' => ['SONOWANGI']]);
+        $import = $this->l3Import($user, [
+            ['Nomor Perforasi' => 'PF-DT-002', 'Keterangan' => 'Duplikat'],
+        ]);
+        $record = $import->importData()->first();
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$import->id],
+                'editableColumns' => ['Desa'],
+            ])
+            ->call('updateCell', $record->id, 'Desa', '  SONOWANGI  ');
+
+        $this->assertSame('SONOWANGI', $record->fresh()->row_data['Desa']);
+
+        // Kolom di luar editableColumns diabaikan.
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$import->id],
+                'editableColumns' => ['Desa'],
+            ])
+            ->call('updateCell', $record->id, 'Keterangan', 'Bukan Duplikat');
+
+        $this->assertSame('Duplikat', $record->fresh()->row_data['Keterangan']);
+    }
+
+    public function test_update_cell_sinkron_baris_duplikat_fisik(): void
+    {
+        $user = User::factory()->create(['daftar_desa' => ['TIRTOMARTO']]);
+        $a = $this->l3Import($user, [['Nomor Perforasi' => 'PF-DT-003', 'Keterangan' => 'Duplikat']]);
+        $b = $this->l3Import($user, [['Nomor Perforasi' => 'PF-DT-003', 'Keterangan' => 'Duplikat']], 'appended');
+        $rowA = $a->importData()->first();
+        $rowB = $b->importData()->first();
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$a->id, $b->id],
+                'editableColumns' => ['Desa'],
+            ])
+            ->call('updateCell', $rowA->id, 'Desa', 'TIRTOMARTO');
+
+        $this->assertSame('TIRTOMARTO', $rowA->fresh()->row_data['Desa']);
+        $this->assertSame('TIRTOMARTO', $rowB->fresh()->row_data['Desa']);
+    }
+
+    public function test_update_cell_ditolak_bukan_pemilik(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $importA = $this->l3Import($userA, [['Nomor Perforasi' => 'PF-DT-A', 'Keterangan' => 'Duplikat']]);
+        $importB = $this->l3Import($userB, [['Nomor Perforasi' => 'PF-DT-B', 'Keterangan' => 'Duplikat']]);
+        $recordB = $importB->importData()->first();
+
+        Livewire::actingAs($userA)
+            ->test('data-table', [
+                'importIds' => [$importA->id],
+                'editableColumns' => ['Desa'],
+            ])
+            ->call('updateCell', $recordB->id, 'Desa', 'SONOWANGI')
+            ->assertStatus(403);
+
+        $this->assertArrayNotHasKey('Desa', $recordB->fresh()->row_data);
+    }
+
+    public function test_mount_merge_ditolak_untuk_import_milik_orang(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $importB = $this->l3Import($userB, [['Nomor Perforasi' => 'PF-DT-X', 'Keterangan' => 'Duplikat']]);
+
+        $this->expectException(ModelNotFoundException::class);
+
+        Livewire::actingAs($userA)->test('data-table', ['importIds' => [$importB->id]]);
     }
 }
