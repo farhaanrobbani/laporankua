@@ -731,15 +731,27 @@ class ReportsController extends Controller
         // Load ALL model l3 data for duplikat
         $l3Imports = Import::where('table_name', 'like', '%model l3%')
             ->where('user_id', $user?->id)
-            ->where('status', 'success')
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $duplikatByDesa = [];
         if ($l3Imports->isNotEmpty()) {
             $l3Raw = ImportData::whereIn('import_id', $l3Imports)
                 ->pluck('row_data')
                 ->all();
+            // Dedup by Nomor Perforasi (last-wins: data upload terbaru menang)
+            // mencegah double count dari append/re-upload yang menaruh baris fisik ganda.
+            $l3ByPerforasi = [];
+            $l3TanpaPerforasi = [];
             foreach ($l3Raw as $r) {
                 $row = is_array($r) ? $r : json_decode((string) $r, true) ?? [];
+                $perforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
+                if ($perforasi !== '') {
+                    $l3ByPerforasi[$perforasi] = $row;
+                } else {
+                    $l3TanpaPerforasi[] = $row;
+                }
+            }
+            foreach (array_merge(array_values($l3ByPerforasi), $l3TanpaPerforasi) as $row) {
                 if (mb_strtolower((string) ($row['Keterangan'] ?? '')) === 'duplikat') {
                     // Filter duplikat by Tanggal Cetak if month/year filter is set
                     if (($filterMonth !== null && $filterMonth !== '') || ($filterYear !== null && $filterYear !== '')) {

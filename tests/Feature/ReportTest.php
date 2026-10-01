@@ -317,6 +317,58 @@ class ReportTest extends TestCase
         $this->assertSame(['AKTA-SEP-001', 'AKTA-SEP-002'], $entries);
     }
 
+    public function test_laporan_l1_duplikat_l3_tidak_double_count(): void
+    {
+        $user = User::factory()->create(['daftar_desa' => ['DESA A']]);
+
+        $mk = fn (string $table, string $status, array $rows) => tap(
+            Import::factory()->for($user)->create([
+                'status' => $status,
+                'table_name' => $table,
+            ]),
+            function (Import $import) use ($rows) {
+                foreach ($rows as $i => $row) {
+                    ImportData::factory()->for($import)->create([
+                        'row_data' => $row,
+                        'row_number' => $i + 2,
+                    ]);
+                }
+            }
+        );
+
+        $pn = $mk('laporan peristiwa nikah', 'success', [
+            ['Nomor Daftar' => 'ND-L1-001', 'Nomor Akta Nikah' => 'AK-L1-001', 'Tanggal Nikah' => '2026-09-05', 'Kelurahan' => 'DESA A', 'Nama Suami' => 'Suami A', 'Nama Istri' => 'Istri A'],
+        ]);
+        $mk('laporan model l3', 'success', [
+            ['Nomor Perforasi' => 'PF-L1-001', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01', 'Desa' => 'DESA A'],
+        ]);
+        $mk('laporan model l3', 'appended', [
+            ['Nomor Perforasi' => 'PF-L1-001', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01', 'Desa' => 'DESA A'],
+            ['Nomor Perforasi' => 'PF-L1-002', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01', 'Desa' => 'DESA A'],
+        ]);
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $pn->id,
+            'config_json' => [
+                'fields' => ['Kelurahan', 'Jumlah Nikah', 'Duplikat'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'merged_import_ids' => [$pn->id],
+                'table_layout' => ['type' => 'laporan_l1'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+
+        $rows = collect($response->viewData('dataset')['rows']);
+        $desaA = $rows->firstWhere('Kelurahan', 'DESA A');
+
+        $this->assertNotNull($desaA);
+        // PF-L1-001 ada di success DAN appended → dihitung sekali; PF-L1-002 baru → total 2, bukan 3.
+        $this->assertSame(2, $desaA['Duplikat']);
+    }
+
     private function reportStatus(Report $report): string
     {
         return $report->fresh()->status;

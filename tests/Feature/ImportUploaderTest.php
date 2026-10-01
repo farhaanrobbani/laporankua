@@ -214,4 +214,62 @@ class ImportUploaderTest extends TestCase
         $this->assertSame($second->id, $nd1->import_id);
         $this->assertSame('Budi Updated', $nd1->row_data['Nama Suami']);
     }
+
+    public function test_append_l3_menyaring_baris_lama_pakai_nomor_perforasi(): void
+    {
+        $user = User::factory()->create();
+
+        $file1 = $this->uploadedXlsx([
+            'Data' => [
+                ['No', 'Nomor Perforasi', 'Nama Catin', 'Tanggal Akad'],
+                ['1', 'PF001', 'A - B', '2026-09-01'],
+                ['2', 'PF002', 'C - D', '2026-09-02'],
+            ],
+        ], 'laporan-model-l3-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file1])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $first = Import::latest('id')->first();
+
+        $this->assertSame('laporan model l3', $first->table_name);
+        // Default dedup kini per tabel: l3 memakai Nomor Perforasi.
+        $this->assertSame('Nomor Perforasi', $first->dedup_column);
+        $this->assertSame('success', $first->fresh()->status);
+        $this->assertSame(2, $first->fresh()->imported_rows);
+
+        $file2 = $this->uploadedXlsx([
+            'Data' => [
+                ['No', 'Nomor Perforasi', 'Nama Catin', 'Tanggal Akad'],
+                ['1', 'PF001', 'A - B', '2026-09-01'],
+                ['2', 'PF002', 'C - D', '2026-09-02'],
+                ['3', 'PF003', 'E - F', '2026-09-03'],
+            ],
+        ], 'laporan-model-l3-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file2])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $second = Import::latest('id')->first();
+
+        $this->assertNotSame($first->id, $second->id);
+        $this->assertTrue((bool) $second->fresh()->is_append);
+        $this->assertSame('appended', $second->fresh()->status);
+        // PF001/PF002 di-skip (sudah ada); hanya PF003 yang baru.
+        $this->assertSame(1, $second->fresh()->imported_rows);
+        $this->assertSame(1, $second->importData()->count());
+
+        $pf1Count = ImportData::whereIn('import_id', [$first->id, $second->id])
+            ->where('dedup_key_value', 'PF001')
+            ->count();
+        $this->assertSame(1, $pf1Count);
+    }
 }

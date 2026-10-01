@@ -71,8 +71,19 @@ new class extends Component
             $this->addError('file', 'File Excel tidak dapat dibaca. Pastikan file tidak rusak.');
         }
 
-        if (empty($this->dedupColumn) && (in_array('Nomor Daftar', $this->headers) || in_array('No. Daftar', $this->headers))) {
-            $this->dedupColumn = 'No. Daftar';
+        if (empty($this->dedupColumn)) {
+            $dedupByTable = [
+                'laporan model l3' => 'Nomor Perforasi',
+                'laporan simponi' => 'No Pendaftaran',
+                'laporan akta nikah' => 'No. Daftar',
+                'laporan model l5' => 'NIK Calon Suami',
+            ];
+            $fallback = $dedupByTable[$this->tableName] ?? null;
+            if ($fallback !== null && in_array($fallback, $this->headers, true)) {
+                $this->dedupColumn = $fallback;
+            } elseif (in_array('Nomor Daftar', $this->headers, true) || in_array('No. Daftar', $this->headers, true)) {
+                $this->dedupColumn = 'No. Daftar';
+            }
         }
     }
 
