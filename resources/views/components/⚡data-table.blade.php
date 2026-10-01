@@ -435,7 +435,7 @@ new class extends Component
                         @foreach ($mergeRows as $record)
                             <tr>
                                 @foreach ($this->columns as $column)
-                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64">
+                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate">
                                         @if (in_array($column, $this->editableColumns, true) && isset($record['_row_id']))
                                             <input
                                                 type="text"
@@ -522,7 +522,7 @@ new class extends Component
                             <tr>
                                 <td class="px-3 py-2"><input type="checkbox" wire:model.live="selected" value="{{ $record->id }}" class="rounded" /></td>
                                 @foreach ($this->columns as $column)
-                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64">
+                                    <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate">
                                         @if (in_array($column, $this->editableColumns, true))
                                             <input
                                                 type="text"
