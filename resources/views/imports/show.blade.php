@@ -50,7 +50,7 @@
                                         </td>
                                         <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ $import->created_at->format('d M Y H:i') }}</td>
                                         <td class="px-4 py-2 text-right whitespace-nowrap">
-                                            @if ($import->status === 'success')
+                                            @if (in_array($import->status, ['success', 'appended'], true))
                                                 <a href="{{ route('imports.data', $import) }}" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 text-sm font-medium">Data</a>
                                                 <span class="text-gray-300 dark:text-gray-600 mx-1">|</span>
                                             @endif

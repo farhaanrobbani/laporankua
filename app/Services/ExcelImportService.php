@@ -34,6 +34,7 @@ class ExcelImportService
         ],
         'laporan pendaftaran nikah' => [
             'Tanggal Akad' => 'Tanggal Nikah',
+            'No. Daftar' => 'Nomor Daftar',
         ],
     ];
 
@@ -154,15 +155,17 @@ class ExcelImportService
             }
         }
 
-        $dedupColumn = $import->dedup_column;
+        $dedupColumnRaw = $import->dedup_column;
+        $dedupColumn = $dedupColumnRaw;
         if ($dedupColumn !== null && $dedupColumn !== '' && isset(self::COLUMN_ALIASES[$import->table_name][$dedupColumn])) {
             $dedupColumn = self::COLUMN_ALIASES[$import->table_name][$dedupColumn];
         }
         $dedupImportIds = [];
 
-        if (! $isAppend && $dedupColumn !== null && $dedupColumn !== '') {
+        if (! $isAppend && $dedupColumnRaw !== null && $dedupColumnRaw !== '') {
             $dedupImportIds = Import::where('user_id', $import->user_id)
-                ->where('dedup_column', $dedupColumn)
+                ->where('table_name', $import->table_name)
+                ->where('dedup_column', $dedupColumnRaw)
                 ->where('id', '!=', $import->id)
                 ->pluck('id')
                 ->toArray();
