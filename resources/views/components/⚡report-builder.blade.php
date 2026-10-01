@@ -82,7 +82,7 @@ new class extends Component
 
     public string $pageStart = '1';
 
-    /** @var array<int, array{nama: string}> */
+    /** @var array<int, array{id: string, nama: string}> */
     public array $monevMembers = [];
 
     public function mount(): void
@@ -633,7 +633,7 @@ new class extends Component
 
     public function addMonevMember(): void
     {
-        $this->monevMembers[] = ['nama' => ''];
+        $this->monevMembers[] = ['nama' => '', 'id' => bin2hex(random_bytes(8))];
     }
 
     public function removeMonevMember(int $index): void
@@ -1602,7 +1602,7 @@ new class extends Component
                             </div>
                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Anggota Monev</label>
                             @foreach ($monevMembers as $i => $member)
-                                <div class="flex items-center gap-2 mb-2">
+                                <div class="flex items-center gap-2 mb-2" wire:key="monev-{{ $member['id'] ?? $i }}">
                                     <input type="text" wire:model.live="monevMembers.{{ $i }}.nama" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1" placeholder="Nama anggota" />
                                     <button wire:click="removeMonevMember({{ $i }})" type="button" class="shrink-0 text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded px-2 py-1">Hapus</button>
                                 </div>
@@ -1801,7 +1801,7 @@ new class extends Component
                             </div>
                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Anggota Monev</label>
                             @foreach ($monevMembers as $i => $member)
-                                <div class="flex items-center gap-2 mb-2">
+                                <div class="flex items-center gap-2 mb-2" wire:key="monev-{{ $member['id'] ?? $i }}">
                                     <input type="text" wire:model.live="monevMembers.{{ $i }}.nama" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1" placeholder="Nama anggota" />
                                     <button wire:click="removeMonevMember({{ $i }})" type="button" class="shrink-0 text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded px-2 py-1">Hapus</button>
                                 </div>
