@@ -209,6 +209,114 @@ class ReportTest extends TestCase
         Storage::disk('local')->assertMissing($report->file_path);
     }
 
+    public function test_nb_menyertakan_baris_appended_dan_dibatasi_per_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $pdk = fn (User $owner, string $status, array $rows) => tap(
+            Import::factory()->for($owner)->create([
+                'status' => $status,
+                'table_name' => 'laporan pendaftaran nikah',
+            ]),
+            function (Import $import) use ($rows) {
+                foreach ($rows as $i => $row) {
+                    ImportData::factory()->for($import)->create([
+                        'row_data' => $row,
+                        'row_number' => $i + 2,
+                    ]);
+                }
+            }
+        );
+
+        $firstImport = $pdk($user, 'success', [
+            ['Nomor Daftar' => 'NB-SEP-001', 'Tanggal Daftar' => '2026-09-05', 'Nama Suami' => 'Suami Nol Satu', 'Nama Istri' => 'Istri Nol Satu'],
+            ['Nomor Daftar' => 'NB-SEP-002', 'Tanggal Daftar' => '2026-09-08', 'Nama Suami' => 'Suami Nol Dua', 'Nama Istri' => 'Istri Nol Dua'],
+        ]);
+        $pdk($user, 'appended', [
+            ['Nomor Daftar' => 'NB-SEP-003', 'Tanggal Daftar' => '2026-09-12', 'Nama Suami' => 'Suami Nol Tiga', 'Nama Istri' => 'Istri Nol Tiga'],
+        ]);
+        $pdk($other, 'success', [
+            ['Nomor Daftar' => 'NB-LAIN-001', 'Tanggal Daftar' => '2026-09-06', 'Nama Suami' => 'Suami Lain', 'Nama Istri' => 'Istri Lain'],
+        ]);
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $firstImport->id,
+            'config_json' => [
+                'fields' => ['Nomor Daftar', 'Tanggal Daftar', 'Nama Suami', 'Nama Istri'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'table_layout' => ['type' => 'laporan_nb'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk()
+            ->assertSee('Suami Nol Tiga')
+            ->assertDontSee('Suami Lain');
+
+        $entries = [];
+        foreach ($response->viewData('dataset')['rows'] as $row) {
+            foreach ($row['entries'] ?? [] as $entry) {
+                $entries[] = $entry['Nomor Daftar'] ?? '';
+            }
+        }
+
+        $this->assertSame(['NB-SEP-001', 'NB-SEP-002', 'NB-SEP-003'], $entries);
+    }
+
+    public function test_laporan_n_menyertakan_baris_appended(): void
+    {
+        $user = User::factory()->create();
+
+        $pn = fn (string $status, array $rows) => tap(
+            Import::factory()->for($user)->create([
+                'status' => $status,
+                'table_name' => 'laporan peristiwa nikah',
+            ]),
+            function (Import $import) use ($rows) {
+                foreach ($rows as $i => $row) {
+                    ImportData::factory()->for($import)->create([
+                        'row_data' => $row,
+                        'row_number' => $i + 2,
+                    ]);
+                }
+            }
+        );
+
+        $firstImport = $pn('success', [
+            ['Nomor Daftar' => 'PN-SEP-001', 'Nomor Akta Nikah' => 'AKTA-SEP-001', 'Tanggal Nikah' => '2026-09-05', 'Nama Suami' => 'Pengantin Satu', 'Nama Istri' => 'Pasangan Satu'],
+        ]);
+        $pn('appended', [
+            ['Nomor Daftar' => 'PN-SEP-002', 'Nomor Akta Nikah' => 'AKTA-SEP-002', 'Tanggal Nikah' => '2026-09-11', 'Nama Suami' => 'Pengantin Dua', 'Nama Istri' => 'Pasangan Dua'],
+        ]);
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $firstImport->id,
+            'config_json' => [
+                'fields' => ['Nomor Daftar', 'Nomor Akta Nikah', 'Tanggal Nikah', 'Nama Suami', 'Nama Istri'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'table_layout' => ['type' => 'laporan_n'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk()
+            ->assertSee('Pengantin Satu')
+            ->assertSee('Pengantin Dua')
+            ->assertSee('AKTA-SEP-002');
+
+        $entries = [];
+        foreach ($response->viewData('dataset')['rows'] as $row) {
+            foreach ($row['entries'] ?? [] as $entry) {
+                $entries[] = $entry['Nomor Akta Nikah'] ?? '';
+            }
+        }
+
+        $this->assertSame(['AKTA-SEP-001', 'AKTA-SEP-002'], $entries);
+    }
+
     private function reportStatus(Report $report): string
     {
         return $report->fresh()->status;

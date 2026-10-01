@@ -175,7 +175,10 @@ class ReportsController extends Controller
         }
 
         if (($config['table_layout']['type'] ?? '') === 'laporan_na') {
-            $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')->pluck('id');
+            $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
+                ->where('user_id', $report->user_id)
+                ->whereIn('status', ['success', 'appended'])
+                ->pluck('id');
             $aktaMap = [];
             if ($pnImports->isNotEmpty()) {
                 $pnData = ImportData::whereIn('import_id', $pnImports)
@@ -318,7 +321,8 @@ class ReportsController extends Controller
 
         if (($config['table_layout']['type'] ?? '') === 'rekap_nr1') {
             $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
-                ->where('status', 'success')
+                ->where('user_id', $report->user_id)
+                ->whereIn('status', ['success', 'appended'])
                 ->pluck('id');
             $pnMap = [];
             if ($pnImports->isNotEmpty()) {
@@ -335,7 +339,8 @@ class ReportsController extends Controller
             }
 
             $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
-                ->where('status', 'success')
+                ->where('user_id', $report->user_id)
+                ->whereIn('status', ['success', 'appended'])
                 ->pluck('id');
             $pdkMap = [];
             if ($pdkImports->isNotEmpty()) {
@@ -706,7 +711,8 @@ class ReportsController extends Controller
 
         // Load ALL pendaftaran nikah data
         $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
-            ->where('status', 'success')
+            ->where('user_id', $user?->id)
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $pdkMap = [];
         if ($pdkImports->isNotEmpty()) {
@@ -724,6 +730,7 @@ class ReportsController extends Controller
 
         // Load ALL model l3 data for duplikat
         $l3Imports = Import::where('table_name', 'like', '%model l3%')
+            ->where('user_id', $user?->id)
             ->where('status', 'success')
             ->pluck('id');
         $duplikatByDesa = [];
@@ -905,7 +912,8 @@ class ReportsController extends Controller
         $monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
-            ->where('status', 'success')
+            ->where('user_id', $user?->id)
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $pnRows = [];
         if ($pnImports->isNotEmpty()) {
@@ -919,7 +927,8 @@ class ReportsController extends Controller
         }
 
         $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
-            ->where('status', 'success')
+            ->where('user_id', $user?->id)
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $pdkRows = [];
         if ($pdkImports->isNotEmpty()) {
@@ -941,7 +950,8 @@ class ReportsController extends Controller
         }
 
         $simImports = Import::where('table_name', 'like', '%simponi%')
-            ->where('status', 'success')
+            ->where('user_id', $user?->id)
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $simRows = [];
         if ($simImports->isNotEmpty()) {
@@ -1161,7 +1171,8 @@ class ReportsController extends Controller
     private function buildNbData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear, ?string $filterDateFrom = null, ?string $filterDateTo = null): array
     {
         $pdkImports = Import::where('table_name', 'like', '%pendaftaran nikah%')
-            ->where('status', 'success')
+            ->where('user_id', $user?->id)
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $pdkRows = [];
         if ($pdkImports->isNotEmpty()) {
@@ -1377,7 +1388,8 @@ class ReportsController extends Controller
     private function buildNData(array $config, ?User $user, ?string $filterMonth, ?string $filterYear, ?string $filterDateFrom = null, ?string $filterDateTo = null): array
     {
         $pnImports = Import::where('table_name', 'like', '%peristiwa nikah%')
-            ->where('status', 'success')
+            ->where('user_id', $user?->id)
+            ->whereIn('status', ['success', 'appended'])
             ->pluck('id');
         $pnRows = [];
         if ($pnImports->isNotEmpty()) {
