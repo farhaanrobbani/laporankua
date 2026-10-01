@@ -394,7 +394,8 @@
                     @include('reports.partials.buku-stok-header', [
                         'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
                         'tahun' => $dataset['filter_year'] ?? $tahunName,
-                        'model' => 'N (Lembar)',
+                        'model' => 'N Lembar',
+                        'bsModel' => 'BS 2',
                         'pageDisplay' => $bukuStokPageStart,
                     ])
                 @else
