@@ -1604,9 +1604,7 @@ new class extends Component
                             @foreach ($monevMembers as $i => $member)
                                 <div class="flex items-center gap-2 mb-2">
                                     <input type="text" wire:model.live="monevMembers.{{ $i }}.nama" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1" placeholder="Nama anggota" />
-                                    <button wire:click="removeMonevMember({{ $i }})" type="button" class="text-red-400 hover:text-red-600 shrink-0" title="Hapus">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
+                                    <button wire:click="removeMonevMember({{ $i }})" type="button" class="shrink-0 text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded px-2 py-1">Hapus</button>
                                 </div>
                             @endforeach
                             <button wire:click="addMonevMember" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 mt-1">
@@ -1805,9 +1803,7 @@ new class extends Component
                             @foreach ($monevMembers as $i => $member)
                                 <div class="flex items-center gap-2 mb-2">
                                     <input type="text" wire:model.live="monevMembers.{{ $i }}.nama" class="flex-1 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1" placeholder="Nama anggota" />
-                                    <button wire:click="removeMonevMember({{ $i }})" type="button" class="text-red-400 hover:text-red-600 shrink-0" title="Hapus">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
+                                    <button wire:click="removeMonevMember({{ $i }})" type="button" class="shrink-0 text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded px-2 py-1">Hapus</button>
                                 </div>
                             @endforeach
                             <button wire:click="addMonevMember" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 mt-1">
