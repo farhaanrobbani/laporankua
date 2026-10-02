@@ -393,8 +393,12 @@ class ExcelImportService
      * Post-process untuk laporan model L3: tambah kolom "Tanggal Cetak" dan "Keterangan".
      *
      * - Parse nama file untuk dapat bulan/tahun acuan
-     * - Baris dengan Tanggal Akad sesuai bulan/tahun acuan → Tanggal Cetak = Tanggal Akad, Keterangan = "Bukan Duplikat"
-     * - Baris dengan Tanggal Akad tidak sesuai → Tanggal Cetak =Tanggal Cetak baris sebelumnya (atau tanggal dari file), Keterangan = "Duplikat"
+     * - Tanggal Akad sesuai bulan/tahun acuan → Tanggal Cetak = Tanggal Akad, Keterangan = "Bukan Duplikat"
+     * - Tanggal Akad setelah bulan acuan (cetak maju) → Tanggal Cetak = Tanggal Akad,
+     *   Keterangan = "Bukan Duplikat", baris pindah ke bulan akad sehingga tidak terhitung
+     *   pada bulan file; baris berikutnya tetap mewarisi Tanggal Cetak baris sebelumnya
+     * - Tanggal Akad sebelum bulan acuan (cetak ulang/tanpa tanggal) → Tanggal Cetak =
+     *   Tanggal Cetak baris sebelumnya (atau tanggal dari file), Keterangan = "Duplikat"
      */
     private function postProcessModelL3(Import $import): void
     {
@@ -429,6 +433,7 @@ class ExcelImportService
         }
 
         $refDate = Carbon::createFromDate($fileDate['year'], $fileDate['month'], 1);
+        $refEnd = $refDate->copy()->endOfMonth();
         $refMonth = $fileDate['month'];
         $refYear = $fileDate['year'];
         $prevTanggalCetak = $refDate->toDateString();
@@ -442,16 +447,18 @@ class ExcelImportService
             }
 
             $tanggalAkad = $data['Tanggal Akad'];
-            $isOutlier = true;
+            $akadState = 'lampau';
 
             if ($tanggalAkad !== null && $tanggalAkad !== '') {
                 try {
                     $date = Carbon::parse($tanggalAkad);
                     if ($date->month === $refMonth && $date->year === $refYear) {
-                        $isOutlier = false;
+                        $akadState = 'sesuai';
+                    } elseif ($date->greaterThan($refEnd)) {
+                        $akadState = 'maju';
                     }
                 } catch (\Throwable) {
-                    // tanggal tidak bisa di-parse → anggap outlier
+                    // tanggal tidak bisa di-parse → anggap cetak ulang (lampau)
                 }
             }
 
@@ -461,20 +468,23 @@ class ExcelImportService
                 $newData[$key] = $value;
 
                 if ($key === 'Tanggal Akad') {
-                    if ($isOutlier) {
+                    if ($akadState === 'lampau') {
                         $newData['Tanggal Cetak'] = $prevTanggalCetak;
                         $newData['Keterangan'] = 'Duplikat';
                     } else {
                         $newData['Tanggal Cetak'] = $tanggalAkad;
                         $newData['Keterangan'] = 'Bukan Duplikat';
-                        $prevTanggalCetak = $tanggalAkad;
+
+                        if ($akadState === 'sesuai') {
+                            $prevTanggalCetak = $tanggalAkad;
+                        }
                     }
                 }
             }
 
             if (! array_key_exists('Tanggal Cetak', $newData)) {
                 $newData['Tanggal Cetak'] = $prevTanggalCetak;
-                $newData['Keterangan'] = $isOutlier ? 'Duplikat' : 'Bukan Duplikat';
+                $newData['Keterangan'] = $akadState === 'lampau' ? 'Duplikat' : 'Bukan Duplikat';
             }
 
             $row->update([

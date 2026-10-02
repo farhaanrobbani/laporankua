@@ -272,4 +272,51 @@ class ImportUploaderTest extends TestCase
             ->count();
         $this->assertSame(1, $pf1Count);
     }
+
+    public function test_l3_cetak_maju_tidak_jadi_duplikat(): void
+    {
+        $user = User::factory()->create();
+
+        $file = $this->uploadedXlsx([
+            'Data' => [
+                ['No', 'Nomor Perforasi', 'Nama Catin', 'Tanggal Akad'],
+                ['1', 'PF-M-001', 'A - B', '2026-09-05'],
+                ['2', 'PF-M-002', 'C - D', '2026-10-01'],
+                ['3', 'PF-M-003', 'E - F', '2026-08-15'],
+                ['4', 'PF-M-004', 'G - H', 'bukan-tanggal'],
+            ],
+        ], 'laporan-model-l3-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $import = Import::latest('id')->first();
+
+        $this->assertSame('success', $import->fresh()->status);
+
+        $rows = $import->importData()->get()->mapWithKeys(
+            fn (ImportData $r) => [$r->row_data['Nomor Perforasi'] => $r->row_data]
+        );
+
+        // Sesuai bulan file → Bukan Duplikat, Tanggal Cetak = Tanggal Akad.
+        $this->assertSame('Bukan Duplikat', $rows['PF-M-001']['Keterangan']);
+        $this->assertSame('2026-09-05', $rows['PF-M-001']['Tanggal Cetak']);
+
+        // Cetak maju (akad setelah bulan file) → Bukan Duplikat, pindah ke bulan akad.
+        $this->assertSame('Bukan Duplikat', $rows['PF-M-002']['Keterangan']);
+        $this->assertSame('2026-10-01', $rows['PF-M-002']['Tanggal Cetak']);
+
+        // Cetak ulang (akad lampau) → Duplikat, Tanggal Cetak diwarisi dari baris sebelumnya;
+        // baris maju tidak mengubah rantai pewarisan.
+        $this->assertSame('Duplikat', $rows['PF-M-003']['Keterangan']);
+        $this->assertSame('2026-09-05', $rows['PF-M-003']['Tanggal Cetak']);
+
+        // Tanggal tidak ter-parse → tetap Duplikat.
+        $this->assertSame('Duplikat', $rows['PF-M-004']['Keterangan']);
+        $this->assertSame('2026-09-05', $rows['PF-M-004']['Tanggal Cetak']);
+    }
 }
