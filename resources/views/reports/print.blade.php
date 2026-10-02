@@ -1579,7 +1579,9 @@
                             @endif
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
-                                @if ($row['is_manual'] ?? false)
+                                @if (($row['is_manual'] ?? false) && ! ($row['is_sisa_bulan_lalu'] ?? false) && ! empty($row['tanggal']))
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] }}</td>
+                                @elseif ($row['is_manual'] ?? false)
                                     @php
                                         $sblDate = '01/'.str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT).'/'.($dataset['filter_year'] ?? '');
                                         if (!empty($dataset['filter_date_from'])) {
@@ -1704,7 +1706,9 @@
                         @foreach ($dataset['rows'] as $row)
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
-                                @if ($row['is_manual'] ?? false)
+                                @if (($row['is_manual'] ?? false) && ! ($row['is_sisa_bulan_lalu'] ?? false) && ! empty($row['tanggal']))
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['tanggal'] }}</td>
+                                @elseif ($row['is_manual'] ?? false)
                                     @php
                                         $sblDate = '01/'.str_pad((string) ($dataset['filter_month'] ?? ''), 2, '0', STR_PAD_LEFT).'/'.($dataset['filter_year'] ?? '');
                                         if (!empty($dataset['filter_date_from'])) {

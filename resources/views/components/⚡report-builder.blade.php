@@ -616,7 +616,12 @@ new class extends Component
 
     public function addNbRow(): void
     {
-        $this->manualData[] = ['tanggal' => '', 'uraian' => '', 'masuk' => '', 'penerimaan' => ''];
+        $this->manualData[] = ['tanggal' => '', 'uraian' => '', 'masuk' => '', 'keluar' => '', 'penerimaan' => ''];
+    }
+
+    public function addNbRusakRow(): void
+    {
+        $this->manualData[] = ['tanggal' => '', 'uraian' => 'Rusak', 'masuk' => '', 'keluar' => '', 'penerimaan' => '', 'is_rusak' => true];
     }
 
     public function addSisaBulanLaluNb(): void
@@ -1712,7 +1717,7 @@ new class extends Component
         @if ($this->preview && (($this->tableLayout['type'] ?? '') === 'laporan_nb' || ($this->tableLayout['type'] ?? '') === 'laporan_n'))
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Isi Data Manual</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi data stok masuk dan penerimaan. Baris tanggal 1 untuk stok masuk, baris lainnya untuk keluar.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Isi data stok masuk dan penerimaan. Baris tanggal 1 untuk stok masuk. Kolom Keluar untuk baris manual (mis. Rusak) — mengurangi Sisa dan ikut terhitung di Jumlah.</p>
                 <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md">
                     <table class="min-w-full text-sm border-collapse">
                         <thead>
@@ -1721,6 +1726,7 @@ new class extends Component
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Tanggal</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Uraian</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Masuk</th>
+                                <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Keluar</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs">Penerimaan</th>
                                 <th class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center font-semibold text-xs"></th>
                             </tr>
@@ -1750,6 +1756,13 @@ new class extends Component
                                         <input type="number" min="0" wire:model.live="manualData.{{ $i }}.masuk" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
+                                        @if ($isSisaBL)
+                                            <span class="text-xs text-gray-700 dark:text-gray-300">0</span>
+                                        @else
+                                            <input type="number" min="0" wire:model.live="manualData.{{ $i }}.keluar" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5 text-center" placeholder="0" />
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 dark:border-gray-600 px-1 py-0.5">
                                         <input type="text" wire:model.live="manualData.{{ $i }}.penerimaan" class="w-full border-gray-300 dark:border-gray-600 rounded text-xs px-1 py-0.5" placeholder="No. Penerimaan" />
                                     </td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
@@ -1760,10 +1773,14 @@ new class extends Component
                                 </tr>
                             @endforeach
                             <tr>
-                                <td colspan="6" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
+                                <td colspan="7" class="border border-gray-300 dark:border-gray-600 px-2 py-1 text-center">
                                     <button wire:click="addNbRow" type="button" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                         Tambah Baris
+                                    </button>
+                                    <button wire:click="addNbRusakRow" type="button" class="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 ml-3">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Baris Rusak
                                     </button>
                                     <button wire:click="addSisaBulanLaluNb" type="button" class="inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 ml-3">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

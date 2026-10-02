@@ -265,6 +265,135 @@ class ReportTest extends TestCase
         $this->assertSame(['NB-SEP-001', 'NB-SEP-002', 'NB-SEP-003'], $entries);
     }
 
+    private function nbReportWithManual(User $user, array $manualData): Report
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => 'laporan pendaftaran nikah',
+        ]);
+
+        foreach ([
+            ['Nomor Daftar' => 'ND-001', 'Tanggal Daftar' => '2026-09-05', 'Nama Suami' => 'Suami A', 'Nama Istri' => 'Istri A'],
+            ['Nomor Daftar' => 'ND-002', 'Tanggal Daftar' => '2026-09-05', 'Nama Suami' => 'Suami B', 'Nama Istri' => 'Istri B'],
+            ['Nomor Daftar' => 'ND-003', 'Tanggal Daftar' => '2026-09-10', 'Nama Suami' => 'Suami C', 'Nama Istri' => 'Istri C'],
+        ] as $i => $row) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => $row,
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return Report::factory()->for($user)->create([
+            'import_id' => $import->id,
+            'config_json' => [
+                'fields' => ['Nomor Daftar', 'Tanggal Daftar', 'Nama Suami', 'Nama Istri'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'table_layout' => ['type' => 'laporan_nb'],
+                'manual_data' => $manualData,
+            ],
+        ]);
+    }
+
+    public function test_laporan_nb_baris_rusak_manual_mengurangi_sisa_dan_jumlah(): void
+    {
+        $user = User::factory()->create();
+
+        $report = $this->nbReportWithManual($user, [
+            ['is_sisa_bulan_lalu' => true, 'tanggal' => '01', 'uraian' => 'Sisa bulan lalu', 'masuk' => '100', 'penerimaan' => ''],
+            ['tanggal' => '30', 'uraian' => 'Rusak', 'masuk' => '', 'keluar' => '2', 'penerimaan' => '', 'is_rusak' => true],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk()->assertSee('Rusak');
+
+        $rows = $response->viewData('dataset')['rows'];
+
+        // Sisa bulan lalu tidak berubah.
+        $this->assertSame(100, $rows[0]['sisa']);
+
+        // Data 05 Sep (2 entri) lalu 10 Sep (1 entri).
+        $this->assertSame(2, $rows[1]['keluar']);
+        $this->assertSame(98, $rows[1]['sisa']);
+        $this->assertSame(1, $rows[2]['keluar']);
+        $this->assertSame(97, $rows[2]['sisa']);
+
+        // Baris Rusak di akhir: tanggal sesuai isian, keluar mengurangi sisa.
+        $rusak = $rows[3];
+        $this->assertSame('Rusak', $rusak['uraian']);
+        $this->assertSame('30/09/2026', $rusak['tanggal']);
+        $this->assertSame(2, $rusak['keluar']);
+        $this->assertSame(95, $rusak['sisa']);
+
+        // Jumlah: masuk 100, keluar 3 data + 2 rusak, sisa akhir 95.
+        $jumlah = null;
+        foreach ($this->tableCellRows($response->getContent()) as $cells) {
+            if (in_array('Jumlah', $cells, true)) {
+                $jumlah = $cells;
+            }
+        }
+
+        $this->assertNotNull($jumlah);
+        $this->assertSame('100', $jumlah[3]);
+        $this->assertSame('5', $jumlah[4]);
+        $this->assertSame('95', $jumlah[5]);
+    }
+
+    public function test_laporan_nb_baris_rusak_tidak_menimpa_baris_data(): void
+    {
+        $user = User::factory()->create();
+
+        // Tanggal rusak sengaja sama dengan tanggal yang punya data (05 Sep).
+        $report = $this->nbReportWithManual($user, [
+            ['is_sisa_bulan_lalu' => true, 'tanggal' => '01', 'uraian' => 'Sisa bulan lalu', 'masuk' => '100', 'penerimaan' => ''],
+            ['tanggal' => '05', 'uraian' => 'Rusak', 'masuk' => '', 'keluar' => '1', 'penerimaan' => '', 'is_rusak' => true],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk()->assertSee('Suami A - Istri A Cs')->assertSee('Rusak');
+
+        $rows = $response->viewData('dataset')['rows'];
+
+        // Uraian pasangan pada 05 Sep tetap utuh, tidak ditimpa "Rusak".
+        $this->assertSame('Suami A - Istri A Cs', $rows[1]['uraian']);
+        $this->assertCount(2, $rows[1]['entries']);
+
+        // Baris Rusak tetap terpisah di akhir.
+        $rusak = $rows[3];
+        $this->assertSame('Rusak', $rusak['uraian']);
+        $this->assertSame('05/09/2026', $rusak['tanggal']);
+        $this->assertSame(1, $rusak['keluar']);
+        $this->assertSame(96, $rusak['sisa']);
+    }
+
+    public function test_report_builder_tombol_rusak_menambah_baris_manual(): void
+    {
+        $user = User::factory()->create();
+        $import = $this->importWithRows($user);
+
+        $component = Livewire::actingAs($user)
+            ->test('report-builder')
+            ->set('importId', $import->id)
+            ->set('tableLayout', ['type' => 'laporan_nb'])
+            ->call('addNbRusakRow')
+            ->assertSet('manualData.0.uraian', 'Rusak')
+            ->assertSet('manualData.0.is_rusak', true);
+
+        $component
+            ->set('title', 'NB Rusak Manual')
+            ->set('format', 'print')
+            ->set('filterMonth', '9')
+            ->set('filterYear', '2026')
+            ->call('generate')
+            ->assertHasNoErrors();
+
+        $manual = Report::latest()->first()->config_json['manual_data'] ?? [];
+
+        $this->assertSame('Rusak', $manual[0]['uraian'] ?? null);
+        $this->assertTrue((bool) ($manual[0]['is_rusak'] ?? false));
+        $this->assertArrayHasKey('keluar', $manual[0] ?? []);
+    }
+
     public function test_laporan_n_menyertakan_baris_appended(): void
     {
         $user = User::factory()->create();

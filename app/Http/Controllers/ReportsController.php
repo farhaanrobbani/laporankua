@@ -1279,7 +1279,6 @@ class ReportsController extends Controller
         $rows = [];
         $runningSisa = 0;
         $rowNum = 0;
-
         foreach ($sisaRows as $sr) {
             $rowNum++;
             $masuk = isset($sr['masuk']) && $sr['masuk'] !== '' ? (int) $sr['masuk'] : null;
@@ -1296,6 +1295,7 @@ class ReportsController extends Controller
                 'pengeluaran' => '',
                 'is_tgl1' => true,
                 'is_manual' => true,
+                'is_sisa_bulan_lalu' => true,
                 'entries' => [],
             ];
             $runningSisa = $masuk ?? 0;
@@ -1308,6 +1308,7 @@ class ReportsController extends Controller
             $tanggal = $d->format('d/m/Y');
             $count = count($entries);
             usort($entries, fn ($a, $b) => strnatcmp(trim((string) ($a['Nomor Daftar'] ?? '')), trim((string) ($b['Nomor Daftar'] ?? ''))));
+
             $nomorDaftars = array_map(fn ($r) => trim((string) ($r['Nomor Daftar'] ?? '')), $entries);
             $nomorDaftars = array_values(array_filter($nomorDaftars));
 
@@ -1331,6 +1332,9 @@ class ReportsController extends Controller
 
             $md = [];
             foreach ($otherManualRows as $mr) {
+                if (! empty($mr['is_rusak'])) {
+                    continue;
+                }
                 $mrDay = str_pad((string) ($mr['tanggal'] ?? ''), 2, '0', STR_PAD_LEFT);
                 if ($mrDay === $d->format('d') && ! in_array($mr, $matchedManual, true)) {
                     $md = $mr;
@@ -1363,11 +1367,11 @@ class ReportsController extends Controller
             $rowNum++;
             $rows[] = [
                 'no' => $rowNum,
-                'tanggal' => $mr['tanggal'] ?? '',
+                'tanggal' => $this->manualRowTanggal($mr['tanggal'] ?? '', $filterMonth, $filterYear, $filterDateFrom),
                 'tanggal_key' => 'manual_extra_'.$rowNum,
                 'uraian' => $mr['uraian'] ?? '',
                 'masuk' => isset($mr['masuk']) && $mr['masuk'] !== '' ? (int) $mr['masuk'] : null,
-                'keluar' => 0,
+                'keluar' => isset($mr['keluar']) && $mr['keluar'] !== '' ? (int) $mr['keluar'] : 0,
                 'sisa' => null,
                 'satuan' => 'Lembar',
                 'penerimaan' => $mr['penerimaan'] ?? null,
@@ -1379,7 +1383,17 @@ class ReportsController extends Controller
         }
 
         foreach ($rows as &$r) {
-            if ($r['is_manual'] ?? false) {
+            if (! empty($r['is_sisa_bulan_lalu'])) {
+                continue;
+            }
+            if (! empty($r['is_manual'])) {
+                // Baris manual tambahan (mis. Rusak): masuk menambah, keluar mengurangi sisa.
+                if (isset($r['masuk']) && $r['masuk'] !== null) {
+                    $runningSisa += $r['masuk'];
+                }
+                $runningSisa -= (int) ($r['keluar'] ?? 0);
+                $r['sisa'] = $runningSisa;
+
                 continue;
             }
             if ($r['is_tgl1'] && isset($r['masuk']) && $r['masuk'] !== null) {
@@ -1393,6 +1407,37 @@ class ReportsController extends Controller
         unset($r);
 
         return $rows;
+    }
+
+    /**
+     * Tanggal lengkap dd/MM/YYYY untuk baris manual NB/N dari input hari + filter laporan.
+     */
+    private function manualRowTanggal(mixed $day, ?string $filterMonth, ?string $filterYear, ?string $filterDateFrom): string
+    {
+        $d = trim((string) ($day ?? ''));
+
+        if ($d === '') {
+            return '';
+        }
+
+        $month = $filterMonth;
+        $year = $filterYear;
+
+        if (($month === null || $month === '') && ! empty($filterDateFrom)) {
+            try {
+                $base = Carbon::parse($filterDateFrom);
+                $month = (string) $base->month;
+                $year = $year ?: (string) $base->year;
+            } catch (\Exception $e) {
+                return '';
+            }
+        }
+
+        if ($month === null || $month === '' || $year === null || $year === '') {
+            return '';
+        }
+
+        return str_pad($d, 2, '0', STR_PAD_LEFT).'/'.str_pad((string) $month, 2, '0', STR_PAD_LEFT).'/'.$year;
     }
 
     private function buildNbManualData(array $config): array
@@ -1513,6 +1558,7 @@ class ReportsController extends Controller
                 'pengeluaran' => '',
                 'is_tgl1' => true,
                 'is_manual' => true,
+                'is_sisa_bulan_lalu' => true,
                 'entries' => [],
             ];
             $runningSisa = $masuk ?? 0;
@@ -1548,6 +1594,9 @@ class ReportsController extends Controller
 
             $md = [];
             foreach ($otherManualRows as $mr) {
+                if (! empty($mr['is_rusak'])) {
+                    continue;
+                }
                 $mrDay = str_pad((string) ($mr['tanggal'] ?? ''), 2, '0', STR_PAD_LEFT);
                 if ($mrDay === $d->format('d') && ! in_array($mr, $matchedManual, true)) {
                     $md = $mr;
@@ -1580,11 +1629,11 @@ class ReportsController extends Controller
             $rowNum++;
             $rows[] = [
                 'no' => $rowNum,
-                'tanggal' => $mr['tanggal'] ?? '',
+                'tanggal' => $this->manualRowTanggal($mr['tanggal'] ?? '', $filterMonth, $filterYear, $filterDateFrom),
                 'tanggal_key' => 'manual_extra_'.$rowNum,
                 'uraian' => $mr['uraian'] ?? '',
                 'masuk' => isset($mr['masuk']) && $mr['masuk'] !== '' ? (int) $mr['masuk'] : null,
-                'keluar' => 0,
+                'keluar' => isset($mr['keluar']) && $mr['keluar'] !== '' ? (int) $mr['keluar'] : 0,
                 'sisa' => null,
                 'satuan' => 'Lembar',
                 'penerimaan' => $mr['penerimaan'] ?? null,
@@ -1596,7 +1645,17 @@ class ReportsController extends Controller
         }
 
         foreach ($rows as &$r) {
-            if ($r['is_manual'] ?? false) {
+            if (! empty($r['is_sisa_bulan_lalu'])) {
+                continue;
+            }
+            if (! empty($r['is_manual'])) {
+                // Baris manual tambahan (mis. Rusak): masuk menambah, keluar mengurangi sisa.
+                if (isset($r['masuk']) && $r['masuk'] !== null) {
+                    $runningSisa += $r['masuk'];
+                }
+                $runningSisa -= (int) ($r['keluar'] ?? 0);
+                $r['sisa'] = $runningSisa;
+
                 continue;
             }
             if ($r['is_tgl1'] && isset($r['masuk']) && $r['masuk'] !== null) {
