@@ -510,6 +510,117 @@ class ReportTest extends TestCase
         $this->assertSame(1, $sonowangi['Duplikat']);
     }
 
+    private function laporanNaReportWithPerforasi(User $user, array $nums): Report
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => 'laporan model l3',
+        ]);
+
+        foreach ($nums as $i => $num) {
+            $perforasi = '116741'.str_pad((string) $num, 3, '0', STR_PAD_LEFT);
+            ImportData::factory()->for($import)->create([
+                'row_data' => [
+                    'Nomor Perforasi' => $perforasi,
+                    'Keterangan' => 'Bukan Duplikat',
+                    'Nama Catin' => 'Suami '.$num.' - Istri '.$num,
+                    'Tanggal Akad' => '2026-09-10',
+                    'Tanggal Nikah' => '2026-09-10',
+                    'Tanggal Cetak' => '2026-09-10',
+                ],
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return Report::factory()->for($user)->create([
+            'import_id' => $import->id,
+            'output_format' => 'print',
+            'config_json' => [
+                'fields' => ['Tanggal Akad', 'Keterangan', 'Nama Catin', 'Nomor Perforasi', 'Tanggal Nikah'],
+                'is_merged' => true,
+                'merged_import_ids' => [$import->id],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'sort_column' => 'Tanggal Nikah',
+                'sort_direction' => 'asc',
+                'table_layout' => ['type' => 'laporan_na'],
+                'manual_data' => [
+                    'sisa_bulan_lalu' => [
+                        'uraian' => 'Sisa bulan lalu',
+                        'masuk' => '6',
+                        'keluar' => '',
+                        'seri_dari' => '116741001',
+                        'seri_sampai' => '116741006',
+                        'model' => 'NA',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /** @return array<int, array<int, string>> */
+    private function tableCellRows(string $html): array
+    {
+        $rows = [];
+        if (! preg_match_all('/<tr\b[^>]*>(.*?)<\/tr>/s', $html, $trs)) {
+            return $rows;
+        }
+        foreach ($trs[1] as $tr) {
+            if (! preg_match_all('/<td[^>]*>(.*?)<\/td>/s', $tr, $cells)) {
+                continue;
+            }
+            $rows[] = array_map(fn ($c) => trim(html_entity_decode(strip_tags($c))), $cells[1]);
+        }
+
+        return $rows;
+    }
+
+    public function test_laporan_na_menampilkan_baris_rusak_dari_perforasi_hilang(): void
+    {
+        $user = User::factory()->create();
+        // Nomor 003 hilang (rusak) di tengah rentang; 006 belum terpakai (stok, bukan rusak).
+        $report = $this->laporanNaReportWithPerforasi($user, [1, 2, 4, 5]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+        $response->assertSee('Rusak');
+        $response->assertSee('JT 116741003');
+
+        $rows = $this->tableCellRows($response->getContent());
+
+        $rusak = collect($rows)->first(fn ($r) => ($r[2] ?? '') === 'Rusak');
+        $this->assertNotNull($rusak, 'Baris Rusak harus tampil di laporan NA');
+        $this->assertSame('10/09/2026', $rusak[1]);
+        $this->assertSame('', $rusak[3], 'Masuk baris Rusak kosong');
+        $this->assertSame('1', $rusak[4], 'Rusak dihitung sebagai Keluar');
+        $this->assertSame('1', $rusak[5], 'Sisa dikurangi rusak: 6 - 4 terpakai - 1 rusak');
+        $this->assertSame('NA', $rusak[6]);
+        $this->assertSame('JT 116741003', $rusak[7], 'Hanya nomor hilang yang dijadikan seri (006 bukan rusak)');
+        $this->assertSame('Buku', $rusak[8]);
+
+        $jumlah = collect($rows)->first(fn ($r) => ($r[2] ?? '') === 'Jumlah');
+        $this->assertNotNull($jumlah);
+        $this->assertSame('6', $jumlah[3], 'Masuk = sisa bulan lalu');
+        $this->assertSame('5', $jumlah[4], 'Keluar = 4 baris + 1 rusak');
+        $this->assertSame('1', $jumlah[5], 'Sisa = 6 - 5');
+    }
+
+    public function test_laporan_na_tanpa_celah_tidak_menampilkan_rusak(): void
+    {
+        $user = User::factory()->create();
+        // Rentang kontigu: tidak ada nomor hilang → tanpa baris Rusak.
+        $report = $this->laporanNaReportWithPerforasi($user, [1, 2, 3, 4]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+        $response->assertDontSee('Rusak');
+
+        $jumlah = collect($this->tableCellRows($response->getContent()))->first(fn ($r) => ($r[2] ?? '') === 'Jumlah');
+        $this->assertNotNull($jumlah);
+        $this->assertSame('4', $jumlah[4], 'Keluar = 4 baris, tanpa rusak');
+        $this->assertSame('2', $jumlah[5], 'Sisa = 6 - 4');
+    }
+
     private function reportStatus(Report $report): string
     {
         return $report->fresh()->status;

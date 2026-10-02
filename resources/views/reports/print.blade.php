@@ -907,9 +907,52 @@
                             }
                             ksort($grouped);
 
+                            // Deteksi nomor perforasi hilang (Rusak) per prefix.
+                            // Sumber data rusak: celah interior pada rentang nomor
+                            // yang benar-benar ada di baris laporan bulan ini.
+                            $perforasiByPrefix = [];
+                            foreach ($rows as $row) {
+                                $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($row['Nomor Perforasi'] ?? ''))));
+                                if (! preg_match('/^\d+$/', $p)) {
+                                    continue;
+                                }
+                                $pf = substr($p, 0, $prefixLength);
+                                $perforasiByPrefix[$pf][(int) $p] = true;
+                            }
+                            $rusakByPrefix = [];
+                            foreach ($perforasiByPrefix as $pf => $numSet) {
+                                $sortedNums = array_keys($numSet);
+                                sort($sortedNums);
+                                if (count($sortedNums) < 2) {
+                                    continue;
+                                }
+                                $missing = [];
+                                for ($n = $sortedNums[0]; $n <= $sortedNums[count($sortedNums) - 1]; $n++) {
+                                    if (! isset($numSet[$n])) {
+                                        $missing[] = $n;
+                                    }
+                                }
+                                if ($missing !== []) {
+                                    $rusakByPrefix[$pf] = $missing;
+                                }
+                            }
+                            // Tanggal terakhir tiap prefix (grouped sudah ksort naik).
+                            $lastDateByPrefix = [];
+                            foreach ($grouped as $dateKey => $dateRows) {
+                                foreach ($dateRows as $r) {
+                                    $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
+                                    $lastDateByPrefix[substr((string) $p, 0, $prefixLength)] = $dateKey;
+                                }
+                            }
+                            $totalRusak = 0;
+                            foreach ($rusakByPrefix as $missingNums) {
+                                $totalRusak += count($missingNums);
+                            }
+
                             // Pre-calculate sisa per date/prefix
                             $dateSisaBD = [];
                             $dateSisaD = [];
+                            $dateSisaRusak = [];
                             foreach ($grouped as $dateKey => $dateRows) {
                                 $byPrefix = [];
                                 foreach ($dateRows as $r) {
@@ -922,6 +965,7 @@
                                 }
                                 $dateSisaBD[$dateKey] = [];
                                 $dateSisaD[$dateKey] = [];
+                                $dateSisaRusak[$dateKey] = [];
                                 foreach ($byPrefix as $pf => $pfRows) {
                                     $bdCount = count(array_values(array_filter($pfRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') !== 'duplikat')));
                                     $dCount = count(array_values(array_filter($pfRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') === 'duplikat')));
@@ -932,6 +976,12 @@
                                     $dateSisaBD[$dateKey][$pf] = max(0, $runningSisa[$pf]);
                                     $runningSisa[$pf] -= $dCount;
                                     $dateSisaD[$dateKey][$pf] = max(0, $runningSisa[$pf]);
+                                    $dateSisaRusak[$dateKey][$pf] = $dateSisaD[$dateKey][$pf];
+                                    // Rusak mengurangi sisa tepat di tanggal terakhir data prefix.
+                                    if (isset($rusakByPrefix[$pf]) && ($lastDateByPrefix[$pf] ?? null) === $dateKey) {
+                                        $runningSisa[$pf] -= count($rusakByPrefix[$pf]);
+                                        $dateSisaRusak[$dateKey][$pf] = max(0, $runningSisa[$pf]);
+                                    }
                                 }
                             }
 
@@ -969,6 +1019,17 @@
                                     if ($keluarD > 0) {
                                         $flatRows[] = ['type' => 'd', 'date' => $dateDisplay, 'pf' => $pf, 'duplikat' => $duplikat, 'keluarD' => $keluarD, 'sisaD' => $sisaD];
                                     }
+                                    if (isset($rusakByPrefix[$pf]) && ($lastDateByPrefix[$pf] ?? null) === $dateKey) {
+                                        $missing = $rusakByPrefix[$pf];
+                                        $flatRows[] = [
+                                            'type' => 'rusak',
+                                            'date' => $dateDisplay,
+                                            'pf' => $pf,
+                                            'missing' => $missing,
+                                            'keluarRusak' => count($missing),
+                                            'sisaRusak' => $dateSisaRusak[$dateKey][$pf] ?? 0,
+                                        ];
+                                    }
                                 }
                             }
 
@@ -992,7 +1053,7 @@
                             foreach ($sisaBLEntries as $sbl) {
                                 $totalMasukVal += (int) ($sbl['masuk'] ?? 0);
                             }
-                            $totalKeluarVal = count($rows);
+                            $totalKeluarVal = count($rows) + $totalRusak;
                         @endphp
                         @foreach ($flatRows as $fi => $flatRow)
                                 @if ($needsPageBreak)
@@ -1226,6 +1287,67 @@
                                         <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
                                     </tr>
                                 @endif
+                            @elseif ($flatRow['type'] === 'rusak')
+                                @php
+                                    $missingNums = $flatRow['missing'];
+                                    $keluarRusak = $flatRow['keluarRusak'];
+                                    $sisaRusak = $flatRow['sisaRusak'];
+                                    // Gabung nomor berurut jadi rentang, mis. "JT 116741470 - 116741471".
+                                    $rusakRuns = [];
+                                    $runStart = $missingNums[0];
+                                    $runPrev = $missingNums[0];
+                                    for ($mi = 1; $mi < count($missingNums); $mi++) {
+                                        $m = $missingNums[$mi];
+                                        if ($m === $runPrev + 1) {
+                                            $runPrev = $m;
+                                            continue;
+                                        }
+                                        $rusakRuns[] = $runStart === $runPrev ? 'JT '.$runStart : 'JT '.$runStart.' - '.$runPrev;
+                                        $runStart = $m;
+                                        $runPrev = $m;
+                                    }
+                                    $rusakRuns[] = $runStart === $runPrev ? 'JT '.$runStart : 'JT '.$runStart.' - '.$runPrev;
+                                    $rusakSeriRange = implode("\n", $rusakRuns);
+                                @endphp
+                                <tr>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $rowNum++ }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >{{ $flatRow['date'] }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5" >Rusak</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >{{ $keluarRusak }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $sisaRusak < 0 ? 0 : $sisaRusak }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >NA</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" style="white-space:pre-line;">{{ $rusakSeriRange }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" >Buku</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                </tr>
+                                @php
+                                    $pageIndex++;
+                                    $runningKeluar += $keluarRusak;
+                                    $sisaState[$flatRow['pf']] = $sisaRusak;
+                                    if (($pageIndex >= $pageRows && $fi < $flatCount - 1) || ($fi === $flatCount - 1 && $pageIndex > $extraPageThreshold && $pageIndex <= 25)) {
+                                        $totalSisaVal = max(0, array_sum($sisaState));
+                                        $prevPageSisa = $totalSisaVal;
+                                        $needsPageBreak = true;
+                                    }
+                                @endphp
+                                @if ($needsPageBreak)
+                                    {{-- Jumlah Dipindahkan row --}}
+                                    <tr>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5" style="font-weight:bold;">Jumlah Dipindahkan</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $runningKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">{{ $totalSisaVal }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">NA</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" style="font-weight:bold;">Buku</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center" ></td>
+                                    </tr>
+                                @endif
                             @endif
                         @endforeach
                         {{-- Buka halaman baru jika break terjadi di baris terakhir (data 18-28 baris) --}}
@@ -1291,7 +1413,7 @@
                             foreach ($sisaBLEntries as $sbl) {
                                 $totalMasuk += (int) ($sbl['masuk'] ?? 0);
                             }
-                            $totalKeluar = count($rows);
+                            $totalKeluar = count($rows) + $totalRusak;
                             $lastKeluarPerPrefix = [];
                             foreach ($grouped as $dateKey => $dateRows) {
                                 foreach ($dateRows as $r) {
