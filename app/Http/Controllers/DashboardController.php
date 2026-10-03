@@ -76,6 +76,14 @@ class DashboardController extends Controller
             'pn_luar' => 0,
             'pdk_kantor' => 0,
             'pdk_luar' => 0,
+            'pn_kantor_tahun' => 0,
+            'pn_luar_tahun' => 0,
+            'pdk_kantor_tahun' => 0,
+            'pdk_luar_tahun' => 0,
+            'ph_kantor_bulan' => 0,
+            'ph_luar_bulan' => 0,
+            'ph_kantor_tahun' => 0,
+            'ph_luar_tahun' => 0,
         ];
 
         $rawRows = DB::table('import_data')
@@ -123,17 +131,38 @@ class DashboardController extends Controller
             }
             $matchYear = $date->year === $tahun;
             $matchMonth = $matchYear && $date->month === $bulan;
+            $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
+            $isLuar = $pdk !== null && $this->isLuarKantor($pdk);
+            $hasPenghulu = trim((string) ($row['Penghulu'] ?? '')) !== '';
+
             if ($matchYear) {
                 $stats['pn_tahun']++;
+                if ($isLuar) {
+                    $stats['pn_luar_tahun']++;
+                } else {
+                    $stats['pn_kantor_tahun']++;
+                }
+                if ($hasPenghulu) {
+                    if ($isLuar) {
+                        $stats['ph_luar_tahun']++;
+                    } else {
+                        $stats['ph_kantor_tahun']++;
+                    }
+                }
             }
             if ($matchMonth) {
                 $stats['pn_bulan']++;
-
-                $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
-                if ($pdk !== null && $this->isLuarKantor($pdk)) {
+                if ($isLuar) {
                     $stats['pn_luar']++;
                 } else {
                     $stats['pn_kantor']++;
+                }
+                if ($hasPenghulu) {
+                    if ($isLuar) {
+                        $stats['ph_luar_bulan']++;
+                    } else {
+                        $stats['ph_kantor_bulan']++;
+                    }
                 }
             }
         }
@@ -145,13 +174,19 @@ class DashboardController extends Controller
             }
             $matchYear = $date->year === $tahun;
             $matchMonth = $matchYear && $date->month === $bulan;
+            $isLuar = $this->isLuarKantor($row);
             if ($matchYear) {
                 $stats['pdk_tahun']++;
+                if ($isLuar) {
+                    $stats['pdk_luar_tahun']++;
+                } else {
+                    $stats['pdk_kantor_tahun']++;
+                }
             }
             if ($matchMonth) {
                 $stats['pdk_bulan']++;
 
-                if ($this->isLuarKantor($row)) {
+                if ($isLuar) {
                     $stats['pdk_luar']++;
                 } else {
                     $stats['pdk_kantor']++;

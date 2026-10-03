@@ -80,9 +80,9 @@ class DashboardTest extends TestCase
         );
 
         $mk('laporan peristiwa nikah', [
-            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '15-09-2026'],
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '15-09-2026', 'Penghulu' => 'MOHAMAD AMIN'],
             ['Nomor Daftar' => 'ND-2', 'Tanggal Nikah' => '10-10-2026'],
-            ['Nomor Daftar' => 'ND-X', 'Tanggal Nikah' => '20-09-2026'],
+            ['Nomor Daftar' => 'ND-X', 'Tanggal Nikah' => '20-09-2026', 'Penghulu' => ''],
             ['Nomor Daftar' => 'ND-3', 'Tanggal Nikah' => 'bukan tanggal'],
         ]);
 
@@ -181,5 +181,33 @@ class DashboardTest extends TestCase
         $this->assertSame(0, $stats['dup_bulan']);
         $this->assertSame(1, $stats['pn_kantor']);
         $this->assertSame(0, $stats['pdk_kantor']);
+    }
+
+    public function test_statistik_kantor_tahun_dan_penghulu_hadir(): void
+    {
+        $user = User::factory()->create();
+        $this->seedStatsFixtures($user);
+
+        // Kartu tahun tidak dibatasi bulan: pn kantor (ND-1, ND-X) & luar (ND-2); pdk kantor (ND-1) & luar (ND-2, ND-4).
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+        $this->assertSame(2, $stats['pn_kantor_tahun']);
+        $this->assertSame(1, $stats['pn_luar_tahun']);
+        $this->assertSame(1, $stats['pdk_kantor_tahun']);
+        $this->assertSame(2, $stats['pdk_luar_tahun']);
+
+        // Penghulu hadir: hanya ND-1 (terisi); ND-X kosong, ND-2 tanpa key.
+        $this->assertSame(1, $stats['ph_kantor_bulan']);
+        $this->assertSame(0, $stats['ph_luar_bulan']);
+        $this->assertSame(1, $stats['ph_kantor_tahun']);
+        $this->assertSame(0, $stats['ph_luar_tahun']);
+
+        // Oktober: kartu tahun identik (ND-1 tetap terhitung tahun 2026), kartu penghulu bulan nol (ND-2 tanpa Penghulu).
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026')->viewData('stats');
+        $this->assertSame(2, $stats['pn_kantor_tahun']);
+        $this->assertSame(1, $stats['pn_luar_tahun']);
+        $this->assertSame(0, $stats['ph_kantor_bulan']);
+        $this->assertSame(0, $stats['ph_luar_bulan']);
+        $this->assertSame(1, $stats['ph_kantor_tahun']);
+        $this->assertSame(0, $stats['ph_luar_tahun']);
     }
 }
