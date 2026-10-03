@@ -45,6 +45,93 @@
                 </div>
             </div>
 
+            {{-- Statistik laporan --}}
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Statistik Laporan</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Periode: {{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <form method="GET" action="{{ route('dashboard') }}" class="flex items-end gap-3">
+                            <div>
+                                <label for="filter-bulan" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bulan</label>
+                                <select id="filter-bulan" name="bulan" class="border-gray-300 dark:border-gray-600 rounded-md text-sm">
+                                    @for ($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" @selected($bulan === $m)>{{ \App\Http\Controllers\DashboardController::MONTH_NAMES[$m - 1] }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-tahun" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tahun</label>
+                                <select id="filter-tahun" name="tahun" class="border-gray-300 dark:border-gray-600 rounded-md text-sm">
+                                    @for ($y = now()->year; $y >= now()->year - 5; $y--)
+                                        <option value="{{ $y }}" @selected($tahun === $y)>{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded-md transition">Terapkan</button>
+                        </form>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah &middot; Bulan</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_bulan']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah &middot; Tahun</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_tahun']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah &middot; Bulan</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_bulan']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah &middot; Tahun</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_tahun']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Duplikat &middot; Bulan</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['dup_bulan']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Duplikat &middot; Tahun</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['dup_tahun']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah Kantor</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_kantor']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah Luar Kantor</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_luar']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah Kantor</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_kantor']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah Luar Kantor</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_luar']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Recent imports --}}
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">

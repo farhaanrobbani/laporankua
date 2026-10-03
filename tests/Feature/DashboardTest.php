@@ -61,4 +61,125 @@ class DashboardTest extends TestCase
         $response->assertSee('Belum ada data import');
         $response->assertSee('Belum ada laporan');
     }
+
+    private function seedStatsFixtures(User $user): void
+    {
+        $mk = fn (string $tableName, array $rows) => tap(
+            Import::factory()->for($user)->create([
+                'status' => 'success',
+                'table_name' => $tableName,
+            ]),
+            function (Import $import) use ($rows) {
+                foreach ($rows as $i => $row) {
+                    ImportData::factory()->for($import)->create([
+                        'row_data' => $row,
+                        'row_number' => $i + 2,
+                    ]);
+                }
+            }
+        );
+
+        $mk('laporan peristiwa nikah', [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '15-09-2026'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Nikah' => '10-10-2026'],
+            ['Nomor Daftar' => 'ND-X', 'Tanggal Nikah' => '20-09-2026'],
+            ['Nomor Daftar' => 'ND-3', 'Tanggal Nikah' => 'bukan tanggal'],
+        ]);
+
+        $mk('laporan pendaftaran nikah', [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Daftar' => '05-10-2026', 'Nikah Di' => 'LUAR KUA / BEDOL'],
+            ['Nomor Daftar' => 'ND-4', 'Tanggal Daftar' => '20-09-2026', 'Nikah Di' => 'LUAR KUA / BEDOL'],
+        ]);
+
+        $mk('laporan model l3', [
+            ['Nomor Perforasi' => '111', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '02-09-2026'],
+            ['Nomor Perforasi' => '111', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '02-09-2026'],
+            ['Nomor Perforasi' => '222', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '03-10-2026'],
+            ['Nomor Perforasi' => '333', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '04-09-2026'],
+        ]);
+    }
+
+    public function test_statistik_periode_mengikuti_filter_bulan_tahun(): void
+    {
+        $user = User::factory()->create();
+        $this->seedStatsFixtures($user);
+
+        $september = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026');
+        $september->assertOk()->assertSee('Statistik Laporan')->assertSee('Peristiwa Nikah');
+
+        $stats = $september->viewData('stats');
+        $this->assertSame(9, $september->viewData('bulan'));
+        $this->assertSame(2026, $september->viewData('tahun'));
+        $this->assertSame('September', $september->viewData('monthName'));
+
+        // Periode September: pn=2 (1 baris tanggal rusak diabaikan), pdk=2, duplikat=1 (dedup perforasi 111).
+        $this->assertSame(2, $stats['pn_bulan']);
+        $this->assertSame(2, $stats['pdk_bulan']);
+        $this->assertSame(1, $stats['dup_bulan']);
+
+        // Tahun 2026 tetap menghitung seluruh bulan.
+        $this->assertSame(3, $stats['pn_tahun']);
+        $this->assertSame(3, $stats['pdk_tahun']);
+        $this->assertSame(2, $stats['dup_tahun']);
+
+        $oktober = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026');
+        $oktober->assertOk();
+        $stats = $oktober->viewData('stats');
+        $this->assertSame(1, $stats['pn_bulan']);
+        $this->assertSame(1, $stats['pdk_bulan']);
+        $this->assertSame(1, $stats['dup_bulan']);
+        $this->assertSame(3, $stats['pn_tahun']);
+        $this->assertSame(3, $stats['pdk_tahun']);
+        $this->assertSame(2, $stats['dup_tahun']);
+
+        $tanpaFilter = $this->actingAs($user)->get('/dashboard');
+        $tanpaFilter->assertOk();
+        $this->assertSame((int) now()->month, $tanpaFilter->viewData('bulan'));
+        $this->assertSame((int) now()->year, $tanpaFilter->viewData('tahun'));
+    }
+
+    public function test_statistik_kantor_luar_ikut_periode_dan_join_pn(): void
+    {
+        $user = User::factory()->create();
+        $this->seedStatsFixtures($user);
+
+        // September: pn ND-1 join pdk (KUA/KANTOR) + ND-X tanpa pasangan -> kantor; pdk: 1 kantor + 1 luar.
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+        $this->assertSame(2, $stats['pn_kantor']);
+        $this->assertSame(0, $stats['pn_luar']);
+        $this->assertSame(1, $stats['pdk_kantor']);
+        $this->assertSame(1, $stats['pdk_luar']);
+
+        // Oktober: pn ND-2 join pdk (LUAR KUA/BEDOL) -> luar; pdk ND-2 luar.
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026')->viewData('stats');
+        $this->assertSame(0, $stats['pn_kantor']);
+        $this->assertSame(1, $stats['pn_luar']);
+        $this->assertSame(0, $stats['pdk_kantor']);
+        $this->assertSame(1, $stats['pdk_luar']);
+    }
+
+    public function test_statistik_tidak_menghitung_data_user_lain(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+
+        $this->seedStatsFixtures($userB);
+
+        Import::factory()->for($userA)->create([
+            'status' => 'success',
+            'table_name' => 'laporan peristiwa nikah',
+        ])->importData()->create([
+            'row_data' => ['Nomor Daftar' => 'A-1', 'Tanggal Nikah' => '15-09-2026'],
+            'row_number' => 2,
+        ]);
+
+        $stats = $this->actingAs($userA)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+
+        $this->assertSame(1, $stats['pn_bulan']);
+        $this->assertSame(0, $stats['pdk_bulan']);
+        $this->assertSame(0, $stats['dup_bulan']);
+        $this->assertSame(1, $stats['pn_kantor']);
+        $this->assertSame(0, $stats['pdk_kantor']);
+    }
 }
