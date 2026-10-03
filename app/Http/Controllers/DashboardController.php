@@ -80,10 +80,7 @@ class DashboardController extends Controller
             'pn_luar_tahun' => 0,
             'pdk_kantor_tahun' => 0,
             'pdk_luar_tahun' => 0,
-            'ph_kantor_bulan' => 0,
-            'ph_luar_bulan' => 0,
-            'ph_kantor_tahun' => 0,
-            'ph_luar_tahun' => 0,
+            'penghulu_bulan' => [],
         ];
 
         $rawRows = DB::table('import_data')
@@ -124,6 +121,7 @@ class DashboardController extends Controller
             }
         }
 
+        $penghuluCounts = [];
         foreach ($pnRows as $row) {
             $date = $this->parseDate($row['Tanggal Nikah'] ?? null);
             if ($date === null) {
@@ -133,7 +131,6 @@ class DashboardController extends Controller
             $matchMonth = $matchYear && $date->month === $bulan;
             $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
             $isLuar = $pdk !== null && $this->isLuarKantor($pdk);
-            $hasPenghulu = trim((string) ($row['Penghulu'] ?? '')) !== '';
 
             if ($matchYear) {
                 $stats['pn_tahun']++;
@@ -141,13 +138,6 @@ class DashboardController extends Controller
                     $stats['pn_luar_tahun']++;
                 } else {
                     $stats['pn_kantor_tahun']++;
-                }
-                if ($hasPenghulu) {
-                    if ($isLuar) {
-                        $stats['ph_luar_tahun']++;
-                    } else {
-                        $stats['ph_kantor_tahun']++;
-                    }
                 }
             }
             if ($matchMonth) {
@@ -157,14 +147,16 @@ class DashboardController extends Controller
                 } else {
                     $stats['pn_kantor']++;
                 }
-                if ($hasPenghulu) {
-                    if ($isLuar) {
-                        $stats['ph_luar_bulan']++;
-                    } else {
-                        $stats['ph_kantor_bulan']++;
-                    }
+                $penghulu = trim((string) ($row['Penghulu'] ?? ''));
+                if ($penghulu !== '') {
+                    $penghuluCounts[$penghulu] = ($penghuluCounts[$penghulu] ?? 0) + 1;
                 }
             }
+        }
+        uksort($penghuluCounts, fn ($a, $b) => [$penghuluCounts[$b], $a] <=> [$penghuluCounts[$a], $b]);
+        $stats['penghulu_bulan'] = [];
+        foreach ($penghuluCounts as $nama => $jumlah) {
+            $stats['penghulu_bulan'][] = ['nama' => $nama, 'jumlah' => $jumlah];
         }
 
         foreach ($pdkRows as $row) {
