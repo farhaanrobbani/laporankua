@@ -149,14 +149,25 @@ class DashboardController extends Controller
                 }
                 $penghulu = trim((string) ($row['Penghulu'] ?? ''));
                 if ($penghulu !== '') {
-                    $penghuluCounts[$penghulu] = ($penghuluCounts[$penghulu] ?? 0) + 1;
+                    $penghuluCounts[$penghulu] ??= ['kantor' => 0, 'luar' => 0];
+                    if ($isLuar) {
+                        $penghuluCounts[$penghulu]['luar']++;
+                    } else {
+                        $penghuluCounts[$penghulu]['kantor']++;
+                    }
                 }
             }
         }
-        uksort($penghuluCounts, fn ($a, $b) => [$penghuluCounts[$b], $a] <=> [$penghuluCounts[$a], $b]);
+        $jumlah = fn ($item) => $item['kantor'] + $item['luar'];
+        uksort($penghuluCounts, fn ($a, $b) => [$jumlah($penghuluCounts[$b]), $a] <=> [$jumlah($penghuluCounts[$a]), $b]);
         $stats['penghulu_bulan'] = [];
-        foreach ($penghuluCounts as $nama => $jumlah) {
-            $stats['penghulu_bulan'][] = ['nama' => $nama, 'jumlah' => $jumlah];
+        foreach ($penghuluCounts as $nama => $info) {
+            $stats['penghulu_bulan'][] = [
+                'nama' => $nama,
+                'kantor' => $info['kantor'],
+                'luar' => $info['luar'],
+                'jumlah' => $jumlah($info),
+            ];
         }
 
         foreach ($pdkRows as $row) {

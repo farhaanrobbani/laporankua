@@ -164,6 +164,8 @@
                                     <thead class="bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Penghulu</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kantor</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Luar</th>
                                             <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jumlah</th>
                                         </tr>
                                     </thead>
@@ -171,6 +173,8 @@
                                         @foreach ($stats['penghulu_bulan'] as $item)
                                             <tr>
                                                 <td class="px-4 py-2 text-gray-900 dark:text-gray-100">{{ $item['nama'] }}</td>
+                                                <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ number_format($item['kantor']) }}</td>
+                                                <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ number_format($item['luar']) }}</td>
                                                 <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ number_format($item['jumlah']) }}</td>
                                             </tr>
                                         @endforeach
