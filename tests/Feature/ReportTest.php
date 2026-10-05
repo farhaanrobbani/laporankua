@@ -446,6 +446,72 @@ class ReportTest extends TestCase
         $this->assertSame(['AKTA-SEP-001', 'AKTA-SEP-002'], $entries);
     }
 
+    public function test_laporan_n_pindah_halaman_setelah_25_baris(): void
+    {
+        $user = User::factory()->create();
+
+        $import = Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => 'laporan peristiwa nikah',
+        ]);
+
+        // 30 tanggal berbeda → 30 baris data + 1 baris sisa bulan lalu = 31 baris.
+        foreach (range(1, 30) as $day) {
+            $dd = str_pad((string) $day, 2, '0', STR_PAD_LEFT);
+            ImportData::factory()->for($import)->create([
+                'row_data' => [
+                    'Nomor Daftar' => 'PN-'.$dd,
+                    'Nomor Akta Nikah' => 'AKTA-'.$dd,
+                    'Tanggal Nikah' => '2026-09-'.$dd,
+                    'Nama Suami' => 'Suami '.$day,
+                    'Nama Istri' => 'Istri '.$day,
+                ],
+                'row_number' => $day + 1,
+            ]);
+        }
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $import->id,
+            'output_format' => 'print',
+            'config_json' => [
+                'fields' => ['Nomor Daftar', 'Nomor Akta Nikah', 'Tanggal Nikah', 'Nama Suami', 'Nama Istri'],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'table_layout' => ['type' => 'laporan_n'],
+                'manual_data' => [
+                    ['is_sisa_bulan_lalu' => true, 'uraian' => 'Sisa bulan lalu', 'masuk' => '40'],
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        // Halaman 1 (25 baris) ditutup Jumlah Dipindahkan; halaman 2 dibuka Jumlah Pindahan + kop baru.
+        $this->assertSame(1, substr_count($html, 'Jumlah Dipindahkan'));
+        $this->assertSame(1, substr_count($html, 'Jumlah Pindahan dari halaman sebelumnya'));
+        $this->assertSame(1, substr_count($html, 'page-break-before: always'));
+        $this->assertSame(2, substr_count($html, 'BUKU STOK KHUSUS'), 'Kop halaman tercetak untuk halaman 1 dan 2');
+
+        $rows = $this->tableCellRows($html);
+
+        // Pindahan membawa akumulasi halaman 1: masuk 40, keluar 24 (1 sisa + 24 tanggal), sisa 16.
+        $pindahan = collect($rows)->first(fn ($r) => ($r[2] ?? '') === 'Jumlah Pindahan dari halaman sebelumnya');
+        $this->assertNotNull($pindahan);
+        $this->assertSame('40', $pindahan[3]);
+        $this->assertSame('24', $pindahan[4]);
+        $this->assertSame('16', $pindahan[5]);
+
+        // Jumlah tetap dihitung penuh: masuk 40, keluar 30, sisa akhir 10.
+        $jumlah = collect($rows)->first(fn ($r) => ($r[2] ?? '') === 'Jumlah');
+        $this->assertNotNull($jumlah);
+        $this->assertSame('40', $jumlah[3]);
+        $this->assertSame('30', $jumlah[4]);
+        $this->assertSame('10', $jumlah[5]);
+    }
+
     public function test_laporan_l1_duplikat_l3_tidak_double_count(): void
     {
         $user = User::factory()->create(['daftar_desa' => ['DESA A']]);

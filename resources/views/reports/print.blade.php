@@ -1703,7 +1703,74 @@
                             <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
                         </tr>
                     @elseif ($isNReport)
-                        @foreach ($dataset['rows'] as $row)
+                        @php
+                            $nRowCount = count($dataset['rows']);
+                            $pageIndex = 0;
+                            $pageRows = 25;
+                            $closureReason = $dataset['config_json']['closure_reason'] ?? 'akhir_bulan';
+                            $extraPageThreshold = in_array($closureReason, ['monev', 'ganti_kepala']) ? 8 : 15;
+                            $pageNumber = 1;
+                            $prevPageMasuk = 0;
+                            $prevPageKeluar = 0;
+                            $prevPageSisa = '';
+                            $needsPageBreak = false;
+                            $runningMasuk = 0;
+                            $runningKeluar = 0;
+                            $runningSisa = '';
+                        @endphp
+                        @foreach ($dataset['rows'] as $ri => $row)
+                            @if ($needsPageBreak)
+                                @php
+                                    $pageNumber++;
+                                    $pageRows = 24;
+                                    $pageIndex = 0;
+                                    $needsPageBreak = false;
+                                    $prevPageMasuk = $runningMasuk;
+                                    $prevPageKeluar = $runningKeluar;
+                                    $prevPageSisa = $runningSisa;
+                                @endphp
+                                </tbody></table>
+                                <div style="page-break-before: always;"></div>
+                                @include('reports.partials.buku-stok-header', [
+                                    'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
+                                    'tahun' => $dataset['filter_year'] ?? $tahunName,
+                                    'model' => 'N Lembar',
+                                    'bookTitle' => 'BUKU STOK KHUSUS',
+                                    'bsModel' => 'BS 2',
+                                    'pageDisplay' => $bukuStokPageStart + $pageNumber - 1,
+                                ])
+                                <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
+                                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tanggal</th>
+                                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Uraian</th>
+                                            <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
+                                            <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
+                                            <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
+                                        </tr>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Masuk</th>
+                                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keluar</th>
+                                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Sisa</th>
+                                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Penerimaan</th>
+                                            <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="font-size: 10px;">
+                                        {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
+                                        <tr style="font-weight: bold;">
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                            <td class="border border-gray-700 px-1 py-0.5">Jumlah Pindahan dari halaman sebelumnya</td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $prevPageMasuk }}</td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $prevPageKeluar }}</td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $prevPageSisa }}</td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                            <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                        </tr>
+                            @endif
                             <tr>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['no'] ?? '' }}</td>
                                 @if (($row['is_manual'] ?? false) && ! ($row['is_sisa_bulan_lalu'] ?? false) && ! empty($row['tanggal']))
@@ -1727,7 +1794,85 @@
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['penerimaan'] ?? '' }}</td>
                                 <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $row['pengeluaran'] ?? '' }}</td>
                             </tr>
+                            @php
+                                $pageIndex++;
+                                $runningMasuk += (int) ($row['masuk'] ?? 0);
+                                $runningKeluar += (int) ($row['keluar'] ?? 0);
+                                if (isset($row['sisa']) && $row['sisa'] !== '') {
+                                    $runningSisa = $row['sisa'];
+                                }
+                                if (($pageIndex >= $pageRows && $ri < $nRowCount - 1) || ($ri === $nRowCount - 1 && $pageIndex > $extraPageThreshold && $pageIndex <= 25)) {
+                                    $needsPageBreak = true;
+                                }
+                            @endphp
+                            @if ($needsPageBreak)
+                                {{-- Jumlah Dipindahkan row (bottom of current page) --}}
+                                <tr style="font-weight: bold;">
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5">Jumlah Dipindahkan</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $runningMasuk }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $runningKeluar }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $runningSisa }}</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                </tr>
+                            @endif
                         @endforeach
+                        {{-- Buka halaman baru jika break terjadi di baris terakhir (data 16-25 baris) --}}
+                        @if ($needsPageBreak)
+                            @php
+                                $pageNumber++;
+                                $pageRows = 24;
+                                $pageIndex = 0;
+                                $needsPageBreak = false;
+                                $prevPageMasuk = $runningMasuk;
+                                $prevPageKeluar = $runningKeluar;
+                                $prevPageSisa = $runningSisa;
+                            @endphp
+                            </tbody></table>
+                            <div style="page-break-before: always;"></div>
+                            @include('reports.partials.buku-stok-header', [
+                                'bulan' => strtoupper($monthNames[(int) ($dataset['filter_month'] ?? 1)] ?? ''),
+                                'tahun' => $dataset['filter_year'] ?? $tahunName,
+                                'model' => 'N Lembar',
+                                'bookTitle' => 'BUKU STOK KHUSUS',
+                                'bsModel' => 'BS 2',
+                                'pageDisplay' => $bukuStokPageStart + $pageNumber - 1,
+                            ])
+                            <table class="w-full border-collapse border border-gray-700" style="font-size: 12px;">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">No</th>
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Tanggal</th>
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Uraian</th>
+                                        <th colspan="3" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Banyaknya</th>
+                                        <th rowspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Satuan</th>
+                                        <th colspan="2" class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Nomor Bukti</th>
+                                    </tr>
+                                    <tr class="bg-gray-100">
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Masuk</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Keluar</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Sisa</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Penerimaan</th>
+                                        <th class="border border-gray-700 px-1 py-0.5 text-center font-semibold">Pengeluaran</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="font-size: 10px;">
+                                    {{-- Jumlah Pindahan dari halaman sebelumnya row (top of new page) --}}
+                                    <tr style="font-weight: bold;">
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5">Jumlah Pindahan dari halaman sebelumnya</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $prevPageMasuk }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $prevPageKeluar }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center">{{ $prevPageSisa }}</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center">Lembar</td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                        <td class="border border-gray-700 px-1 py-0.5 text-center"></td>
+                                    </tr>
+                        @endif
                         @php
                             $totalMasuk = 0;
                             $totalKeluar = 0;
