@@ -407,4 +407,42 @@ class DataTest extends TestCase
                 ->assertSee('/data/rusak', false);
         }
     }
+
+    public function test_tab_pelaksanaan_tidak_error_dengan_join_column(): void
+    {
+        $user = User::factory()->create();
+
+        $pn = Import::factory()->for($user)->create(['status' => 'success', 'table_name' => 'laporan peristiwa nikah']);
+        ImportData::factory()->for($pn)->create([
+            'row_data' => ['Nomor Daftar' => 'ND-001', 'Nikah Di' => 'KANTOR', 'Nama Suami' => 'Budi'],
+            'row_number' => 2,
+        ]);
+        ImportData::factory()->for($pn)->create([
+            'row_data' => ['Nomor Daftar' => 'ND-002', 'Nikah Di' => 'BEDOL', 'Nama Suami' => 'Agus'],
+            'row_number' => 3,
+        ]);
+
+        $pdk = Import::factory()->for($user)->create(['status' => 'success', 'table_name' => 'laporan pendaftaran nikah']);
+        ImportData::factory()->for($pdk)->create([
+            'row_data' => ['Nomor Daftar' => 'ND-001', 'Nikah Di' => 'KANTOR', 'Nama Istri' => 'Siti'],
+            'row_number' => 2,
+        ]);
+        ImportData::factory()->for($pdk)->create([
+            'row_data' => ['Nomor Daftar' => 'ND-002', 'Nikah Di' => 'BEDOL', 'Nama Istri' => 'Aminah'],
+            'row_number' => 3,
+        ]);
+
+        // Sebelum fix mergeByColumn tidak mengisi _row_id → ErrorException wire:key (500).
+        $this->actingAs($user)->get('/data/pelaksanaan-kantor')
+            ->assertOk()
+            ->assertSee('Budi')
+            ->assertSee('Siti')
+            ->assertDontSee('Agus');
+
+        $this->actingAs($user)->get('/data/pelaksanaan-luar-kantor')
+            ->assertOk()
+            ->assertSee('Agus')
+            ->assertSee('Aminah')
+            ->assertDontSee('Budi');
+    }
 }

@@ -454,7 +454,10 @@ class MergeService
             $rows = ImportData::where('import_id', $importId)
                 ->orderBy('row_number')
                 ->cursor()
-                ->map(fn (ImportData $record) => $record->row_data ?? [])
+                ->map(fn (ImportData $record) => [
+                    '_row_id' => $record->id,
+                    '_import_id' => $record->import_id,
+                ] + ($record->row_data ?? []))
                 ->all();
 
             foreach ($rows as $row) {
@@ -483,6 +486,8 @@ class MergeService
             foreach ($allColumns as $col) {
                 $mergedRow[$col] = $row[$col] ?? null;
             }
+            $mergedRow['_row_id'] = $row['_row_id'] ?? null;
+            $mergedRow['_import_id'] = $row['_import_id'] ?? null;
             $mergedRows[] = $mergedRow;
         }
 

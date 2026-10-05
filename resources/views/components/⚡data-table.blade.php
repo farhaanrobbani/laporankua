@@ -433,7 +433,7 @@ new class extends Component
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @foreach ($mergeRows as $record)
-                            <tr wire:key="row-{{ $record['_row_id'] }}">
+                            <tr wire:key="row-{{ $record['_row_id'] ?? $loop->index }}">
                                 @foreach ($this->columns as $column)
                                     <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate">
                                         @if (in_array($column, $this->editableColumns, true) && isset($record['_row_id']))
