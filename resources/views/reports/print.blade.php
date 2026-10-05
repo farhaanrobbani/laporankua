@@ -910,32 +910,7 @@
                             // Deteksi nomor perforasi hilang (Rusak) per prefix.
                             // Sumber data rusak: celah interior pada rentang nomor
                             // yang benar-benar ada di baris laporan bulan ini.
-                            $perforasiByPrefix = [];
-                            foreach ($rows as $row) {
-                                $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($row['Nomor Perforasi'] ?? ''))));
-                                if (! preg_match('/^\d+$/', $p)) {
-                                    continue;
-                                }
-                                $pf = substr($p, 0, $prefixLength);
-                                $perforasiByPrefix[$pf][(int) $p] = true;
-                            }
-                            $rusakByPrefix = [];
-                            foreach ($perforasiByPrefix as $pf => $numSet) {
-                                $sortedNums = array_keys($numSet);
-                                sort($sortedNums);
-                                if (count($sortedNums) < 2) {
-                                    continue;
-                                }
-                                $missing = [];
-                                for ($n = $sortedNums[0]; $n <= $sortedNums[count($sortedNums) - 1]; $n++) {
-                                    if (! isset($numSet[$n])) {
-                                        $missing[] = $n;
-                                    }
-                                }
-                                if ($missing !== []) {
-                                    $rusakByPrefix[$pf] = $missing;
-                                }
-                            }
+                            $rusakByPrefix = app(\App\Services\RusakDetectionService::class)->detectMissing($rows, $prefixLength);
                             // Tanggal terakhir tiap prefix (grouped sudah ksort naik).
                             $lastDateByPrefix = [];
                             foreach ($grouped as $dateKey => $dateRows) {

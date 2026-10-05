@@ -6,9 +6,12 @@ use App\Exports\ImportDataExport;
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Services\ReportGenerationService;
+use App\Services\RusakDetectionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -81,6 +84,46 @@ class DataController extends Controller
             ->toArray();
 
         return view('data.bukan-duplikat', compact('importIds'));
+    }
+
+    public function rusak(Request $request): View
+    {
+        $importIds = Import::where('user_id', auth()->id())
+            ->where('table_name', 'laporan model l3')
+            ->pluck('id')
+            ->toArray();
+
+        $rows = $importIds === [] ? [] : ImportData::whereIn('import_id', $importIds)
+            ->get(['row_data'])
+            ->pluck('row_data')
+            ->all();
+
+        $missingByPrefix = app(RusakDetectionService::class)->detectMissing($rows);
+
+        $detected = [];
+        foreach ($missingByPrefix as $prefix => $numbers) {
+            foreach ($numbers as $number) {
+                $detected[] = ['prefix' => $prefix, 'number' => $number];
+            }
+        }
+
+        usort($detected, fn (array $a, array $b) => [$a['prefix'], $a['number']] <=> [$b['prefix'], $b['number']]);
+
+        $page = max(1, $request->integer('page'));
+        $missingRows = new LengthAwarePaginator(
+            array_slice($detected, ($page - 1) * 50, 50),
+            count($detected),
+            50,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
+
+        return view('data.rusak', [
+            'importIds' => $importIds,
+            'missingRows' => $missingRows,
+            'totalRusak' => count($detected),
+            'prefixCount' => count($missingByPrefix),
+        ]);
     }
 
     public function show(ImportData $record): View

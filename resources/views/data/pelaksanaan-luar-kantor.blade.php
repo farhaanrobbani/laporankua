@@ -27,6 +27,9 @@
                         <a href="{{ route('data.bukan-duplikat') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.bukan-duplikat') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
                             {{ __('Bukan Duplikat') }}
                         </a>
+                        <a href="{{ route('data.rusak') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.rusak') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
+                            {{ __('Rusak') }}
+                        </a>
                     </div>
 
                     @if (empty($importIds))

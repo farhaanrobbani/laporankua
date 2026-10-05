@@ -34,15 +34,36 @@
 
                     @if (empty($importIds))
                         <x-empty-state title="Belum ada data" message="Upload laporan model L3 terlebih dahulu." :action-url="route('imports.create')" action-label="Upload Excel" />
+                    @elseif ($totalRusak === 0)
+                        <x-empty-state title="Tidak ada nomor rusak terdeteksi" message="Semua nomor perforasi dalam rentang lengkap." />
                     @else
-                        <livewire:data-table
-                            :import-ids="$importIds"
-                            :filter-column="'Keterangan'"
-                            :filter-value="'Duplikat'"
-                            :filter-mode="'exact'"
-                            :editable-columns="['Desa']"
-                            :key="'duplikat'"
-                        />
+                        <div class="mb-4 bg-amber-50 border border-amber-200 rounded-md px-4 py-3 text-sm text-amber-800">
+                            <strong>{{ $totalRusak }}</strong> nomor terdeteksi rusak (hilang di tengah rentang) dari
+                            <strong>{{ $prefixCount }}</strong> prefix.
+                        </div>
+
+                        <div class="overflow-x-auto border border-gray-200 rounded-md">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">No</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Prefix</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Nomor JT</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @php($no = $missingRows->firstItem() ?? 1)
+                                    @foreach ($missingRows as $row)
+                                        <tr>
+                                            <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $no++ }}</td>
+                                            <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['prefix'] }}</td>
+                                            <td class="px-3 py-2 text-gray-700 whitespace-nowrap">JT {{ $row['number'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4">{{ $missingRows->links() }}</div>
                     @endif
                 </div>
             </div>

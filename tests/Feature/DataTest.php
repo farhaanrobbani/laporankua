@@ -50,6 +50,7 @@ class DataTest extends TestCase
     {
         $this->get('/data/data-import')->assertRedirect('/login');
         $this->get('/data/export')->assertRedirect('/login');
+        $this->get('/data/rusak')->assertRedirect('/login');
     }
 
     public function test_index_menampilkan_picker_dan_tabel(): void
@@ -326,5 +327,84 @@ class DataTest extends TestCase
         $this->expectException(ModelNotFoundException::class);
 
         Livewire::actingAs($userA)->test('data-table', ['importIds' => [$importB->id]]);
+    }
+
+    public function test_tab_rusak_mendeteksi_nomor_hilang_per_nomor(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [
+            ['Nomor Perforasi' => '116741001'],
+            ['Nomor Perforasi' => 'JT 116741002'],
+            ['Nomor Perforasi' => '116741004'],
+            ['Nomor Perforasi' => '116741005'],
+            ['Nomor Perforasi' => 'PF-DT-NONNUM'],
+        ]);
+
+        $response = $this->actingAs($user)->get('/data/rusak');
+
+        $response->assertOk();
+        // Celah interior: 003 hilang di tengah rentang 001..005.
+        $response->assertSee('JT 116741003');
+        // Di luar rentang = stok, bukan rusak.
+        $response->assertDontSee('JT 116741006');
+        // Nomor yang ada bukan rusak.
+        $response->assertDontSee('JT 116741001');
+        $response->assertSee('nomor terdeteksi rusak');
+        $response->assertSee('116741');
+    }
+
+    public function test_tab_rusak_tanpa_import_l3_tampil_empty_state(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/data/rusak');
+
+        $response->assertOk();
+        $response->assertSee('Belum ada data');
+        $response->assertSee('Upload laporan model L3');
+    }
+
+    public function test_tab_rusak_tanpa_celah_tampil_tidak_ada_rusak(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [
+            ['Nomor Perforasi' => '116741001'],
+            ['Nomor Perforasi' => '116741002'],
+            ['Nomor Perforasi' => '116741003'],
+        ]);
+
+        $response = $this->actingAs($user)->get('/data/rusak');
+
+        $response->assertOk();
+        $response->assertSee('Tidak ada nomor rusak terdeteksi');
+    }
+
+    public function test_tab_rusak_isolasi_antar_user(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $this->l3Import($userA, [
+            ['Nomor Perforasi' => '116741001'],
+            ['Nomor Perforasi' => '116741004'],
+        ]);
+
+        $response = $this->actingAs($userB)->get('/data/rusak');
+
+        $response->assertOk();
+        $response->assertSee('Belum ada data');
+        $response->assertDontSee('JT 116741002');
+        $response->assertDontSee('JT 116741003');
+    }
+
+    public function test_tab_rusak_muncul_di_semua_halaman_menu_data(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [['Nomor Perforasi' => '116741001']]);
+
+        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak'] as $uri) {
+            $this->actingAs($user)->get($uri)
+                ->assertOk()
+                ->assertSee('/data/rusak', false);
+        }
     }
 }
