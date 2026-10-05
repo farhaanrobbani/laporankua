@@ -37,8 +37,8 @@ npm install && npm run build
 ## Menjalankan
 
 ```bash
-# Web server (port default 7012)
-php85 artisan serve --port=7012
+# Web server (port default 7021)
+php85 artisan serve --port=7021
 
 # Queue worker — WAJIB jalan untuk proses import Excel & generate laporan
 php85 artisan queue:work --tries=3 --sleep=3 --timeout=120

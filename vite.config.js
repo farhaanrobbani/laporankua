@@ -15,10 +15,10 @@ export default defineConfig({
         }),
     ],
     server: {
-        port: 7012,
+        port: 7021,
         hot: {
             host: 'localhost',
-            port: 7012,
+            port: 7021,
         },
         watch: {
             ignored: ['**/storage/framework/views/**'],

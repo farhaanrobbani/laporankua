@@ -33,7 +33,7 @@ Wajib diubah:
 ```env
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://domain-anda.com        # atau http://host:7012
+APP_URL=https://domain-anda.com        # atau http://host:7021
 APP_TIMEZONE=Asia/Jakarta
 
 DB_DATABASE=laporan
@@ -88,7 +88,7 @@ sudo ln -s /etc/nginx/sites-available/laporan /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Konfigurasi mendengarkan **port 7012** dan meneruskan PHP ke `php8.5-fpm.sock`.
+Konfigurasi mendengarkan **port 7021** dan meneruskan PHP ke `php8.5-fpm.sock`.
 Sesuaikan `server_name` dan `root` bila perlu.
 
 ## 7. Queue worker (Supervisor)
