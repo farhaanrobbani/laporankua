@@ -321,6 +321,7 @@ new class extends Component
         $filterDateFrom = $this->filterDateFrom;
         $filterDateTo = $this->filterDateTo;
 
+        $filteredRows = [];
         foreach ($allRows as $row) {
             $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
             $nomor = preg_replace('/^JT\s*/i', '', $nomor);
@@ -360,8 +361,12 @@ new class extends Component
             if (isset($groups[$prefix])) {
                 $groups[$prefix]['count']++;
                 $groups[$prefix]['filtered_porp'][] = (int) $nomor;
+                $filteredRows[] = $row;
             }
         }
+
+        // Rusak = celah interior rentang baris terfilter (basis sama dengan Laporan NA).
+        $rusakByPrefix = app(\App\Services\RusakDetectionService::class)->detectMissing($filteredRows, $prefixLength);
 
         ksort($groups);
 
@@ -371,10 +376,12 @@ new class extends Component
                 continue;
             }
             $filteredPorp = $data['filtered_porp'];
+            $rusakCount = count($rusakByPrefix[$prefix] ?? []);
             $versions[] = [
                 'prefix' => (string) $prefix,
                 'label' => 'Model NA ('.$prefix.')',
-                'keluar_jumlah' => $data['count'],
+                'keluar_jumlah' => $data['count'] + $rusakCount,
+                'rusak_jumlah' => $rusakCount,
                 'min_porp' => (string) min($filteredPorp),
                 'max_porp' => (string) max($filteredPorp),
             ];
@@ -407,7 +414,7 @@ new class extends Component
         foreach ($this->manualData as $i => $row) {
             $masuk = (int) ($row['masuk_jumlah'] ?? 0);
             $keluar = (int) ($row['keluar_jumlah'] ?? 0);
-            $this->manualData[$i]['sisa_jumlah'] = $masuk > 0 ? (string) ($masuk - $keluar) : '';
+            $this->manualData[$i]['sisa_jumlah'] = $masuk > 0 ? (string) max(0, $masuk - $keluar) : '';
         }
     }
 
@@ -986,7 +993,8 @@ new class extends Component
                         if ($date->lt($from)) {
                             return false;
                         }
-                    } catch (\Exception $e) {}
+                    } catch (\Exception $e) {
+                    }
                 }
                 if ($filterDateTo !== '') {
                     try {
@@ -994,7 +1002,8 @@ new class extends Component
                         if ($date->gt($to)) {
                             return false;
                         }
-                    } catch (\Exception $e) {}
+                    } catch (\Exception $e) {
+                    }
                 }
 
                 return true;

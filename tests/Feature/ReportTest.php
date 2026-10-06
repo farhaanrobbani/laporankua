@@ -754,6 +754,75 @@ class ReportTest extends TestCase
     }
 
     /** @return array<int, array<int, string>> */
+    private function laporanL3ReportWithPerforasi(User $user, array $nums, int $masuk): Report
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => 'laporan model l3',
+        ]);
+
+        foreach ($nums as $i => $num) {
+            $perforasi = '116741'.str_pad((string) $num, 3, '0', STR_PAD_LEFT);
+            ImportData::factory()->for($import)->create([
+                'row_data' => [
+                    'Nomor Perforasi' => $perforasi,
+                    'Keterangan' => 'Bukan Duplikat',
+                    'Nama Catin' => 'Suami '.$num.' - Istri '.$num,
+                    'Tanggal Akad' => '2026-09-10',
+                    'Tanggal Nikah' => '2026-09-10',
+                    'Tanggal Cetak' => '2026-09-10',
+                ],
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        $masukAkhir = '116741'.str_pad((string) $masuk, 3, '0', STR_PAD_LEFT);
+        $staticRows = [
+            ['formulir' => 'Model N', 'row_num' => 1],
+            ['formulir' => 'Model NA (116741)', 'row_num' => 2],
+            ['formulir' => 'Model DN', 'row_num' => 3],
+            ['formulir' => 'Model NB', 'row_num' => 4],
+        ];
+
+        return Report::factory()->for($user)->create([
+            'import_id' => $import->id,
+            'output_format' => 'print',
+            'config_json' => [
+                'fields' => ['Nomor Perforasi', 'Keterangan', 'Nama Catin', 'Tanggal Akad', 'Tanggal Cetak'],
+                'is_merged' => true,
+                'merged_import_ids' => [$import->id],
+                'filter_month' => '9',
+                'filter_year' => '2026',
+                'sort_column' => 'Tanggal Cetak',
+                'sort_direction' => 'asc',
+                'table_layout' => [
+                    'type' => 'formulir',
+                    'static_rows' => $staticRows,
+                ],
+                'manual_data' => [
+                    'rows' => [
+                        ['formulir' => 'Model N', 'masuk_jumlah' => '', 'keluar_jumlah' => '', 'sisa_jumlah' => '', 'keterangan' => ''],
+                        [
+                            'formulir' => 'Model NA (116741)',
+                            'masuk_jumlah' => (string) $masuk,
+                            'masuk_seri_awal' => '116741001',
+                            'masuk_seri_akhir' => $masukAkhir,
+                            'masuk_seri' => 'JT 116741001 - '.$masukAkhir,
+                            'keluar_jumlah' => '',
+                            'keluar_seri' => '',
+                            'sisa_jumlah' => '',
+                            'sisa_seri' => '',
+                            'keterangan' => '',
+                        ],
+                        ['formulir' => 'Model DN', 'masuk_jumlah' => '', 'keluar_jumlah' => '', 'sisa_jumlah' => '', 'keterangan' => ''],
+                        ['formulir' => 'Model NB', 'masuk_jumlah' => '', 'keluar_jumlah' => '', 'sisa_jumlah' => '', 'keterangan' => ''],
+                    ],
+                    'static_rows' => $staticRows,
+                ],
+            ],
+        ]);
+    }
+
     private function tableCellRows(string $html): array
     {
         $rows = [];
@@ -814,6 +883,61 @@ class ReportTest extends TestCase
         $this->assertNotNull($jumlah);
         $this->assertSame('4', $jumlah[4], 'Keluar = 4 baris, tanpa rusak');
         $this->assertSame('2', $jumlah[5], 'Sisa = 6 - 4');
+    }
+
+    public function test_laporan_l3_rusak_masuk_hitungan_tanpa_label_baru(): void
+    {
+        $user = User::factory()->create();
+        // Nomor 003 hilang (rusak) di tengah rentang → celah interior = 1 nomor.
+        $report = $this->laporanL3ReportWithPerforasi($user, [1, 2, 4], 10);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+        // Tabel L3 tidak boleh punya baris/kolom label "Rusak".
+        $response->assertDontSee('Rusak');
+
+        $rows = $this->tableCellRows($response->getContent());
+        $na = collect($rows)->first(fn ($r) => ($r[1] ?? '') === 'Model NA (116741)');
+        $this->assertNotNull($na, 'Baris Model NA harus tampil');
+        $this->assertSame('10', $na[2], 'Masuk tetap 10');
+        $this->assertSame('JT 116741001 - 116741010', $na[3], 'Masuk seri tidak berubah');
+        $this->assertSame('4', $na[4], 'Keluar = 3 baris + 1 rusak');
+        $this->assertSame('JT 116741001 - 116741004', $na[5], 'Keluar seri tetap min..max baris');
+        $this->assertSame('6', $na[6], 'Sisa = 10 - 4');
+        $this->assertSame('JT 116741005 - 116741010', $na[7], 'Sisa seri tetap ekor setelah nomor terakhir');
+    }
+
+    public function test_laporan_l3_tanpa_celah_angka_tetap(): void
+    {
+        $user = User::factory()->create();
+        // Rentang kontigu: tidak ada rusak → angka sama persis seperti sebelum fitur.
+        $report = $this->laporanL3ReportWithPerforasi($user, [1, 2, 3, 4], 10);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+        $response->assertDontSee('Rusak');
+
+        $rows = $this->tableCellRows($response->getContent());
+        $na = collect($rows)->first(fn ($r) => ($r[1] ?? '') === 'Model NA (116741)');
+        $this->assertNotNull($na);
+        $this->assertSame('4', $na[4], 'Keluar = 4 baris tanpa tambahan rusak');
+        $this->assertSame('6', $na[6], 'Sisa = 10 - 4');
+    }
+
+    public function test_laporan_l3_sisa_tidak_negatif_karena_rusak(): void
+    {
+        $user = User::factory()->create();
+        // Masuk 3 dengan 3 baris + 1 rusak → keluar 4, sisa di-clamp 0 (bukan -1).
+        $report = $this->laporanL3ReportWithPerforasi($user, [1, 2, 4], 3);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+
+        $rows = $this->tableCellRows($response->getContent());
+        $na = collect($rows)->first(fn ($r) => ($r[1] ?? '') === 'Model NA (116741)');
+        $this->assertNotNull($na);
+        $this->assertSame('4', $na[4], 'Keluar = 3 baris + 1 rusak');
+        $this->assertSame('0', $na[6], 'Sisa di-clamp ke 0, tidak negatif');
     }
 
     private function reportStatus(Report $report): string

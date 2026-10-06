@@ -8,6 +8,7 @@ use App\Models\Report;
 use App\Models\User;
 use App\Services\MergeService;
 use App\Services\ReportGenerationService;
+use App\Services\RusakDetectionService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -518,6 +519,7 @@ class ReportsController extends Controller
             }
         }
 
+        $filteredRows = [];
         foreach ($allRows as $row) {
             $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
             $nomor = preg_replace('/^JT\s*/i', '', $nomor);
@@ -545,8 +547,13 @@ class ReportsController extends Controller
             if (isset($groups[$prefix])) {
                 $groups[$prefix]['count']++;
                 $groups[$prefix]['filtered_porp'][] = (int) $nomor;
+                $filteredRows[] = $row;
             }
         }
+
+        // Rusak = celah interior rentang baris bulan terfilter (basis sama dengan Laporan NA);
+        // masuk ke keluar_jumlah tanpa baris/keterangan terpisah.
+        $rusakByPrefix = app(RusakDetectionService::class)->detectMissing($filteredRows, $prefixLength);
 
         $naVersions = [];
         foreach ($groups as $prefix => $data) {
@@ -554,10 +561,12 @@ class ReportsController extends Controller
                 continue;
             }
             $filteredPorp = $data['filtered_porp'];
+            $rusakCount = count($rusakByPrefix[$prefix] ?? []);
             $naVersions[] = [
                 'prefix' => (string) $prefix,
                 'label' => 'Model NA ('.$prefix.')',
-                'keluar_jumlah' => $data['count'],
+                'keluar_jumlah' => $data['count'] + $rusakCount,
+                'rusak_jumlah' => $rusakCount,
                 'min_porp' => (string) min($filteredPorp),
                 'max_porp' => (string) max($filteredPorp),
             ];
@@ -595,7 +604,7 @@ class ReportsController extends Controller
             $masuk = (int) ($row['masuk_jumlah'] ?? 0);
             $keluar = (int) ($row['keluar_jumlah'] ?? 0);
             if ($masuk > 0) {
-                $row['sisa_jumlah'] = (string) ($masuk - $keluar);
+                $row['sisa_jumlah'] = (string) max(0, $masuk - $keluar);
             }
 
             $masukAkhir = (int) ($row['masuk_seri_akhir'] ?? 0);
