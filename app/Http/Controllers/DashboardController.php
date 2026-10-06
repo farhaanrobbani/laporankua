@@ -93,7 +93,7 @@ class DashboardController extends Controller
                     ->orWhere('imports.table_name', 'like', '%model l3%');
             })
             ->orderBy('import_data.row_number')
-            ->select('imports.table_name', 'import_data.row_data')
+            ->select('imports.table_name', 'import_data.import_id', 'import_data.row_data')
             ->get();
 
         $pnRows = [];
@@ -105,13 +105,17 @@ class DashboardController extends Controller
                 continue;
             }
             if (str_contains((string) $raw->table_name, 'peristiwa nikah')) {
-                $pnRows[] = $row;
+                $pnRows[] = ['import_id' => (int) $raw->import_id, 'row' => $row];
             } elseif (str_contains((string) $raw->table_name, 'pendaftaran nikah')) {
-                $pdkRows[] = $row;
+                $pdkRows[] = ['import_id' => (int) $raw->import_id, 'row' => $row];
             } else {
                 $l3Rows[] = $row;
             }
         }
+
+        // Statistik pn/pdk: satu Nomor Daftar dihitung sekali, data import terbaru menang.
+        $pnRows = $this->dedupNewestWins($pnRows);
+        $pdkRows = $this->dedupNewestWins($pdkRows);
 
         $pdkByNomorDaftar = [];
         foreach ($pdkRows as $row) {
@@ -223,6 +227,32 @@ class DashboardController extends Controller
         }
 
         return $stats;
+    }
+
+    /**
+     * @param  array<int, array{import_id: int, row: array<string, mixed>}>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function dedupNewestWins(array $rows): array
+    {
+        $newest = [];
+        $tanpaNomor = [];
+
+        foreach ($rows as $item) {
+            $nd = trim((string) ($item['row']['Nomor Daftar'] ?? ''));
+
+            if ($nd === '') {
+                $tanpaNomor[] = $item['row'];
+
+                continue;
+            }
+
+            if (! isset($newest[$nd]) || $item['import_id'] >= $newest[$nd]['import_id']) {
+                $newest[$nd] = $item;
+            }
+        }
+
+        return array_merge(array_column($newest, 'row'), $tanpaNomor);
     }
 
     private function parseDate(mixed $value): ?Carbon

@@ -208,4 +208,80 @@ class DashboardTest extends TestCase
         $this->assertSame(2, $stats['pn_luar_tahun']);
         $this->assertSame([], $stats['penghulu_bulan']);
     }
+
+    private function mkImport(User $user, string $tableName, array $rows): Import
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => $tableName,
+        ]);
+
+        foreach ($rows as $i => $row) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => $row,
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return $import;
+    }
+
+    public function test_statistik_pn_tidak_menghitung_nomor_daftar_kembar(): void
+    {
+        $user = User::factory()->create();
+
+        // Import kedua mengulang ND-1 (kasus upload ganda) — tidak boleh dihitung dua kali.
+        $this->mkImport($user, 'laporan peristiwa nikah', [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '15-09-2026'],
+        ]);
+        $this->mkImport($user, 'laporan peristiwa nikah', [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '15-09-2026'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Nikah' => '20-09-2026'],
+        ]);
+
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+
+        $this->assertSame(2, $stats['pn_bulan']);
+        $this->assertSame(2, $stats['pn_tahun']);
+    }
+
+    public function test_statistik_pn_menggunakan_data_upload_terbaru(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mkImport($user, 'laporan peristiwa nikah', [
+            ['Nomor Daftar' => 'ND-9', 'Tanggal Nikah' => '20-09-2026'],
+        ]);
+        $this->mkImport($user, 'laporan peristiwa nikah', [
+            ['Nomor Daftar' => 'ND-9', 'Tanggal Nikah' => '10-10-2026'],
+        ]);
+
+        $september = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+        $this->assertSame(0, $september['pn_bulan']);
+        $this->assertSame(1, $september['pn_tahun']);
+
+        $oktober = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026')->viewData('stats');
+        $this->assertSame(1, $oktober['pn_bulan']);
+        $this->assertSame(1, $oktober['pn_tahun']);
+    }
+
+    public function test_statistik_pdk_tidak_menghitung_nomor_daftar_kembar(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mkImport($user, 'laporan pendaftaran nikah', [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+        ]);
+        $this->mkImport($user, 'laporan pendaftaran nikah', [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Daftar' => '03-09-2026', 'Nikah Di' => 'LUAR KUA / BEDOL'],
+        ]);
+
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+
+        $this->assertSame(2, $stats['pdk_bulan']);
+        $this->assertSame(2, $stats['pdk_tahun']);
+        $this->assertSame(1, $stats['pdk_kantor']);
+        $this->assertSame(1, $stats['pdk_luar']);
+    }
 }

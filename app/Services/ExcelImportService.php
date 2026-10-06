@@ -122,39 +122,6 @@ class ExcelImportService
         $isAppend = (bool) $import->is_append;
         $appendExistingKeys = [];
 
-        if ($isAppend) {
-            $appendExistingImport = Import::where('user_id', $import->user_id)
-                ->where('file_name', $import->file_name)
-                ->where('id', '!=', $import->id)
-                ->latest()
-                ->first();
-
-            if ($appendExistingImport) {
-                $appendExistingKeys = ImportData::where('import_id', $appendExistingImport->id)
-                    ->whereNotNull('dedup_key_value')
-                    ->pluck('dedup_key_value')
-                    ->map(fn ($v) => (string) $v)
-                    ->values()
-                    ->all();
-
-                if ($appendExistingKeys === []) {
-                    $dedupColForFallback = $import->dedup_column;
-                    if ($dedupColForFallback !== null && $dedupColForFallback !== '' && isset(self::COLUMN_ALIASES[$import->table_name][$dedupColForFallback])) {
-                        $dedupColForFallback = self::COLUMN_ALIASES[$import->table_name][$dedupColForFallback];
-                    }
-                    if ($dedupColForFallback !== null && $dedupColForFallback !== '') {
-                        $appendExistingKeys = ImportData::where('import_id', $appendExistingImport->id)
-                            ->get()
-                            ->map(fn ($model) => $model->row_data[$dedupColForFallback] ?? null)
-                            ->filter(fn ($v) => $v !== null && trim((string) $v) !== '')
-                            ->map(fn ($v) => (string) $v)
-                            ->values()
-                            ->all();
-                    }
-                }
-            }
-        }
-
         $dedupColumnRaw = $import->dedup_column;
         $dedupColumn = $dedupColumnRaw;
         if ($dedupColumn !== null && $dedupColumn !== '' && isset(self::COLUMN_ALIASES[$import->table_name][$dedupColumn])) {
@@ -162,13 +129,34 @@ class ExcelImportService
         }
         $dedupImportIds = [];
 
-        if (! $isAppend && $dedupColumnRaw !== null && $dedupColumnRaw !== '') {
+        if ($dedupColumnRaw !== null && $dedupColumnRaw !== '') {
             $dedupImportIds = Import::where('user_id', $import->user_id)
                 ->where('table_name', $import->table_name)
                 ->where('dedup_column', $dedupColumnRaw)
                 ->where('id', '!=', $import->id)
                 ->pluck('id')
                 ->toArray();
+        }
+
+        // Mode append: kunci duplikat dari seluruh import sebelumnya (rentetan file
+        // yang sama maupun nama file berbeda), bukan hanya import terakhir.
+        if ($isAppend && $dedupImportIds !== []) {
+            $appendExistingKeys = ImportData::whereIn('import_id', $dedupImportIds)
+                ->whereNotNull('dedup_key_value')
+                ->pluck('dedup_key_value')
+                ->map(fn ($v) => (string) $v)
+                ->values()
+                ->all();
+
+            if ($appendExistingKeys === [] && $dedupColumn !== null && $dedupColumn !== '') {
+                $appendExistingKeys = ImportData::whereIn('import_id', $dedupImportIds)
+                    ->get()
+                    ->map(fn ($model) => $model->row_data[$dedupColumn] ?? null)
+                    ->filter(fn ($v) => $v !== null && trim((string) $v) !== '')
+                    ->map(fn ($v) => (string) $v)
+                    ->values()
+                    ->all();
+            }
         }
 
         DB::transaction(function () use ($import, $headers, $rawRows, $totalRows, $now, $isAppend, $appendExistingKeys, $dedupColumn, $dedupImportIds, &$imported, &$failed, &$skipped, &$overwritten, &$errors, &$batch) {

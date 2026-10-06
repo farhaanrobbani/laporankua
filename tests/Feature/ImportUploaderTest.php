@@ -273,6 +273,143 @@ class ImportUploaderTest extends TestCase
         $this->assertSame(1, $pf1Count);
     }
 
+    public function test_append_memeriksa_duplikat_dari_seluruh_riwayat_import(): void
+    {
+        $user = User::factory()->create();
+
+        $file1 = $this->uploadedXlsx([
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND001', 'Budi', 'Siti'],
+                ['ND002', 'Andi', 'Aya'],
+            ],
+        ], 'laporan-pendaftaran-nikah-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file1])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $base = Import::latest('id')->first();
+
+        $file2 = $this->uploadedXlsx([
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND003', 'Cecep', 'Imas'],
+            ],
+        ], 'laporan-pendaftaran-nikah-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file2])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $second = Import::latest('id')->first();
+
+        $this->assertTrue((bool) $second->fresh()->is_append);
+        $this->assertSame(1, $second->fresh()->imported_rows);
+
+        $file3 = $this->uploadedXlsx([
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND001', 'Budi', 'Siti'],
+                ['ND003', 'Cecep', 'Imas'],
+                ['ND004', 'Imam', 'Ain'],
+            ],
+        ], 'laporan-pendaftaran-nikah-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file3])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $third = Import::latest('id')->first();
+
+        $this->assertNotSame($second->id, $third->id);
+        $this->assertTrue((bool) $third->fresh()->is_append);
+        $this->assertSame('appended', $third->fresh()->status);
+        // ND001/ND003 sudah ada di rentetan riwayat (bukan hanya import terakhir) → hanya ND004 yang masuk.
+        $this->assertSame(1, $third->fresh()->imported_rows);
+        $this->assertSame(1, $third->importData()->count());
+        $this->assertSame(['ND004'], $third->importData()->pluck('dedup_key_value')->all());
+
+        $total = ImportData::whereIn('import_id', [$base->id, $second->id, $third->id])->count();
+        $this->assertSame(4, $total);
+    }
+
+    public function test_append_mengecek_duplikat_lintas_nama_file(): void
+    {
+        $user = User::factory()->create();
+
+        $file1 = $this->uploadedXlsx([
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND001', 'Budi', 'Siti'],
+                ['ND002', 'Andi', 'Aya'],
+            ],
+        ], 'laporan-pendaftaran-nikah-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file1])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $september = Import::latest('id')->first();
+
+        $file2 = $this->uploadedXlsx([
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND003', 'Cecep', 'Imas'],
+            ],
+        ], 'laporan-pendaftaran-nikah-10-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file2])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $oktober = Import::latest('id')->first();
+
+        $this->assertFalse((bool) $oktober->fresh()->is_append);
+        $this->assertSame(1, $oktober->fresh()->imported_rows);
+
+        $file3 = $this->uploadedXlsx([
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND001', 'Budi', 'Siti'],
+                ['ND002', 'Andi', 'Aya'],
+                ['ND004', 'Imam', 'Ain'],
+            ],
+        ], 'laporan-pendaftaran-nikah-10-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file3])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $third = Import::latest('id')->first();
+
+        $this->assertTrue((bool) $third->fresh()->is_append);
+        // ND001/ND002 berasal dari file bulan lain tetap dianggap duplikat; hanya ND004 yang masuk.
+        $this->assertSame(1, $third->fresh()->imported_rows);
+        $this->assertSame(['ND004'], $third->importData()->pluck('dedup_key_value')->all());
+
+        $total = ImportData::whereIn('import_id', [$september->id, $oktober->id, $third->id])->count();
+        $this->assertSame(4, $total);
+    }
+
     public function test_l3_cetak_maju_tidak_jadi_duplikat(): void
     {
         $user = User::factory()->create();
