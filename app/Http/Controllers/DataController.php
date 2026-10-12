@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -129,23 +130,8 @@ class DataController extends Controller
 
     public function buktiBayar(Request $request): View
     {
-        $importIds = Import::where('user_id', auth()->id())
-            ->where('table_name', 'laporan pendaftaran nikah')
-            ->whereIn('status', ['success', 'appended'])
-            ->pluck('id')
-            ->toArray();
-
-        // Peta Nomor Daftar pelaksanaan luar kantor (Nikah Di contains BEDOL) → tanggal nikah.
-        $pelaksanaan = collect($importIds === [] ? [] : ImportData::whereIn('import_id', $importIds)
-            ->get(['row_data'])
-            ->pluck('row_data')
-            ->filter(fn ($row) => is_array($row)))
-            ->filter(fn (array $row) => mb_stripos((string) ($row['Nikah Di'] ?? ''), 'BEDOL') !== false)
-            ->mapWithKeys(function (array $row) {
-                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
-
-                return $nd === '' ? [] : [$nd => $this->parseTanggalPelaksanaan((string) ($row['Tanggal Nikah'] ?? ''))];
-            });
+        $importIds = $this->pdkImportIds(auth()->id());
+        $pelaksanaan = $this->pdkLuarMap(auth()->id());
 
         $simponiIds = Import::where('user_id', auth()->id())
             ->where('table_name', 'like', '%simponi%')
@@ -171,7 +157,7 @@ class DataController extends Controller
         $billings = $semuaSimponi
             ->filter(fn (array $row) => $pelaksanaan->has($row['no_pendaftaran']))
             ->map(function (array $row) use ($pelaksanaan) {
-                $row['tanggal_pelaksanaan'] = $pelaksanaan->get($row['no_pendaftaran']);
+                $row['tanggal_pelaksanaan'] = $pelaksanaan->get($row['no_pendaftaran'])['tanggal'];
 
                 return $row;
             })
@@ -258,6 +244,117 @@ class DataController extends Controller
         }
 
         return null;
+    }
+
+    private function pdkImportIds(int $userId): array
+    {
+        return Import::where('user_id', $userId)
+            ->where('table_name', 'laporan pendaftaran nikah')
+            ->whereIn('status', ['success', 'appended'])
+            ->pluck('id')
+            ->toArray();
+    }
+
+    private function pdkLuarMap(int $userId): Collection
+    {
+        $importIds = $this->pdkImportIds($userId);
+
+        return collect($importIds === [] ? [] : ImportData::whereIn('import_id', $importIds)
+            ->get(['row_data'])
+            ->pluck('row_data')
+            ->filter(fn ($row) => is_array($row)))
+            ->filter(fn (array $row) => mb_stripos((string) ($row['Nikah Di'] ?? ''), 'BEDOL') !== false)
+            ->mapWithKeys(function (array $row) {
+                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+
+                return $nd === '' ? [] : [$nd => [
+                    'tanggal' => $this->parseTanggalPelaksanaan((string) ($row['Tanggal Nikah'] ?? '')),
+                    'suami' => trim((string) ($row['Nama Suami'] ?? '')),
+                    'istri' => trim((string) ($row['Nama Istri'] ?? '')),
+                ]];
+            });
+    }
+
+    public function suratTugas(Request $request): View
+    {
+        $importIds = $this->pdkImportIds(auth()->id());
+
+        $rows = $this->pdkLuarMap(auth()->id())
+            ->map(function (array $info, string $nd) {
+                return [
+                    'nomor_daftar' => $nd,
+                    'tanggal_pelaksanaan' => $info['tanggal'],
+                    'suami' => $info['suami'],
+                    'istri' => $info['istri'],
+                ];
+            });
+
+        $tahunTersedia = $rows
+            ->filter(fn (array $row) => $row['tanggal_pelaksanaan'] !== null)
+            ->map(fn (array $row) => $row['tanggal_pelaksanaan']->year)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        $bulan = $request->integer('bulan') ?: null;
+        $tahun = $request->integer('tahun') ?: null;
+        $q = trim((string) $request->query('q', ''));
+
+        $rows = $rows->filter(function (array $row) use ($bulan, $tahun) {
+            if ($bulan === null && $tahun === null) {
+                return true;
+            }
+
+            $tanggal = $row['tanggal_pelaksanaan'];
+            if ($tanggal === null) {
+                return false;
+            }
+
+            return ($bulan === null || $tanggal->month === $bulan)
+                && ($tahun === null || $tanggal->year === $tahun);
+        });
+
+        if ($q !== '') {
+            $needle = mb_strtolower($q);
+            $rows = $rows->filter(fn (array $row) => mb_strpos(mb_strtolower($row['nomor_daftar']), $needle) !== false
+                || mb_strpos(mb_strtolower($row['suami']), $needle) !== false
+                || mb_strpos(mb_strtolower($row['istri']), $needle) !== false);
+        }
+
+        $rows = $rows
+            ->sort(fn (array $a, array $b) => [$a['tanggal_pelaksanaan']?->getTimestamp() ?? PHP_INT_MAX, $a['nomor_daftar']]
+                <=> [$b['tanggal_pelaksanaan']?->getTimestamp() ?? PHP_INT_MAX, $b['nomor_daftar']])
+            ->values();
+
+        $daftarSalin = $rows->map(function (array $row) {
+            $nama = match (true) {
+                $row['suami'] !== '' && $row['istri'] !== '' => $row['suami'].' dan '.$row['istri'],
+                default => $row['suami'].$row['istri'],
+            };
+
+            return $nama !== '' ? $row['nomor_daftar'].' - '.$nama : $row['nomor_daftar'];
+        })->values()->all();
+
+        $page = max(1, $request->integer('page'));
+        $paginator = new LengthAwarePaginator(
+            array_slice($rows->all(), ($page - 1) * 50, 50),
+            $rows->count(),
+            50,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
+        $paginator->appends($request->query());
+
+        return view('data.surat-tugas', [
+            'importIds' => $importIds,
+            'rows' => $paginator,
+            'totalRows' => $rows->count(),
+            'daftarSalin' => $daftarSalin,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'q' => $q,
+            'tahunTersedia' => $tahunTersedia,
+        ]);
     }
 
     public function show(ImportData $record): View

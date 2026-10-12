@@ -37,6 +37,9 @@
                         <a href="{{ route('data.bukti-bayar') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.bukti-bayar') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
                             {{ __('Bukti Bayar') }}
                         </a>
+                        <a href="{{ route('data.surat-tugas') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.surat-tugas') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
+                            {{ __('Surat Tugas') }}
+                        </a>
                     </div>
 
                     @if (empty($importIds))
@@ -143,8 +146,8 @@
                                 <li>Di laptop/PC, pasang ekstensi <strong>Tampermonkey</strong> di browser (Chrome/Edge/Firefox).</li>
                                 <li>Buka <a href="{{ url('/userscripts/simkah4-bukti-bayar.user.js') }}" target="_blank" rel="noopener" class="text-blue-600 underline">link pemasangan script unduh massal</a> — Tampermonkey akan menawarkan pemasangan.</li>
                                 <li>Login ke SIMKAH4 (<span class="font-mono">https://simkah4.kemenag.go.id</span>).</li>
-                                <li>Klik tombol <strong>"Unduh Massal Bukti Bayar"</strong> (panel Tampermonkey) di halaman SIMKAH4.</li>
-                                <li>Sekali saja: tempel URL bukti bayar apa pun (mis. dari hasil klik manual) ke kolom <strong>UUID</strong> — otomatis tersimpan.</li>
+                                <li>Klik tombol <strong>"Unduh Massal"</strong> (panel Tampermonkey), jenis dokumen <strong>"Bukti Bayar"</strong>.</li>
+                                <li>Sekali saja: tempel URL bukti bayar apa pun (mis. dari hasil klik manual, param <span class="font-mono">no_billing</span>) ke kolom <strong>UUID</strong> — otomatis tersimpan per jenis dokumen.</li>
                                 <li>Tempel daftar No Billing (hasil tombol <strong>"Salin Daftar No Billing"</strong>) ke kolom daftar, lalu klik <strong>Mulai</strong>.</li>
                                 <li>Browser mungkin meminta izin "unduh multiple files" — izinkan sekali. Hasil: <span class="font-mono">no_billing - nama wajib bayar.pdf</span>.</li>
                             </ol>

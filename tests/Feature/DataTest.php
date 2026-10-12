@@ -52,6 +52,7 @@ class DataTest extends TestCase
         $this->get('/data/export')->assertRedirect('/login');
         $this->get('/data/rusak')->assertRedirect('/login');
         $this->get('/data/bukti-bayar')->assertRedirect('/login');
+        $this->get('/data/surat-tugas')->assertRedirect('/login');
     }
 
     public function test_index_menampilkan_picker_dan_tabel(): void
@@ -402,11 +403,12 @@ class DataTest extends TestCase
         $user = User::factory()->create();
         $this->l3Import($user, [['Nomor Perforasi' => '116741001']]);
 
-        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak', '/data/bukti-bayar'] as $uri) {
+        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak', '/data/bukti-bayar', '/data/surat-tugas'] as $uri) {
             $this->actingAs($user)->get($uri)
                 ->assertOk()
                 ->assertSee('/data/rusak', false)
-                ->assertSee('/data/bukti-bayar', false);
+                ->assertSee('/data/bukti-bayar', false)
+                ->assertSee('/data/surat-tugas', false);
         }
     }
 
@@ -633,5 +635,94 @@ class DataTest extends TestCase
                 '820260801000001 - Warga Agustus',
                 '820260901000002 - Warga September',
             ]);
+    }
+
+    public function test_tab_surat_tugas_tanpa_pdk_tampil_empty_state(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/data/surat-tugas')
+            ->assertOk()
+            ->assertSee('Belum ada data')
+            ->assertSee('pendaftaran nikah');
+    }
+
+    public function test_surat_tugas_menampilkan_semua_pelaksanaan_luar_kantor_termasuk_tanpa_billing(): void
+    {
+        $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '08-09-2026', 'Nama Suami' => 'Budi Santoso', 'Nama Istri' => 'Siti Aminah'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Nikah' => '09-09-2026', 'Nama Suami' => 'Agus Salim', 'Nama Istri' => 'Aminah'],
+        ]);
+
+        $this->actingAs($user)->get('/data/surat-tugas')
+            ->assertOk()
+            ->assertSee('ND-1')
+            ->assertSee('Budi Santoso')
+            ->assertSee('Siti Aminah')
+            ->assertSee('ND-2')
+            ->assertSee('Agus Salim')
+            ->assertViewHas('totalRows', 2);
+    }
+
+    public function test_surat_tugas_filter_bulan_mengikuti_tanggal_nikah(): void
+    {
+        $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-AGT', 'Tanggal Nikah' => '15-08-2026', 'Nama Suami' => 'Agus', 'Nama Istri' => 'Aminah'],
+            ['Nomor Daftar' => 'ND-SEP', 'Tanggal Nikah' => '01-09-2026', 'Nama Suami' => 'Budi', 'Nama Istri' => 'Siti'],
+        ]);
+
+        $this->actingAs($user)->get('/data/surat-tugas?bulan=8&tahun=2026')
+            ->assertOk()
+            ->assertSee('ND-AGT')
+            ->assertSee('Agus')
+            ->assertDontSee('ND-SEP')
+            ->assertDontSee('Budi');
+
+        $this->actingAs($user)->get('/data/surat-tugas?bulan=9&tahun=2026')
+            ->assertOk()
+            ->assertSee('ND-SEP')
+            ->assertDontSee('ND-AGT');
+    }
+
+    public function test_surat_tugas_daftar_salin_format_nomor_dan_nama_suami_dan_istri(): void
+    {
+        $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '08-09-2026', 'Nama Suami' => 'Budi Santoso', 'Nama Istri' => 'Siti Aminah'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Nikah' => '09-09-2026', 'Nama Suami' => 'Agus Salim', 'Nama Istri' => 'Aminah Putri'],
+        ]);
+
+        $this->actingAs($user)->get('/data/surat-tugas')
+            ->assertOk()
+            ->assertSee('id="salin-btn"', false)
+            ->assertSee('Salin Daftar Nomor Daftar')
+            ->assertViewHas('daftarSalin', fn (array $daftar) => $daftar === [
+                'ND-1 - Budi Santoso dan Siti Aminah',
+                'ND-2 - Agus Salim dan Aminah Putri',
+            ]);
+    }
+
+    public function test_surat_tugas_isolasi_milik_user_saja(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $this->pdkLuarImport($userA, [
+            ['Nomor Daftar' => 'ND-A', 'Tanggal Nikah' => '08-09-2026', 'Nama Suami' => 'Ahmad', 'Nama Istri' => 'Aminah'],
+        ]);
+        $this->pdkLuarImport($userB, [
+            ['Nomor Daftar' => 'ND-B', 'Tanggal Nikah' => '08-09-2026', 'Nama Suami' => 'Bagus', 'Nama Istri' => 'Bella'],
+        ]);
+
+        $this->actingAs($userA)->get('/data/surat-tugas')
+            ->assertOk()
+            ->assertSee('ND-A')
+            ->assertDontSee('ND-B');
+
+        $this->actingAs($userB)->get('/data/surat-tugas')
+            ->assertOk()
+            ->assertSee('ND-B')
+            ->assertDontSee('ND-A');
     }
 }
