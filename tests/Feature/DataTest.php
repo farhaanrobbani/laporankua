@@ -51,6 +51,7 @@ class DataTest extends TestCase
         $this->get('/data/data-import')->assertRedirect('/login');
         $this->get('/data/export')->assertRedirect('/login');
         $this->get('/data/rusak')->assertRedirect('/login');
+        $this->get('/data/bukti-bayar')->assertRedirect('/login');
     }
 
     public function test_index_menampilkan_picker_dan_tabel(): void
@@ -401,10 +402,11 @@ class DataTest extends TestCase
         $user = User::factory()->create();
         $this->l3Import($user, [['Nomor Perforasi' => '116741001']]);
 
-        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak'] as $uri) {
+        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak', '/data/bukti-bayar'] as $uri) {
             $this->actingAs($user)->get($uri)
                 ->assertOk()
-                ->assertSee('/data/rusak', false);
+                ->assertSee('/data/rusak', false)
+                ->assertSee('/data/bukti-bayar', false);
         }
     }
 
@@ -444,5 +446,114 @@ class DataTest extends TestCase
             ->assertSee('Agus')
             ->assertSee('Aminah')
             ->assertDontSee('Budi');
+    }
+
+    private function simponiImport(User $user, array $rows, string $status = 'success'): Import
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => $status,
+            'table_name' => 'laporan simponi',
+        ]);
+
+        foreach ($rows as $i => $row) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => $row,
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return $import;
+    }
+
+    public function test_tab_bukti_bayar_tanpa_simponi_tampil_empty_state(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/data/bukti-bayar');
+
+        $response->assertOk();
+        $response->assertSee('Belum ada data');
+        $response->assertSee('Upload laporan simponi');
+    }
+
+    public function test_tab_bukti_bayar_menampilkan_simponi_milik_user_saja(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+
+        $this->simponiImport($userA, [
+            [
+                'No Billing' => '820260908847263',
+                'Tanggal Billing' => '2026-09-08',
+                'Nama Wajib Bayar' => 'Ahmad Fauzi',
+                'Nominal Setor' => '600000',
+                'No Pendaftaran' => 'ND-A-001',
+                'No NTB' => 'NTB-A-001',
+            ],
+        ]);
+        $this->simponiImport($userB, [
+            [
+                'No Billing' => '820260999000111',
+                'Tanggal Billing' => '2026-09-09',
+                'Nama Wajib Bayar' => 'Budi Rahasia',
+            ],
+        ]);
+
+        $this->actingAs($userA)->get('/data/bukti-bayar')
+            ->assertOk()
+            ->assertSee('820260908847263')
+            ->assertSee('Ahmad Fauzi')
+            ->assertSee('NTB-A-001')
+            ->assertDontSee('820260999000111')
+            ->assertDontSee('Budi Rahasia');
+    }
+
+    public function test_filter_bulan_tahun_memfilter_tanggal_billing(): void
+    {
+        $user = User::factory()->create();
+        $this->simponiImport($user, [
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus'],
+            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Warga September'],
+        ]);
+
+        $this->actingAs($user)->get('/data/bukti-bayar?bulan=9&tahun=2026')
+            ->assertOk()
+            ->assertSee('820260901000002')
+            ->assertSee('Warga September')
+            ->assertDontSee('820260801000001')
+            ->assertDontSee('Warga Agustus');
+    }
+
+    public function test_pencarian_bukti_bayar_memfilter_nama_dan_no_billing(): void
+    {
+        $user = User::factory()->create();
+        $this->simponiImport($user, [
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Ahmad Fauzi'],
+            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Siti Aminah'],
+        ]);
+
+        $this->actingAs($user)->get('/data/bukti-bayar?q=ahmad')
+            ->assertOk()
+            ->assertSee('Ahmad Fauzi')
+            ->assertDontSee('Siti Aminah');
+
+        $this->actingAs($user)->get('/data/bukti-bayar?q=820260901000002')
+            ->assertOk()
+            ->assertSee('Siti Aminah')
+            ->assertDontSee('Ahmad Fauzi');
+    }
+
+    public function test_daftar_no_billing_unik_terurut_tanggal(): void
+    {
+        $user = User::factory()->create();
+        $this->simponiImport($user, [
+            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Warga September'],
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus'],
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus'],
+        ]);
+
+        $this->actingAs($user)->get('/data/bukti-bayar')
+            ->assertOk()
+            ->assertViewHas('semuaNoBilling', fn (array $billings) => $billings === ['820260801000001', '820260901000002']);
     }
 }

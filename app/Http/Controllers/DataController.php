@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -123,6 +124,95 @@ class DataController extends Controller
             'missingRows' => $missingRows,
             'totalRusak' => count($detected),
             'prefixCount' => count($missingByPrefix),
+        ]);
+    }
+
+    public function buktiBayar(Request $request): View
+    {
+        $importIds = Import::where('user_id', auth()->id())
+            ->where('table_name', 'like', '%simponi%')
+            ->whereIn('status', ['success', 'appended'])
+            ->pluck('id')
+            ->toArray();
+
+        $billings = collect($importIds === [] ? [] : ImportData::whereIn('import_id', $importIds)
+            ->get(['row_data'])
+            ->pluck('row_data')
+            ->filter(fn ($row) => is_array($row)))
+            ->map(fn (array $row) => [
+                'no_billing' => trim((string) ($row['No Billing'] ?? '')),
+                'tanggal_billing' => trim((string) ($row['Tanggal Billing'] ?? '')),
+                'nama' => trim((string) ($row['Nama Wajib Bayar'] ?? '')),
+                'nominal' => trim((string) ($row['Nominal Setor'] ?? '')),
+                'no_pendaftaran' => trim((string) ($row['No Pendaftaran'] ?? '')),
+                'no_ntb' => trim((string) ($row['No NTB'] ?? '')),
+            ])
+            ->filter(fn (array $row) => $row['no_billing'] !== '')
+            ->values();
+
+        $tahunTersedia = $billings
+            ->map(function (array $row) {
+                try {
+                    return Carbon::parse($row['tanggal_billing'])->year;
+                } catch (\Throwable) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        $bulan = $request->integer('bulan') ?: null;
+        $tahun = $request->integer('tahun') ?: null;
+        $q = trim((string) $request->query('q', ''));
+
+        $billings = $billings->filter(function (array $row) use ($bulan, $tahun) {
+            if ($bulan === null && $tahun === null) {
+                return true;
+            }
+
+            try {
+                $tanggal = Carbon::parse($row['tanggal_billing']);
+            } catch (\Throwable) {
+                return false;
+            }
+
+            return ($bulan === null || $tanggal->month === $bulan)
+                && ($tahun === null || $tanggal->year === $tahun);
+        });
+
+        if ($q !== '') {
+            $needle = mb_strtolower($q);
+            $billings = $billings->filter(fn (array $row) => mb_strpos(mb_strtolower($row['no_billing']), $needle) !== false
+                || mb_strpos(mb_strtolower($row['nama']), $needle) !== false);
+        }
+
+        $billings = $billings
+            ->sortBy([['tanggal_billing', 'asc'], ['no_billing', 'asc']])
+            ->values();
+
+        $semuaNoBilling = $billings->pluck('no_billing')->unique()->values()->all();
+
+        $page = max(1, $request->integer('page'));
+        $rows = new LengthAwarePaginator(
+            array_slice($billings->all(), ($page - 1) * 50, 50),
+            $billings->count(),
+            50,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
+        $rows->appends($request->query());
+
+        return view('data.bukti-bayar', [
+            'importIds' => $importIds,
+            'billings' => $rows,
+            'totalBillings' => $billings->count(),
+            'semuaNoBilling' => $semuaNoBilling,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'q' => $q,
+            'tahunTersedia' => $tahunTersedia,
         ]);
     }
 
