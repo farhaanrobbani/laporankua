@@ -301,6 +301,76 @@ class DataTest extends TestCase
         $this->assertSame('TIRTOMARTO', $rowB->fresh()->row_data['Desa']);
     }
 
+    public function test_update_cell_tanggal_cetak_normalisasi_dan_fanout_per_perforasi(): void
+    {
+        $user = User::factory()->create();
+        $a = $this->l3Import($user, [['Nomor Perforasi' => 'PF-TC-001', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01']]);
+        $b = $this->l3Import($user, [['Nomor Perforasi' => 'PF-TC-001', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01']], 'appended');
+        $rowA = $a->importData()->first();
+        $rowB = $b->importData()->first();
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$a->id, $b->id],
+                'editableColumns' => ['Desa', 'Tanggal Cetak'],
+            ])
+            ->call('updateCell', $rowA->id, 'Tanggal Cetak', '05-10-2026');
+
+        $this->assertSame('2026-10-05', $rowA->fresh()->row_data['Tanggal Cetak']);
+        $this->assertSame('2026-10-05', $rowB->fresh()->row_data['Tanggal Cetak']);
+    }
+
+    public function test_update_cell_tanggal_cetak_value_invalid_ditolak(): void
+    {
+        $user = User::factory()->create();
+        $import = $this->l3Import($user, [['Nomor Perforasi' => 'PF-TC-002', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01']]);
+        $record = $import->importData()->first();
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$import->id],
+                'editableColumns' => ['Tanggal Cetak'],
+            ])
+            ->call('updateCell', $record->id, 'Tanggal Cetak', 'bukan-tanggal');
+
+        $this->assertSame('2026-09-01', $record->fresh()->row_data['Tanggal Cetak']);
+    }
+
+    public function test_update_cell_tanggal_cetak_kosong_diizinkan(): void
+    {
+        $user = User::factory()->create();
+        $import = $this->l3Import($user, [['Nomor Perforasi' => 'PF-TC-003', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-01']]);
+        $record = $import->importData()->first();
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$import->id],
+                'editableColumns' => ['Tanggal Cetak'],
+            ])
+            ->call('updateCell', $record->id, 'Tanggal Cetak', '');
+
+        $this->assertSame('', $record->fresh()->row_data['Tanggal Cetak']);
+    }
+
+    public function test_tanggal_cetak_dirender_sebagai_input_date_dengan_nilai_dinormalisasi(): void
+    {
+        $user = User::factory()->create();
+        $import = $this->l3Import($user, [['Nomor Perforasi' => 'PF-TC-004', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '05-09-2026']]);
+        $record = $import->importData()->first();
+
+        Livewire::actingAs($user)
+            ->test('data-table', [
+                'importIds' => [$import->id],
+                'filterColumn' => 'Keterangan',
+                'filterValue' => 'Duplikat',
+                'filterMode' => 'exact',
+                'editableColumns' => ['Desa', 'Tanggal Cetak'],
+            ])
+            ->assertSee('type="date"', false)
+            ->assertSee('value="2026-09-05"', false)
+            ->assertSeeInOrder(['Keterangan', 'Tanggal Cetak']);
+    }
+
     public function test_update_cell_ditolak_bukan_pemilik(): void
     {
         $userA = User::factory()->create();

@@ -4,6 +4,7 @@ use App\Models\Import;
 use App\Models\ImportData;
 use App\Services\MergeService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -129,11 +130,23 @@ new class extends Component
 
         $value = mb_substr(trim($value), 0, 255);
 
+        if ($column === 'Tanggal Cetak') {
+            if ($value !== '') {
+                try {
+                    $value = Carbon::parse($value)->format('Y-m-d');
+                } catch (\Throwable) {
+                    session()->flash('status', 'Tanggal Cetak tidak berubah — format tanggal tidak dikenali.');
+
+                    return;
+                }
+            }
+        }
+
         $targets = collect([$record]);
 
         // Baris duplikat fisik (Nomor Perforasi sama di banyak file) ikut disimpan
         // agar konsisten dengan dedup last-wins di laporan L1.
-        if ($column === 'Desa') {
+        if (in_array($column, ['Desa', 'Tanggal Cetak'], true)) {
             $perforasi = trim((string) ($record->row_data['Nomor Perforasi'] ?? ''));
             if ($perforasi !== '') {
                 $l3ImportIds = Import::where('user_id', auth()->id())
@@ -156,6 +169,20 @@ new class extends Component
         }
 
         session()->flash('status', $column.' disimpan untuk '.$targets->count().' baris.');
+    }
+
+    private function toInputDate(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function updatingSearch(): void
@@ -437,14 +464,23 @@ new class extends Component
                                 @foreach ($this->columns as $column)
                                     <td class="px-3 py-2 text-gray-700 whitespace-nowrap max-w-64 truncate">
                                         @if (in_array($column, $this->editableColumns, true) && isset($record['_row_id']))
-                                            <input
-                                                type="text"
-                                                list="options-{{ strtolower($column) }}"
-                                                value="{{ $record[$column] ?? '' }}"
-                                                wire:change="updateCell({{ $record['_row_id'] }}, '{{ $column }}', $event.target.value)"
-                                                class="w-36 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1"
-                                                placeholder="Isi {{ $column }}..."
-                                            />
+                                            @if ($column === 'Tanggal Cetak')
+                                                <input
+                                                    type="date"
+                                                    value="{{ $this->toInputDate((string) ($record[$column] ?? '')) }}"
+                                                    wire:change="updateCell({{ $record['_row_id'] }}, '{{ $column }}', $event.target.value)"
+                                                    class="w-40 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1"
+                                                />
+                                            @else
+                                                <input
+                                                    type="text"
+                                                    list="options-{{ strtolower($column) }}"
+                                                    value="{{ $record[$column] ?? '' }}"
+                                                    wire:change="updateCell({{ $record['_row_id'] }}, '{{ $column }}', $event.target.value)"
+                                                    class="w-36 border-gray-300 dark:border-gray-600 rounded text-xs px-2 py-1"
+                                                    placeholder="Isi {{ $column }}..."
+                                                />
+                                            @endif
                                         @else
                                             <span title="{{ $record[$column] ?? '' }}">{{ $record[$column] ?? '' }}</span>
                                         @endif
