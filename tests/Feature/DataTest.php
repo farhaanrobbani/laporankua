@@ -53,6 +53,7 @@ class DataTest extends TestCase
         $this->get('/data/rusak')->assertRedirect('/login');
         $this->get('/data/bukti-bayar')->assertRedirect('/login');
         $this->get('/data/surat-tugas')->assertRedirect('/login');
+        $this->get('/data/skp')->assertRedirect('/login');
     }
 
     public function test_index_menampilkan_picker_dan_tabel(): void
@@ -473,12 +474,13 @@ class DataTest extends TestCase
         $user = User::factory()->create();
         $this->l3Import($user, [['Nomor Perforasi' => '116741001']]);
 
-        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak', '/data/bukti-bayar', '/data/surat-tugas'] as $uri) {
+        foreach (['/data/data-import', '/data/pelaksanaan-kantor', '/data/pelaksanaan-luar-kantor', '/data/duplikat', '/data/bukan-duplikat', '/data/rusak', '/data/bukti-bayar', '/data/surat-tugas', '/data/skp'] as $uri) {
             $this->actingAs($user)->get($uri)
                 ->assertOk()
                 ->assertSee('/data/rusak', false)
                 ->assertSee('/data/bukti-bayar', false)
-                ->assertSee('/data/surat-tugas', false);
+                ->assertSee('/data/surat-tugas', false)
+                ->assertSee('/data/skp', false);
         }
     }
 
@@ -756,6 +758,26 @@ class DataTest extends TestCase
             ->assertDontSee('ND-AGT');
     }
 
+    private function pnImport(User $user, array $rows, string $status = 'success'): Import
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => $status,
+            'table_name' => 'laporan peristiwa nikah',
+        ]);
+
+        foreach ($rows as $i => $row) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => array_merge([
+                    'Nomor Daftar' => '',
+                    'Tanggal Nikah' => '',
+                ], $row),
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return $import;
+    }
+
     public function test_surat_tugas_daftar_salin_format_nomor_dan_nama_suami_dan_istri(): void
     {
         $user = User::factory()->create();
@@ -794,5 +816,121 @@ class DataTest extends TestCase
             ->assertOk()
             ->assertSee('ND-B')
             ->assertDontSee('ND-A');
+    }
+
+    private function seedSkpFixtures(User $user): void
+    {
+        // PDK: 2 pendaftaran September (1 luar, 1 kantor), 1 pendaftaran April (untuk kuartal).
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-S1', 'Tanggal Nikah' => '10-09-2026', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'LUAR KUA / BEDOL'],
+            ['Nomor Daftar' => 'ND-S2', 'Tanggal Nikah' => '12-09-2026', 'Tanggal Daftar' => '02-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+            ['Nomor Daftar' => 'ND-A1', 'Tanggal Nikah' => '15-04-2026', 'Tanggal Daftar' => '05-04-2026', 'Nikah Di' => 'KUA / KANTOR'],
+        ]);
+
+        // PN: pelaksanaan September (1 luar via join PDK, 1 kantor, 1 tanpa padanan PDK = kantor).
+        $this->pnImport($user, [
+            ['Nomor Daftar' => 'ND-S1', 'Tanggal Nikah' => '10-09-2026'],
+            ['Nomor Daftar' => 'ND-S2', 'Tanggal Nikah' => '12-09-2026'],
+            ['Nomor Daftar' => 'ND-ONLY', 'Tanggal Nikah' => '20-09-2026'],
+        ]);
+
+        // L3: 2 duplikat unik (perforasi 111 kembar dihitung 1) + 1 bukan duplikat.
+        $this->l3Import($user, [
+            ['Nomor Perforasi' => '111', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '05-09-2026'],
+            ['Nomor Perforasi' => '111', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-09-05'],
+            ['Nomor Perforasi' => '222', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '08-09-2026'],
+            ['Nomor Perforasi' => '333', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '08-09-2026'],
+        ]);
+    }
+
+    public function test_skp_bulanan_menghitung_periode_terpilih(): void
+    {
+        $user = User::factory()->create();
+        $this->seedSkpFixtures($user);
+
+        $this->actingAs($user)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
+            ->assertOk()
+            ->assertSee('Statistik SKP')
+            ->assertSee('September 2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats === [
+                'pendaftaran' => 2,
+                'pelaksanaan_kantor' => 2, // ND-S2 + ND-ONLY (tanpa padanan = kantor)
+                'pelaksanaan_luar' => 1,
+                'duplikat' => 2, // perforasi 111 dihitung sekali
+            ]);
+    }
+
+    public function test_skp_kuartal_mengikuti_kuartal_kalender(): void
+    {
+        $user = User::factory()->create();
+        $this->seedSkpFixtures($user);
+
+        // Mei 2026 → kuartal April–Juni 2026.
+        $this->actingAs($user)->get('/data/skp?mode=kuartal&bulan=5&tahun=2026')
+            ->assertOk()
+            ->assertSee('April–Juni 2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats === [
+                'pendaftaran' => 1,
+                'pelaksanaan_kantor' => 0,
+                'pelaksanaan_luar' => 0,
+                'duplikat' => 0,
+            ]);
+
+        // September 2026 → kuartal Juli–September 2026 (termasuk data September).
+        $this->actingAs($user)->get('/data/skp?mode=kuartal&bulan=9&tahun=2026')
+            ->assertOk()
+            ->assertSee('Juli–September 2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats === [
+                'pendaftaran' => 2,
+                'pelaksanaan_kantor' => 2,
+                'pelaksanaan_luar' => 1,
+                'duplikat' => 2,
+            ]);
+    }
+
+    public function test_skp_dedup_nomor_daftar_kembar_dihitung_sekali(): void
+    {
+        $user = User::factory()->create();
+        $this->pnImport($user, [
+            ['Nomor Daftar' => 'ND-DUP', 'Tanggal Nikah' => '10-09-2026'],
+        ]);
+        $this->pnImport($user, [
+            ['Nomor Daftar' => 'ND-DUP', 'Tanggal Nikah' => '10-09-2026'],
+        ], 'appended');
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-DUP', 'Tanggal Nikah' => '10-09-2026', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+        ]);
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-DUP', 'Tanggal Nikah' => '10-09-2026', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+        ], 'appended');
+
+        $this->actingAs($user)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats === [
+                'pendaftaran' => 1,
+                'pelaksanaan_kantor' => 1,
+                'pelaksanaan_luar' => 0,
+                'duplikat' => 0,
+            ]);
+    }
+
+    public function test_skp_isolasi_milik_user_saja(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $this->seedSkpFixtures($userA);
+        $this->pdkLuarImport($userB, [
+            ['Nomor Daftar' => 'ND-B1', 'Tanggal Daftar' => '01-09-2026'],
+        ]);
+
+        $this->actingAs($userA)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats['pendaftaran'] === 2);
+
+        $this->actingAs($userB)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats === [
+                'pendaftaran' => 1,
+                'pelaksanaan_kantor' => 0,
+                'pelaksanaan_luar' => 0,
+                'duplikat' => 0,
+            ]);
     }
 }

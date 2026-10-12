@@ -14,12 +14,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DataController extends Controller
 {
     use AuthorizesRequests;
+
+    private const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
     public function index(Request $request): View
     {
@@ -355,6 +358,180 @@ class DataController extends Controller
             'q' => $q,
             'tahunTersedia' => $tahunTersedia,
         ]);
+    }
+
+    public function skp(Request $request): View
+    {
+        $mode = $request->query('mode', 'bulanan') === 'kuartal' ? 'kuartal' : 'bulanan';
+
+        $bulan = $request->integer('bulan') ?: (int) now()->month;
+        if ($bulan < 1 || $bulan > 12) {
+            $bulan = (int) now()->month;
+        }
+
+        $tahun = $request->integer('tahun') ?: (int) now()->year;
+        if ($tahun < 2000 || $tahun > 2100) {
+            $tahun = (int) now()->year;
+        }
+
+        if ($mode === 'kuartal') {
+            $kuartal = (int) ceil($bulan / 3);
+            $bulanAwal = ($kuartal - 1) * 3 + 1;
+            $start = Carbon::create($tahun, $bulanAwal, 1)->startOfDay();
+            $end = Carbon::create($tahun, $bulanAwal + 2, 1)->endOfMonth()->endOfDay();
+            $periodeLabel = self::MONTH_NAMES[$bulanAwal - 1].'–'.self::MONTH_NAMES[$bulanAwal + 1].' '.$tahun;
+        } else {
+            $start = Carbon::create($tahun, $bulan, 1)->startOfDay();
+            $end = $start->copy()->endOfMonth()->endOfDay();
+            $periodeLabel = self::MONTH_NAMES[$bulan - 1].' '.$tahun;
+        }
+
+        return view('data.skp', [
+            'stats' => $this->skpStats(auth()->id(), $start, $end),
+            'mode' => $mode,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'periodeLabel' => $periodeLabel,
+            'tahunTersedia' => range((int) now()->year, max((int) now()->year - 5, 2020)),
+        ]);
+    }
+
+    private function skpStats(int $userId, Carbon $start, Carbon $end): array
+    {
+        $stats = [
+            'pendaftaran' => 0,
+            'pelaksanaan_kantor' => 0,
+            'pelaksanaan_luar' => 0,
+            'duplikat' => 0,
+        ];
+
+        $rawRows = DB::table('import_data')
+            ->join('imports', 'imports.id', '=', 'import_data.import_id')
+            ->where('imports.user_id', $userId)
+            ->whereIn('imports.status', ['success', 'appended'])
+            ->where(function ($query) {
+                $query->where('imports.table_name', 'like', '%peristiwa nikah%')
+                    ->orWhere('imports.table_name', 'like', '%pendaftaran nikah%')
+                    ->orWhere('imports.table_name', 'like', '%model l3%');
+            })
+            ->orderBy('import_data.row_number')
+            ->select('imports.table_name', 'import_data.import_id', 'import_data.row_data')
+            ->get();
+
+        $pnRows = [];
+        $pdkRows = [];
+        $l3Rows = [];
+        foreach ($rawRows as $raw) {
+            $row = json_decode((string) $raw->row_data, true);
+            if (! is_array($row)) {
+                continue;
+            }
+            if (str_contains((string) $raw->table_name, 'peristiwa nikah')) {
+                $pnRows[] = ['import_id' => (int) $raw->import_id, 'row' => $row];
+            } elseif (str_contains((string) $raw->table_name, 'pendaftaran nikah')) {
+                $pdkRows[] = ['import_id' => (int) $raw->import_id, 'row' => $row];
+            } else {
+                $l3Rows[] = $row;
+            }
+        }
+
+        $pnRows = $this->skpDedupNewestWins($pnRows);
+        $pdkRows = $this->skpDedupNewestWins($pdkRows);
+
+        $pdkByNomorDaftar = [];
+        foreach ($pdkRows as $row) {
+            $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+            if ($nd !== '') {
+                $pdkByNomorDaftar[$nd] = $row;
+            }
+        }
+
+        $inRange = fn (?Carbon $date) => $date !== null && $date->betweenIncluded($start, $end);
+
+        foreach ($pnRows as $row) {
+            if (! $inRange($this->skpParseDate($row['Tanggal Nikah'] ?? null))) {
+                continue;
+            }
+            $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
+            $isLuar = $pdk !== null && $this->skpIsLuarKantor($pdk);
+            if ($isLuar) {
+                $stats['pelaksanaan_luar']++;
+            } else {
+                $stats['pelaksanaan_kantor']++;
+            }
+        }
+
+        foreach ($pdkRows as $row) {
+            if ($inRange($this->skpParseDate($row['Tanggal Daftar'] ?? null))) {
+                $stats['pendaftaran']++;
+            }
+        }
+
+        $seenPerforasi = [];
+        foreach ($l3Rows as $row) {
+            if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) !== 'duplikat') {
+                continue;
+            }
+            if (! $inRange($this->skpParseDate($row['Tanggal Cetak'] ?? null))) {
+                continue;
+            }
+            $perforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
+            if ($perforasi !== '') {
+                if (isset($seenPerforasi[$perforasi])) {
+                    continue;
+                }
+                $seenPerforasi[$perforasi] = true;
+            }
+            $stats['duplikat']++;
+        }
+
+        return $stats;
+    }
+
+    /**
+     * @param  array<int, array{import_id: int, row: array<string, mixed>}>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function skpDedupNewestWins(array $rows): array
+    {
+        $newest = [];
+        $tanpaNomor = [];
+
+        foreach ($rows as $item) {
+            $nd = trim((string) ($item['row']['Nomor Daftar'] ?? ''));
+
+            if ($nd === '') {
+                $tanpaNomor[] = $item['row'];
+
+                continue;
+            }
+
+            if (! isset($newest[$nd]) || $item['import_id'] >= $newest[$nd]['import_id']) {
+                $newest[$nd] = $item;
+            }
+        }
+
+        return array_merge(array_column($newest, 'row'), $tanpaNomor);
+    }
+
+    private function skpParseDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function skpIsLuarKantor(array $row): bool
+    {
+        $nikahDi = mb_strtoupper(trim((string) ($row['Nikah Di'] ?? '')));
+
+        return str_contains($nikahDi, 'LUAR') || str_contains($nikahDi, 'BEDOL');
     }
 
     public function show(ImportData $record): View
