@@ -40,11 +40,11 @@
                     </div>
 
                     @if (empty($importIds))
-                        <x-empty-state title="Belum ada data" message="Upload laporan simponi terlebih dahulu." :action-url="route('imports.create')" action-label="Upload Excel" />
+                        <x-empty-state title="Belum ada data" message="Upload laporan peristiwa nikah dan pendaftaran nikah terlebih dahulu." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <form method="GET" action="{{ route('data.bukti-bayar') }}" class="mb-6 flex flex-wrap items-end gap-3">
                             <div>
-                                <label for="bulan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Bulan') }}</label>
+                                <label for="bulan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Bulan Pelaksanaan') }}</label>
                                 <select id="bulan" name="bulan" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                                     <option value="">{{ __('Semua') }}</option>
                                     @foreach ($bulanNames as $angka => $nama)
@@ -53,7 +53,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="tahun" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Tahun') }}</label>
+                                <label for="tahun" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Tahun Pelaksanaan') }}</label>
                                 <select id="tahun" name="tahun" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                                     <option value="">{{ __('Semua') }}</option>
                                     @foreach ($tahunTersedia as $tahunOption)
@@ -73,8 +73,14 @@
                             </div>
                         </form>
 
+                        <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">Daftar mengikuti pelaksanaan luar kantor (laporan pendaftaran nikah, Nikah Di = BEDOL). Filter bulan/tahun mengikuti tanggal nikah — no billing bisa terbit di bulan sebelumnya.</p>
+
+                        @if ($tanpaPadanan > 0)
+                            <p class="mb-3 text-xs text-amber-700 dark:text-amber-400"><strong>{{ $tanpaPadanan }}</strong> baris simponi tidak ditampilkan karena tidak ada padanan pelaksanaan luar kantor.</p>
+                        @endif
+
                         @if ($totalBillings === 0)
-                            <x-empty-state title="Tidak ada data" message="Tidak ada bukti bayar yang cocok dengan filter." />
+                            <x-empty-state title="Tidak ada data" message="Tidak ada bukti bayar yang cocok dengan pelaksanaan luar kantor atau filter." />
                         @else
                             <div class="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-600 px-5 py-4 text-white shadow-md">
                                 <div>
@@ -103,6 +109,7 @@
                                         <tr>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">No</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">No Billing</th>
+                                            <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Tanggal Pelaksanaan</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Tanggal Billing</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Nama Wajib Bayar</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Nominal Setor</th>
@@ -116,6 +123,7 @@
                                             <tr>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $no++ }}</td>
                                                 <td class="px-3 py-2 text-gray-900 font-mono whitespace-nowrap">{{ $row['no_billing'] }}</td>
+                                                <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['tanggal_pelaksanaan']?->format('d-m-Y') ?? '-' }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['tanggal_billing'] }}</td>
                                                 <td class="px-3 py-2 text-gray-700">{{ $row['nama'] }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['nominal'] }}</td>

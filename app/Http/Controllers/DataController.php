@@ -130,12 +130,30 @@ class DataController extends Controller
     public function buktiBayar(Request $request): View
     {
         $importIds = Import::where('user_id', auth()->id())
+            ->where('table_name', 'laporan pendaftaran nikah')
+            ->whereIn('status', ['success', 'appended'])
+            ->pluck('id')
+            ->toArray();
+
+        // Peta Nomor Daftar pelaksanaan luar kantor (Nikah Di contains BEDOL) → tanggal nikah.
+        $pelaksanaan = collect($importIds === [] ? [] : ImportData::whereIn('import_id', $importIds)
+            ->get(['row_data'])
+            ->pluck('row_data')
+            ->filter(fn ($row) => is_array($row)))
+            ->filter(fn (array $row) => mb_stripos((string) ($row['Nikah Di'] ?? ''), 'BEDOL') !== false)
+            ->mapWithKeys(function (array $row) {
+                $nd = trim((string) ($row['Nomor Daftar'] ?? ''));
+
+                return $nd === '' ? [] : [$nd => $this->parseTanggalPelaksanaan((string) ($row['Tanggal Nikah'] ?? ''))];
+            });
+
+        $simponiIds = Import::where('user_id', auth()->id())
             ->where('table_name', 'like', '%simponi%')
             ->whereIn('status', ['success', 'appended'])
             ->pluck('id')
             ->toArray();
 
-        $billings = collect($importIds === [] ? [] : ImportData::whereIn('import_id', $importIds)
+        $semuaSimponi = collect($simponiIds === [] ? [] : ImportData::whereIn('import_id', $simponiIds)
             ->get(['row_data'])
             ->pluck('row_data')
             ->filter(fn ($row) => is_array($row)))
@@ -150,15 +168,20 @@ class DataController extends Controller
             ->filter(fn (array $row) => $row['no_billing'] !== '')
             ->values();
 
-        $tahunTersedia = $billings
-            ->map(function (array $row) {
-                try {
-                    return Carbon::parse($row['tanggal_billing'])->year;
-                } catch (\Throwable) {
-                    return null;
-                }
+        $billings = $semuaSimponi
+            ->filter(fn (array $row) => $pelaksanaan->has($row['no_pendaftaran']))
+            ->map(function (array $row) use ($pelaksanaan) {
+                $row['tanggal_pelaksanaan'] = $pelaksanaan->get($row['no_pendaftaran']);
+
+                return $row;
             })
-            ->filter()
+            ->values();
+
+        $tanpaPadanan = $semuaSimponi->count() - $billings->count();
+
+        $tahunTersedia = $billings
+            ->filter(fn (array $row) => $row['tanggal_pelaksanaan'] !== null)
+            ->map(fn (array $row) => $row['tanggal_pelaksanaan']->year)
             ->unique()
             ->sortDesc()
             ->values();
@@ -172,9 +195,8 @@ class DataController extends Controller
                 return true;
             }
 
-            try {
-                $tanggal = Carbon::parse($row['tanggal_billing']);
-            } catch (\Throwable) {
+            $tanggal = $row['tanggal_pelaksanaan'];
+            if ($tanggal === null) {
                 return false;
             }
 
@@ -189,7 +211,8 @@ class DataController extends Controller
         }
 
         $billings = $billings
-            ->sortBy([['tanggal_billing', 'asc'], ['no_billing', 'asc']])
+            ->sort(fn (array $a, array $b) => [$a['tanggal_pelaksanaan']?->getTimestamp() ?? PHP_INT_MAX, $a['no_billing']]
+                <=> [$b['tanggal_pelaksanaan']?->getTimestamp() ?? PHP_INT_MAX, $b['no_billing']])
             ->values();
 
         $daftarSalin = $billings
@@ -212,12 +235,29 @@ class DataController extends Controller
             'importIds' => $importIds,
             'billings' => $rows,
             'totalBillings' => $billings->count(),
+            'tanpaPadanan' => $tanpaPadanan,
             'daftarSalin' => $daftarSalin,
             'bulan' => $bulan,
             'tahun' => $tahun,
             'q' => $q,
             'tahunTersedia' => $tahunTersedia,
         ]);
+    }
+
+    private function parseTanggalPelaksanaan(string $value): ?Carbon
+    {
+        foreach (['d-m-Y', 'Y-m-d'] as $format) {
+            try {
+                $date = Carbon::createFromFormat($format, $value);
+                if ($date !== false) {
+                    return $date;
+                }
+            } catch (\Throwable) {
+                // coba format berikutnya
+            }
+        }
+
+        return null;
     }
 
     public function show(ImportData $record): View

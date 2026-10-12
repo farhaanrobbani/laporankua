@@ -465,7 +465,28 @@ class DataTest extends TestCase
         return $import;
     }
 
-    public function test_tab_bukti_bayar_tanpa_simponi_tampil_empty_state(): void
+    private function pdkLuarImport(User $user, array $rows, string $status = 'success'): Import
+    {
+        $import = Import::factory()->for($user)->create([
+            'status' => $status,
+            'table_name' => 'laporan pendaftaran nikah',
+        ]);
+
+        foreach ($rows as $i => $row) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => array_merge([
+                    'Nomor Daftar' => '',
+                    'Tanggal Nikah' => '',
+                    'Nikah Di' => 'LUAR KUA / BEDOL',
+                ], $row),
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        return $import;
+    }
+
+    public function test_tab_bukti_bayar_tanpa_pdk_tampil_empty_state(): void
     {
         $user = User::factory()->create();
 
@@ -473,7 +494,7 @@ class DataTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Belum ada data');
-        $response->assertSee('Upload laporan simponi');
+        $response->assertSee('pendaftaran nikah');
     }
 
     public function test_tab_bukti_bayar_menampilkan_simponi_milik_user_saja(): void
@@ -481,6 +502,9 @@ class DataTest extends TestCase
         $userA = User::factory()->create();
         $userB = User::factory()->create();
 
+        $this->pdkLuarImport($userA, [
+            ['Nomor Daftar' => 'ND-A-001', 'Tanggal Nikah' => '08-09-2026'],
+        ]);
         $this->simponiImport($userA, [
             [
                 'No Billing' => '820260908847263',
@@ -491,11 +515,15 @@ class DataTest extends TestCase
                 'No NTB' => 'NTB-A-001',
             ],
         ]);
+        $this->pdkLuarImport($userB, [
+            ['Nomor Daftar' => 'ND-B-001', 'Tanggal Nikah' => '09-09-2026'],
+        ]);
         $this->simponiImport($userB, [
             [
                 'No Billing' => '820260999000111',
                 'Tanggal Billing' => '2026-09-09',
                 'Nama Wajib Bayar' => 'Budi Rahasia',
+                'No Pendaftaran' => 'ND-B-001',
             ],
         ]);
 
@@ -504,32 +532,72 @@ class DataTest extends TestCase
             ->assertSee('820260908847263')
             ->assertSee('Ahmad Fauzi')
             ->assertSee('NTB-A-001')
+            ->assertSee('08-09-2026')
             ->assertDontSee('820260999000111')
             ->assertDontSee('Budi Rahasia');
     }
 
-    public function test_filter_bulan_tahun_memfilter_tanggal_billing(): void
+    public function test_hanya_pelaksanaan_luar_kantor_yang_tampil(): void
     {
         $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-LUAR-1', 'Tanggal Nikah' => '10-09-2026', 'Nikah Di' => 'LUAR KUA / BEDOL'],
+            ['Nomor Daftar' => 'ND-KANTOR-1', 'Tanggal Nikah' => '10-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
+        ]);
         $this->simponiImport($user, [
-            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus'],
-            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Warga September'],
+            ['No Billing' => '820260910000001', 'Tanggal Billing' => '2026-08-20', 'Nama Wajib Bayar' => 'Warga Luar', 'No Pendaftaran' => 'ND-LUAR-1'],
+            ['No Billing' => '820260910000002', 'Tanggal Billing' => '2026-08-20', 'Nama Wajib Bayar' => 'Warga Kantor', 'No Pendaftaran' => 'ND-KANTOR-1'],
+            ['No Billing' => '820260910000003', 'Tanggal Billing' => '2026-08-20', 'Nama Wajib Bayar' => 'Warga Tanpa Padanan', 'No Pendaftaran' => 'ND-TIDAK-ADA'],
+        ]);
+
+        $this->actingAs($user)->get('/data/bukti-bayar')
+            ->assertOk()
+            ->assertSee('820260910000001')
+            ->assertSee('Warga Luar')
+            ->assertDontSee('820260910000002')
+            ->assertDontSee('Warga Kantor')
+            ->assertDontSee('820260910000003')
+            ->assertDontSee('Warga Tanpa Padanan')
+            ->assertSee('2</strong> baris simponi tidak ditampilkan', false);
+    }
+
+    public function test_filter_bulan_mengikuti_tanggal_pelaksanaan_bukan_tanggal_billing(): void
+    {
+        $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-AGT', 'Tanggal Nikah' => '30-09-2026'],
+            ['Nomor Daftar' => 'ND-SEP', 'Tanggal Nikah' => '2026-09-15'],
+        ]);
+        $this->simponiImport($user, [
+            // Billing Agustus, akad September → ikut saat bulan=9, tidak saat bulan=8.
+            ['No Billing' => '820260815000001', 'Tanggal Billing' => '2026-08-15', 'Nama Wajib Bayar' => 'Warga Billing Agustus', 'No Pendaftaran' => 'ND-AGT'],
+            ['No Billing' => '820260915000002', 'Tanggal Billing' => '2026-09-15', 'Nama Wajib Bayar' => 'Warga Akad September', 'No Pendaftaran' => 'ND-SEP'],
         ]);
 
         $this->actingAs($user)->get('/data/bukti-bayar?bulan=9&tahun=2026')
             ->assertOk()
-            ->assertSee('820260901000002')
-            ->assertSee('Warga September')
-            ->assertDontSee('820260801000001')
-            ->assertDontSee('Warga Agustus');
+            ->assertSee('820260815000001')
+            ->assertSee('Warga Billing Agustus')
+            ->assertSee('820260915000002')
+            ->assertSee('30-09-2026');
+
+        $this->actingAs($user)->get('/data/bukti-bayar?bulan=8&tahun=2026')
+            ->assertOk()
+            ->assertDontSee('820260815000001')
+            ->assertDontSee('Warga Billing Agustus')
+            ->assertSee('Tidak ada data');
     }
 
     public function test_pencarian_bukti_bayar_memfilter_nama_dan_no_billing(): void
     {
         $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '01-08-2026'],
+            ['Nomor Daftar' => 'ND-2', 'Tanggal Nikah' => '01-09-2026'],
+        ]);
         $this->simponiImport($user, [
-            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Ahmad Fauzi'],
-            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Siti Aminah'],
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Ahmad Fauzi', 'No Pendaftaran' => 'ND-1'],
+            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Siti Aminah', 'No Pendaftaran' => 'ND-2'],
         ]);
 
         $this->actingAs($user)->get('/data/bukti-bayar?q=ahmad')
@@ -546,10 +614,14 @@ class DataTest extends TestCase
     public function test_daftar_salin_memuat_no_billing_dan_nama_unik(): void
     {
         $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-AGT', 'Tanggal Nikah' => '15-08-2026'],
+            ['Nomor Daftar' => 'ND-SEP', 'Tanggal Nikah' => '01-09-2026'],
+        ]);
         $this->simponiImport($user, [
-            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Warga September'],
-            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus'],
-            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus'],
+            ['No Billing' => '820260901000002', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Warga September', 'No Pendaftaran' => 'ND-SEP'],
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus', 'No Pendaftaran' => 'ND-AGT'],
+            ['No Billing' => '820260801000001', 'Tanggal Billing' => '2026-08-01', 'Nama Wajib Bayar' => 'Warga Agustus', 'No Pendaftaran' => 'ND-AGT'],
         ]);
 
         $this->actingAs($user)->get('/data/bukti-bayar')
