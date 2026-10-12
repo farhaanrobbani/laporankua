@@ -192,7 +192,11 @@ class DataController extends Controller
             ->sortBy([['tanggal_billing', 'asc'], ['no_billing', 'asc']])
             ->values();
 
-        $semuaNoBilling = $billings->pluck('no_billing')->unique()->values()->all();
+        $daftarSalin = $billings
+            ->unique('no_billing')
+            ->map(fn (array $row) => $row['nama'] !== '' ? $row['no_billing'].' - '.$row['nama'] : $row['no_billing'])
+            ->values()
+            ->all();
 
         $page = max(1, $request->integer('page'));
         $rows = new LengthAwarePaginator(
@@ -208,7 +212,7 @@ class DataController extends Controller
             'importIds' => $importIds,
             'billings' => $rows,
             'totalBillings' => $billings->count(),
-            'semuaNoBilling' => $semuaNoBilling,
+            'daftarSalin' => $daftarSalin,
             'bulan' => $bulan,
             'tahun' => $tahun,
             'q' => $q,

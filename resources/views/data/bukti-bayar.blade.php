@@ -66,7 +66,7 @@
                                 <input type="text" id="q" name="q" value="{{ $q }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" />
                             </div>
                             <div class="flex gap-2">
-                                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition">{{ __('Filter') }}</button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition">{{ __('Filter') }}</button>
                                 @if ($bulan !== null || $tahun !== null || $q !== '')
                                     <a href="{{ route('data.bukti-bayar') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">{{ __('Reset') }}</a>
                                 @endif
@@ -76,16 +76,16 @@
                         @if ($totalBillings === 0)
                             <x-empty-state title="Tidak ada data" message="Tidak ada bukti bayar yang cocok dengan filter." />
                         @else
-                            <div class="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-lg bg-indigo-600 px-5 py-4 text-white shadow-md">
+                            <div class="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-lg bg-blue-600 px-5 py-4 text-white shadow-md">
                                 <div>
                                     <p class="text-base font-semibold">
-                                        <strong>{{ $totalBillings }}</strong> bukti bayar{{ $totalBillings !== count($semuaNoBilling) ? ' (' . count($semuaNoBilling) . ' no billing unik)' : '' }}
+                                        <strong>{{ $totalBillings }}</strong> bukti bayar{{ $totalBillings !== count($daftarSalin) ? ' (' . count($daftarSalin) . ' no billing unik)' : '' }}
                                     </p>
-                                    <p class="mt-0.5 text-xs text-indigo-100">Klik tombol untuk menyalin daftar no billing, lalu tempel ke panel unduh massal di SIMKAH4.</p>
+                                    <p class="mt-0.5 text-xs text-blue-100">Klik tombol untuk menyalin daftar (no billing - nama wajib bayar), lalu tempel ke panel unduh massal di SIMKAH4.</p>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <span id="salin-status" class="text-sm font-medium"></span>
-                                    <button type="button" id="salin-btn" data-list='@json($semuaNoBilling)' class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 shadow hover:bg-indigo-50 transition">
+                                    <button type="button" id="salin-btn" data-list='@json($daftarSalin)' class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 shadow hover:bg-blue-50 transition">
                                         <x-heroicon-o-clipboard-document class="h-5 w-5" />
                                         {{ __('Salin Daftar No Billing') }}
                                     </button>
@@ -93,7 +93,7 @@
                             </div>
 
                             <div id="salin-fallback" hidden class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
-                                <p class="mb-2 text-sm font-medium text-amber-800">Salin manual: kolom di bawah sudah terpilih — tekan <kbd class="rounded bg-amber-200 px-1.5 py-0.5 font-mono text-xs">Ctrl+C</kbd> (mac: <kbd class="rounded bg-amber-200 px-1.5 py-0.5 font-mono text-xs">Cmd+C</kbd>).</p>
+                                <p class="mb-2 text-sm font-medium text-amber-800">Salin manual: kolom di bawah sudah terpilih — tekan <kbd class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 font-mono text-xs">Ctrl+C</kbd> (mac: <kbd class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 font-mono text-xs">Cmd+C</kbd>).</p>
                                 <textarea id="salin-fallback-textarea" readonly rows="6" class="w-full rounded-md border-amber-300 font-mono text-sm text-gray-800 focus:border-amber-400 focus:ring-amber-300"></textarea>
                             </div>
 
@@ -133,12 +133,12 @@
                             <summary class="cursor-pointer font-medium">{{ __('Cara pakai unduh massal bukti bayar (SIMKAH4)') }}</summary>
                             <ol class="list-decimal ml-5 mt-2 space-y-1">
                                 <li>Di laptop/PC, pasang ekstensi <strong>Tampermonkey</strong> di browser (Chrome/Edge/Firefox).</li>
-                                <li>Buka <a href="{{ url('/userscripts/simkah4-bukti-bayar.user.js') }}" target="_blank" rel="noopener" class="text-indigo-600 underline">link pemasangan script unduh massal</a> — Tampermonkey akan menawarkan pemasangan.</li>
+                                <li>Buka <a href="{{ url('/userscripts/simkah4-bukti-bayar.user.js') }}" target="_blank" rel="noopener" class="text-blue-600 underline">link pemasangan script unduh massal</a> — Tampermonkey akan menawarkan pemasangan.</li>
                                 <li>Login ke SIMKAH4 (<span class="font-mono">https://simkah4.kemenag.go.id</span>).</li>
                                 <li>Klik tombol <strong>"Unduh Massal Bukti Bayar"</strong> (panel Tampermonkey) di halaman SIMKAH4.</li>
                                 <li>Sekali saja: tempel URL bukti bayar apa pun (mis. dari hasil klik manual) ke kolom <strong>UUID</strong> — otomatis tersimpan.</li>
                                 <li>Tempel daftar No Billing (hasil tombol <strong>"Salin Daftar No Billing"</strong>) ke kolom daftar, lalu klik <strong>Mulai</strong>.</li>
-                                <li>Browser mungkin meminta izin "unduh multiple files" — izinkan sekali. Hasil: <span class="font-mono">bukti-bayar-{no_billing}.pdf</span>.</li>
+                                <li>Browser mungkin meminta izin "unduh multiple files" — izinkan sekali. Hasil: <span class="font-mono">no_billing - nama wajib bayar.pdf</span>.</li>
                             </ol>
                             <p class="mt-2 text-xs text-gray-500">Script memakai sesi login SIMKAH4-mu di browser; tidak ada kredensial yang disimpan aplikasi.</p>
                         </details>
@@ -177,11 +177,11 @@
                                 }
 
                                 if (ok) {
-                                    status.className = 'text-sm font-medium text-green-200';
+                                    status.className = 'text-sm font-semibold text-white';
                                     status.textContent = '✓ Tersalin (' + items.length + ' nomor)';
                                     setTimeout(function () { status.textContent = ''; }, 4000);
                                 } else {
-                                    status.className = 'text-sm font-medium text-amber-200';
+                                    status.className = 'text-sm font-semibold text-amber-200';
                                     status.textContent = 'Gagal otomatis — salin manual dari kolom di bawah.';
                                 }
                             });

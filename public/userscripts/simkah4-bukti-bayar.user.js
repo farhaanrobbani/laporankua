@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Unduh Massal Bukti Bayar
 // @namespace    laporan-kua
-// @version      1.1.0
+// @version      1.2.0
 // @description  Mengunduh bukti bayar (PDF) secara massal dari SIMKAH4 memakai sesi login aktif. Daftar no billing disalin dari aplikasi Laporan (tab Data → Bukti Bayar).
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_setValue
@@ -26,13 +26,38 @@
         return m ? m[0] : '';
     }
 
+    function sanitizeNama(nama) {
+        return (nama || '')
+            .replace(/[\\/:*?"<>|]/g, ' ')
+            // eslint-disable-next-line no-control-regex
+            .replace(/[\x00-\x1f\x7f]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 80);
+    }
+
     function parseList(raw) {
         var out = [];
-        (raw || '').split(/[\s,;]+/).forEach(function (token) {
-            token = token.trim();
-            if (/^\d{8,}$/.test(token) && out.indexOf(token) === -1) {
-                out.push(token);
+        var seen = {};
+        (raw || '').split(/\r?\n/).forEach(function (line) {
+            line = line.trim();
+            if (!line) return;
+
+            var m = line.match(/^(\d{8,})\s*(?:-\s*(.*))?$/);
+            if (m) {
+                var nb = m[1];
+                if (seen[nb]) return;
+                seen[nb] = true;
+                out.push({ no_billing: nb, nama: sanitizeNama(m[2] || '') });
+                return;
             }
+
+            line.split(/[\s,;]+/).forEach(function (token) {
+                if (/^\d{8,}$/.test(token) && !seen[token]) {
+                    seen[token] = true;
+                    out.push({ no_billing: token, nama: '' });
+                }
+            });
         });
         return out;
     }
@@ -71,7 +96,7 @@
             +   '<label for="sb-uuid" style="font-size:11px;display:block;margin-bottom:2px;">UUID SIMKAH (sekali saja)</label>'
             +   '<input id="sb-uuid" type="text" placeholder="tempel URL bukti bayar / UUID" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
             +   '<label for="sb-list" style="font-size:11px;display:block;margin-bottom:2px;">Daftar No Billing (satu per baris)</label>'
-            +   '<textarea id="sb-list" rows="6" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" placeholder="820260827046716\n820260908847263"></textarea>'
+            +   '<textarea id="sb-list" rows="6" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" placeholder="820260908847263 - Ahmad Fauzi\n820260908847264 - Siti Aminah"></textarea>'
             +   '<div style="display:flex;gap:6px;margin-bottom:6px;">'
             +     '<button id="sb-start" style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
             +     '<button id="sb-stop" disabled style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
@@ -111,7 +136,9 @@
                 break;
             }
 
-            var nb = list[i];
+            var item = list[i];
+            var nb = item.no_billing;
+            var fileName = nb + (item.nama ? ' - ' + item.nama : '') + '.pdf';
             progress('[' + (i + 1) + '/' + list.length + '] ' + nb);
             var url = BASE + '/' + uuid + '?no_billing=' + encodeURIComponent(nb);
 
@@ -134,9 +161,9 @@
                 }
 
                 var blob = await res.blob();
-                downloadBlob(blob, 'bukti-bayar-' + nb + '.pdf');
+                downloadBlob(blob, fileName);
                 ok++;
-                log('OK ' + nb, '');
+                log('OK ' + fileName, '');
             } catch (err) {
                 gagal++;
                 log('Gagal ' + nb + ' — ' + err, '');

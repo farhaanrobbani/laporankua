@@ -543,7 +543,7 @@ class DataTest extends TestCase
             ->assertDontSee('Ahmad Fauzi');
     }
 
-    public function test_daftar_no_billing_unik_terurut_tanggal(): void
+    public function test_daftar_salin_memuat_no_billing_dan_nama_unik(): void
     {
         $user = User::factory()->create();
         $this->simponiImport($user, [
@@ -557,6 +557,9 @@ class DataTest extends TestCase
             ->assertSee('id="salin-btn"', false)
             ->assertSee('Salin Daftar No Billing')
             ->assertSee('id="salin-fallback"', false)
-            ->assertViewHas('semuaNoBilling', fn (array $billings) => $billings === ['820260801000001', '820260901000002']);
+            ->assertViewHas('daftarSalin', fn (array $daftar) => $daftar === [
+                '820260801000001 - Warga Agustus',
+                '820260901000002 - Warga September',
+            ]);
     }
 }
