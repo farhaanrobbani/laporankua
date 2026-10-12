@@ -400,6 +400,7 @@ class DataController extends Controller
     {
         $stats = [
             'pendaftaran' => 0,
+            'pelaksanaan' => 0,
             'pelaksanaan_kantor' => 0,
             'pelaksanaan_luar' => 0,
             'duplikat' => 0,
@@ -454,6 +455,7 @@ class DataController extends Controller
             }
             $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
             $isLuar = $pdk !== null && $this->skpIsLuarKantor($pdk);
+            $stats['pelaksanaan']++;
             if ($isLuar) {
                 $stats['pelaksanaan_luar']++;
             } else {

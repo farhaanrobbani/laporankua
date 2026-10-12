@@ -854,6 +854,7 @@ class DataTest extends TestCase
             ->assertSee('September 2026')
             ->assertViewHas('stats', fn (array $stats) => $stats === [
                 'pendaftaran' => 2,
+                'pelaksanaan' => 3,
                 'pelaksanaan_kantor' => 2, // ND-S2 + ND-ONLY (tanpa padanan = kantor)
                 'pelaksanaan_luar' => 1,
                 'duplikat' => 2, // perforasi 111 dihitung sekali
@@ -871,6 +872,7 @@ class DataTest extends TestCase
             ->assertSee('April–Juni 2026')
             ->assertViewHas('stats', fn (array $stats) => $stats === [
                 'pendaftaran' => 1,
+                'pelaksanaan' => 0,
                 'pelaksanaan_kantor' => 0,
                 'pelaksanaan_luar' => 0,
                 'duplikat' => 0,
@@ -882,6 +884,7 @@ class DataTest extends TestCase
             ->assertSee('Juli–September 2026')
             ->assertViewHas('stats', fn (array $stats) => $stats === [
                 'pendaftaran' => 2,
+                'pelaksanaan' => 3,
                 'pelaksanaan_kantor' => 2,
                 'pelaksanaan_luar' => 1,
                 'duplikat' => 2,
@@ -907,6 +910,7 @@ class DataTest extends TestCase
         $this->actingAs($user)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
             ->assertViewHas('stats', fn (array $stats) => $stats === [
                 'pendaftaran' => 1,
+                'pelaksanaan' => 1,
                 'pelaksanaan_kantor' => 1,
                 'pelaksanaan_luar' => 0,
                 'duplikat' => 0,
@@ -928,6 +932,7 @@ class DataTest extends TestCase
         $this->actingAs($userB)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
             ->assertViewHas('stats', fn (array $stats) => $stats === [
                 'pendaftaran' => 1,
+                'pelaksanaan' => 0,
                 'pelaksanaan_kantor' => 0,
                 'pelaksanaan_luar' => 0,
                 'duplikat' => 0,

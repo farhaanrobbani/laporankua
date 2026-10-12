@@ -83,10 +83,15 @@
 
                     <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">Pendaftaran mengikuti Tanggal Daftar; pelaksanaan mengikuti Tanggal Nikah (peristiwa nikah) dengan pecahan kantor/luar dari kolom Nikah Di; duplikat unik per Nomor Perforasi dengan Tanggal Cetak — konsisten dengan Statistik Laporan di dashboard.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Pendaftaran Nikah') }}</p>
                             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pendaftaran']) }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Pelaksanaan Nikah') }}</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pelaksanaan']) }}</p>
                             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
                         </div>
                         <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
