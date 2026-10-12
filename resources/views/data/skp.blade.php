@@ -7,10 +7,6 @@
         </div>
     </x-slot>
 
-    @php
-        $bulanNames = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    @endphp
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -52,18 +48,11 @@
                         </div>
                         <form method="GET" action="{{ route('data.skp') }}" class="flex flex-wrap items-end gap-3">
                             <div>
-                                <label for="mode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Mode Periode') }}</label>
-                                <select id="mode" name="mode" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                                    <option value="bulanan" @selected($mode === 'bulanan')>{{ __('Bulanan (1 bulan)') }}</option>
-                                    <option value="kuartal" @selected($mode === 'kuartal')>{{ __('Kuartal (3 bulan)') }}</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="bulan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Bulan') }}</label>
-                                <select id="bulan" name="bulan" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                                    @foreach ($bulanNames as $angka => $nama)
-                                        <option value="{{ $angka }}" @selected($bulan === $angka)>{{ $nama }}</option>
-                                    @endforeach
+                                <label for="tw" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Triwulan') }}</label>
+                                <select id="tw" name="tw" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                                    @for ($i = 1; $i <= 4; $i++)
+                                        <option value="{{ $i }}" @selected($tw === $i)>TW{{ $i }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div>
@@ -83,32 +72,49 @@
 
                     <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">Pendaftaran mengikuti Tanggal Daftar; pelaksanaan mengikuti Tanggal Nikah (peristiwa nikah) dengan pecahan kantor/luar dari kolom Nikah Di; duplikat unik per Nomor Perforasi dengan Tanggal Cetak — konsisten dengan Statistik Laporan di dashboard.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Pendaftaran Nikah') }}</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pendaftaran']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
+                    @php
+                        $twLabel = 'TW' . $tw . ' ' . $tahun;
+                        $namaBulan = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        $card = fn (string $label, int $nilai, string $periode) => '<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4"><p class="text-xs text-gray-500 dark:text-gray-400">' . e($label) . '</p><p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">' . number_format($nilai) . '</p><p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">' . e($periode) . '</p></div>';
+                    @endphp
+
+                    {{-- Pelaksanaan Nikah: total triwulan --}}
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Pelaksanaan Nikah') }} · {{ $twLabel }}</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        {!! $card(__('Pelaksanaan Nikah') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan'], $periodeLabel) !!}
+                        {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan_kantor'], $periodeLabel) !!}
+                        {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan_luar'], $periodeLabel) !!}
+                    </div>
+
+                    {{-- Pelaksanaan Nikah: per bulan --}}
+                    @foreach ($bulanList as $m)
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            {!! $card(__('Pelaksanaan Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan_kantor'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan_luar'], $namaBulan[$m] . ' ' . $tahun) !!}
                         </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Pelaksanaan Nikah') }}</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pelaksanaan']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Pelaksanaan Kantor') }}</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pelaksanaan_kantor']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Pelaksanaan Luar Kantor') }}</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pelaksanaan_luar']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Duplikat') }}</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['duplikat']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $periodeLabel }}</p>
-                        </div>
+                    @endforeach
+
+                    {{-- Pendaftaran Nikah per bulan --}}
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Pendaftaran Nikah') }}</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        @foreach ($bulanList as $m)
+                            {!! $card(__('Pendaftaran Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran'], $namaBulan[$m] . ' ' . $tahun) !!}
+                        @endforeach
+                    </div>
+
+                    {{-- Duplikat per bulan --}}
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Duplikat') }}</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        @foreach ($bulanList as $m)
+                            {!! $card(__('Duplikat') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['duplikat'], $namaBulan[$m] . ' ' . $tahun) !!}
+                        @endforeach
+                    </div>
+
+                    {{-- Total triwulan: pendaftaran & duplikat --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {!! $card(__('Pendaftaran Nikah') . ' ' . $twLabel, $stats['triwulan']['pendaftaran'], $periodeLabel) !!}
+                        {!! $card(__('Duplikat') . ' ' . $twLabel, $stats['triwulan']['duplikat'], $periodeLabel) !!}
                     </div>
                 </div>
             </div>

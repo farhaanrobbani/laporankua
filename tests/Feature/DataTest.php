@@ -843,52 +843,54 @@ class DataTest extends TestCase
         ]);
     }
 
-    public function test_skp_bulanan_menghitung_periode_terpilih(): void
+    public function test_skp_triwulan_menghitung_total_dan_rincian_bulanan(): void
     {
         $user = User::factory()->create();
         $this->seedSkpFixtures($user);
 
-        $this->actingAs($user)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
+        $this->actingAs($user)->get('/data/skp?tw=3&tahun=2026')
             ->assertOk()
             ->assertSee('Statistik SKP')
-            ->assertSee('September 2026')
-            ->assertViewHas('stats', fn (array $stats) => $stats === [
-                'pendaftaran' => 2,
-                'pelaksanaan' => 3,
-                'pelaksanaan_kantor' => 2, // ND-S2 + ND-ONLY (tanpa padanan = kantor)
-                'pelaksanaan_luar' => 1,
-                'duplikat' => 2, // perforasi 111 dihitung sekali
-            ]);
+            ->assertSee('TW3 2026')
+            ->assertSee('Juli–September')
+            ->assertViewHas('stats', function (array $stats) {
+                $this->assertSame([
+                    'pelaksanaan' => 3,
+                    'pelaksanaan_kantor' => 2, // ND-S2 + ND-ONLY (tanpa padanan = kantor)
+                    'pelaksanaan_luar' => 1,
+                    'pendaftaran' => 2,
+                    'duplikat' => 2, // perforasi 111 dihitung sekali
+                ], $stats['triwulan']);
+
+                $this->assertSame($stats['triwulan'], $stats['bulan'][9]);
+                $this->assertSame(
+                    ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0],
+                    $stats['bulan'][7]
+                );
+                $this->assertSame($stats['bulan'][7], $stats['bulan'][8]);
+
+                return true;
+            });
     }
 
-    public function test_skp_kuartal_mengikuti_kuartal_kalender(): void
+    public function test_skp_triwulan_dua_di_luar_rentang_tiga(): void
     {
         $user = User::factory()->create();
         $this->seedSkpFixtures($user);
 
-        // Mei 2026 → kuartal April–Juni 2026.
-        $this->actingAs($user)->get('/data/skp?mode=kuartal&bulan=5&tahun=2026')
+        // TW2 (April–Juni): hanya pendaftaran April yang masuk.
+        $this->actingAs($user)->get('/data/skp?tw=2&tahun=2026')
             ->assertOk()
-            ->assertSee('April–Juni 2026')
-            ->assertViewHas('stats', fn (array $stats) => $stats === [
-                'pendaftaran' => 1,
-                'pelaksanaan' => 0,
-                'pelaksanaan_kantor' => 0,
-                'pelaksanaan_luar' => 0,
-                'duplikat' => 0,
-            ]);
+            ->assertSee('TW2 2026')
+            ->assertSee('April–Juni')
+            ->assertViewHas('stats', function (array $stats) {
+                $this->assertSame(1, $stats['triwulan']['pendaftaran']);
+                $this->assertSame(0, $stats['triwulan']['pelaksanaan']);
+                $this->assertSame(0, $stats['triwulan']['duplikat']);
+                $this->assertSame(1, $stats['bulan'][4]['pendaftaran']);
 
-        // September 2026 → kuartal Juli–September 2026 (termasuk data September).
-        $this->actingAs($user)->get('/data/skp?mode=kuartal&bulan=9&tahun=2026')
-            ->assertOk()
-            ->assertSee('Juli–September 2026')
-            ->assertViewHas('stats', fn (array $stats) => $stats === [
-                'pendaftaran' => 2,
-                'pelaksanaan' => 3,
-                'pelaksanaan_kantor' => 2,
-                'pelaksanaan_luar' => 1,
-                'duplikat' => 2,
-            ]);
+                return true;
+            });
     }
 
     public function test_skp_dedup_nomor_daftar_kembar_dihitung_sekali(): void
@@ -907,14 +909,18 @@ class DataTest extends TestCase
             ['Nomor Daftar' => 'ND-DUP', 'Tanggal Nikah' => '10-09-2026', 'Tanggal Daftar' => '01-09-2026', 'Nikah Di' => 'KUA / KANTOR'],
         ], 'appended');
 
-        $this->actingAs($user)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
-            ->assertViewHas('stats', fn (array $stats) => $stats === [
-                'pendaftaran' => 1,
-                'pelaksanaan' => 1,
-                'pelaksanaan_kantor' => 1,
-                'pelaksanaan_luar' => 0,
-                'duplikat' => 0,
-            ]);
+        $this->actingAs($user)->get('/data/skp?tw=3&tahun=2026')
+            ->assertViewHas('stats', function (array $stats) {
+                $this->assertSame([
+                    'pelaksanaan' => 1,
+                    'pelaksanaan_kantor' => 1,
+                    'pelaksanaan_luar' => 0,
+                    'pendaftaran' => 1,
+                    'duplikat' => 0,
+                ], $stats['triwulan']);
+
+                return true;
+            });
     }
 
     public function test_skp_isolasi_milik_user_saja(): void
@@ -926,15 +932,15 @@ class DataTest extends TestCase
             ['Nomor Daftar' => 'ND-B1', 'Tanggal Daftar' => '01-09-2026'],
         ]);
 
-        $this->actingAs($userA)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
-            ->assertViewHas('stats', fn (array $stats) => $stats['pendaftaran'] === 2);
+        $this->actingAs($userA)->get('/data/skp?tw=3&tahun=2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats['triwulan']['pendaftaran'] === 2);
 
-        $this->actingAs($userB)->get('/data/skp?mode=bulanan&bulan=9&tahun=2026')
-            ->assertViewHas('stats', fn (array $stats) => $stats === [
-                'pendaftaran' => 1,
+        $this->actingAs($userB)->get('/data/skp?tw=3&tahun=2026')
+            ->assertViewHas('stats', fn (array $stats) => $stats['triwulan'] === [
                 'pelaksanaan' => 0,
                 'pelaksanaan_kantor' => 0,
                 'pelaksanaan_luar' => 0,
+                'pendaftaran' => 1,
                 'duplikat' => 0,
             ]);
     }

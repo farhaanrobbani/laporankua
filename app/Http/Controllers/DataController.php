@@ -362,11 +362,9 @@ class DataController extends Controller
 
     public function skp(Request $request): View
     {
-        $mode = $request->query('mode', 'bulanan') === 'kuartal' ? 'kuartal' : 'bulanan';
-
-        $bulan = $request->integer('bulan') ?: (int) now()->month;
-        if ($bulan < 1 || $bulan > 12) {
-            $bulan = (int) now()->month;
+        $tw = $request->integer('tw') ?: (int) ceil((int) now()->month / 3);
+        if ($tw < 1 || $tw > 4) {
+            $tw = (int) ceil((int) now()->month / 3);
         }
 
         $tahun = $request->integer('tahun') ?: (int) now()->year;
@@ -374,37 +372,37 @@ class DataController extends Controller
             $tahun = (int) now()->year;
         }
 
-        if ($mode === 'kuartal') {
-            $kuartal = (int) ceil($bulan / 3);
-            $bulanAwal = ($kuartal - 1) * 3 + 1;
-            $start = Carbon::create($tahun, $bulanAwal, 1)->startOfDay();
-            $end = Carbon::create($tahun, $bulanAwal + 2, 1)->endOfMonth()->endOfDay();
-            $periodeLabel = self::MONTH_NAMES[$bulanAwal - 1].'–'.self::MONTH_NAMES[$bulanAwal + 1].' '.$tahun;
-        } else {
-            $start = Carbon::create($tahun, $bulan, 1)->startOfDay();
-            $end = $start->copy()->endOfMonth()->endOfDay();
-            $periodeLabel = self::MONTH_NAMES[$bulan - 1].' '.$tahun;
-        }
+        $bulanAwal = ($tw - 1) * 3 + 1;
+        $bulanList = [$bulanAwal, $bulanAwal + 1, $bulanAwal + 2];
+        $start = Carbon::create($tahun, $bulanAwal, 1)->startOfDay();
+        $end = Carbon::create($tahun, $bulanAwal + 2, 1)->endOfMonth()->endOfDay();
+        $periodeLabel = 'TW'.$tw.' '.$tahun.' · '.self::MONTH_NAMES[$bulanAwal - 1].'–'.self::MONTH_NAMES[$bulanAwal + 1];
 
         return view('data.skp', [
-            'stats' => $this->skpStats(auth()->id(), $start, $end),
-            'mode' => $mode,
-            'bulan' => $bulan,
+            'stats' => $this->skpStats(auth()->id(), $start, $end, $bulanList),
+            'tw' => $tw,
             'tahun' => $tahun,
             'periodeLabel' => $periodeLabel,
+            'bulanList' => $bulanList,
             'tahunTersedia' => range((int) now()->year, max((int) now()->year - 5, 2020)),
         ]);
     }
 
-    private function skpStats(int $userId, Carbon $start, Carbon $end): array
+    /**
+     * @param  array<int, int>  $bulanList
+     * @return array{bulan: array<int, array<string, int>>, triwulan: array<string, int>}
+     */
+    private function skpStats(int $userId, Carbon $start, Carbon $end, array $bulanList): array
     {
+        $kosong = fn () => ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0];
+
         $stats = [
-            'pendaftaran' => 0,
-            'pelaksanaan' => 0,
-            'pelaksanaan_kantor' => 0,
-            'pelaksanaan_luar' => 0,
-            'duplikat' => 0,
+            'bulan' => [],
+            'triwulan' => $kosong(),
         ];
+        foreach ($bulanList as $bulan) {
+            $stats['bulan'][$bulan] = $kosong();
+        }
 
         $rawRows = DB::table('import_data')
             ->join('imports', 'imports.id', '=', 'import_data.import_id')
@@ -450,23 +448,30 @@ class DataController extends Controller
         $inRange = fn (?Carbon $date) => $date !== null && $date->betweenIncluded($start, $end);
 
         foreach ($pnRows as $row) {
-            if (! $inRange($this->skpParseDate($row['Tanggal Nikah'] ?? null))) {
+            $date = $this->skpParseDate($row['Tanggal Nikah'] ?? null);
+            if (! $inRange($date)) {
                 continue;
             }
             $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
             $isLuar = $pdk !== null && $this->skpIsLuarKantor($pdk);
-            $stats['pelaksanaan']++;
+            $stats['triwulan']['pelaksanaan']++;
+            $stats['bulan'][$date->month]['pelaksanaan']++;
             if ($isLuar) {
-                $stats['pelaksanaan_luar']++;
+                $stats['triwulan']['pelaksanaan_luar']++;
+                $stats['bulan'][$date->month]['pelaksanaan_luar']++;
             } else {
-                $stats['pelaksanaan_kantor']++;
+                $stats['triwulan']['pelaksanaan_kantor']++;
+                $stats['bulan'][$date->month]['pelaksanaan_kantor']++;
             }
         }
 
         foreach ($pdkRows as $row) {
-            if ($inRange($this->skpParseDate($row['Tanggal Daftar'] ?? null))) {
-                $stats['pendaftaran']++;
+            $date = $this->skpParseDate($row['Tanggal Daftar'] ?? null);
+            if (! $inRange($date)) {
+                continue;
             }
+            $stats['triwulan']['pendaftaran']++;
+            $stats['bulan'][$date->month]['pendaftaran']++;
         }
 
         $seenPerforasi = [];
@@ -474,7 +479,8 @@ class DataController extends Controller
             if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) !== 'duplikat') {
                 continue;
             }
-            if (! $inRange($this->skpParseDate($row['Tanggal Cetak'] ?? null))) {
+            $date = $this->skpParseDate($row['Tanggal Cetak'] ?? null);
+            if (! $inRange($date)) {
                 continue;
             }
             $perforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
@@ -484,7 +490,8 @@ class DataController extends Controller
                 }
                 $seenPerforasi[$perforasi] = true;
             }
-            $stats['duplikat']++;
+            $stats['triwulan']['duplikat']++;
+            $stats['bulan'][$date->month]['duplikat']++;
         }
 
         return $stats;
