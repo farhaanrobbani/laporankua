@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Unduh Massal Bukti Bayar
 // @namespace    laporan-kua
-// @version      1.0.0
+// @version      1.1.0
 // @description  Mengunduh bukti bayar (PDF) secara massal dari SIMKAH4 memakai sesi login aktif. Daftar no billing disalin dari aplikasi Laporan (tab Data → Bukti Bayar).
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_setValue
@@ -62,22 +62,23 @@
 
     function panelHtml() {
         return ''
-            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-            +   '<strong style="font-size:13px;">Unduh Massal Bukti Bayar</strong>'
-            +   '<button id="sb-hide" title="Tutup panel" style="border:none;background:none;cursor:pointer;font-size:14px;line-height:1;">✕</button>'
-            + '</div>'
-            + '<label for="sb-uuid" style="font-size:11px;display:block;margin-bottom:2px;">UUID SIMKAH (sekali saja)</label>'
-            + '<input id="sb-uuid" type="text" placeholder="tempel URL bukti bayar / UUID" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            + '<label for="sb-list" style="font-size:11px;display:block;margin-bottom:2px;">Daftar No Billing (satu per baris)</label>'
-            + '<textarea id="sb-list" rows="6" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" placeholder="820260827046716\n820260908847263"></textarea>'
-            + '<div style="display:flex;gap:6px;margin-bottom:6px;">'
-            +   '<button id="sb-start" style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
-            +   '<button id="sb-stop" disabled style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
-            + '</div>'
-            + '<div id="sb-progress" style="font-size:11px;margin-bottom:4px;"></div>'
-            + '<pre id="sb-log" style="max-height:120px;overflow:auto;font-size:10px;margin:0;white-space:pre-wrap;"></pre>'
-            + '<div id="sb-toggle" style="position:fixed;right:16px;bottom:16px;z-index:999999;background:#4f46e5;color:#fff;border:none;border-radius:9999px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);">Unduh Massal</div>'
-            + '<div id="sb-panel" style="position:fixed;right:16px;bottom:56px;z-index:999999;width:320px;background:#fff;color:#111;border:1px solid #ccc;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);font-family:sans-serif;display:none;"></div>';
+            + '<div id="sb-toggle" style="position:fixed;right:16px;bottom:16px;z-index:999999;background:#4f46e5;color:#fff;border:none;border-radius:9999px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:sans-serif;">Unduh Massal</div>'
+            + '<div id="sb-panel" style="position:fixed;right:16px;bottom:56px;z-index:999999;width:360px;max-width:calc(100vw - 32px);background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:sans-serif;display:none;">'
+            +   '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+            +     '<strong style="font-size:13px;">Unduh Massal Bukti Bayar</strong>'
+            +     '<button id="sb-hide" title="Tutup panel" style="border:none;background:none;cursor:pointer;font-size:14px;line-height:1;">✕</button>'
+            +   '</div>'
+            +   '<label for="sb-uuid" style="font-size:11px;display:block;margin-bottom:2px;">UUID SIMKAH (sekali saja)</label>'
+            +   '<input id="sb-uuid" type="text" placeholder="tempel URL bukti bayar / UUID" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +   '<label for="sb-list" style="font-size:11px;display:block;margin-bottom:2px;">Daftar No Billing (satu per baris)</label>'
+            +   '<textarea id="sb-list" rows="6" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" placeholder="820260827046716\n820260908847263"></textarea>'
+            +   '<div style="display:flex;gap:6px;margin-bottom:6px;">'
+            +     '<button id="sb-start" style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
+            +     '<button id="sb-stop" disabled style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
+            +   '</div>'
+            +   '<div id="sb-progress" style="font-size:11px;margin-bottom:4px;"></div>'
+            +   '<pre id="sb-log" style="max-height:120px;overflow:auto;font-size:10px;margin:0;white-space:pre-wrap;"></pre>'
+            + '</div>';
     }
 
     async function run() {
@@ -165,12 +166,10 @@
         document.getElementById('sb-uuid').value = GM_getValue('sb-uuid', '');
         document.getElementById('sb-toggle').addEventListener('click', function () {
             var p = document.getElementById('sb-panel');
-            p.style.display = p.style.display === 'none' ? 'block' : 'none';
-            this.style.display = 'none';
+            p.style.display = p.style.display === 'block' ? 'none' : 'block';
         });
         document.getElementById('sb-hide').addEventListener('click', function () {
             document.getElementById('sb-panel').style.display = 'none';
-            document.getElementById('sb-toggle').style.display = 'inline-block';
         });
         document.getElementById('sb-start').addEventListener('click', function () {
             if (!running) run();
@@ -178,6 +177,10 @@
         document.getElementById('sb-stop').addEventListener('click', function () {
             stopRequested = true;
         });
+
+        if (!GM_getValue('sb-uuid', '')) {
+            document.getElementById('sb-panel').style.display = 'block';
+        }
     }
 
     mount();

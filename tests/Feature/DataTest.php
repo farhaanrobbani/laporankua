@@ -554,6 +554,9 @@ class DataTest extends TestCase
 
         $this->actingAs($user)->get('/data/bukti-bayar')
             ->assertOk()
+            ->assertSee('id="salin-btn"', false)
+            ->assertSee('Salin Daftar No Billing')
+            ->assertSee('id="salin-fallback"', false)
             ->assertViewHas('semuaNoBilling', fn (array $billings) => $billings === ['820260801000001', '820260901000002']);
     }
 }

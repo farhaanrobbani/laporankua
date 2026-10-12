@@ -76,12 +76,25 @@
                         @if ($totalBillings === 0)
                             <x-empty-state title="Tidak ada data" message="Tidak ada bukti bayar yang cocok dengan filter." />
                         @else
-                            <div class="mb-4 bg-indigo-50 border border-indigo-200 rounded-md px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-sm text-indigo-800">
-                                <span><strong>{{ $totalBillings }}</strong> bukti bayar{{ $totalBillings !== count($semuaNoBilling) ? ' (' . count($semuaNoBilling) . ' no billing unik)' : '' }}</span>
-                                <button type="button" id="salin-btn" data-list='@json($semuaNoBilling)' class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition">
-                                    {{ __('Salin Daftar No Billing') }}
-                                </button>
-                                <span id="salin-status" class="text-indigo-600"></span>
+                            <div class="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-lg bg-indigo-600 px-5 py-4 text-white shadow-md">
+                                <div>
+                                    <p class="text-base font-semibold">
+                                        <strong>{{ $totalBillings }}</strong> bukti bayar{{ $totalBillings !== count($semuaNoBilling) ? ' (' . count($semuaNoBilling) . ' no billing unik)' : '' }}
+                                    </p>
+                                    <p class="mt-0.5 text-xs text-indigo-100">Klik tombol untuk menyalin daftar no billing, lalu tempel ke panel unduh massal di SIMKAH4.</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span id="salin-status" class="text-sm font-medium"></span>
+                                    <button type="button" id="salin-btn" data-list='@json($semuaNoBilling)' class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 shadow hover:bg-indigo-50 transition">
+                                        <x-heroicon-o-clipboard-document class="h-5 w-5" />
+                                        {{ __('Salin Daftar No Billing') }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="salin-fallback" hidden class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+                                <p class="mb-2 text-sm font-medium text-amber-800">Salin manual: kolom di bawah sudah terpilih — tekan <kbd class="rounded bg-amber-200 px-1.5 py-0.5 font-mono text-xs">Ctrl+C</kbd> (mac: <kbd class="rounded bg-amber-200 px-1.5 py-0.5 font-mono text-xs">Cmd+C</kbd>).</p>
+                                <textarea id="salin-fallback-textarea" readonly rows="6" class="w-full rounded-md border-amber-300 font-mono text-sm text-gray-800 focus:border-amber-400 focus:ring-amber-300"></textarea>
                             </div>
 
                             <div class="overflow-x-auto border border-gray-200 rounded-md">
@@ -134,19 +147,43 @@
                             document.getElementById('salin-btn')?.addEventListener('click', async function () {
                                 var items = JSON.parse(this.dataset.list || '[]');
                                 var text = items.join('\n');
-                                try {
-                                    await navigator.clipboard.writeText(text);
-                                } catch (e) {
-                                    var ta = document.createElement('textarea');
-                                    ta.value = text;
-                                    document.body.appendChild(ta);
-                                    ta.select();
-                                    document.execCommand('copy');
-                                    ta.remove();
-                                }
                                 var status = document.getElementById('salin-status');
-                                status.textContent = 'Tersalin (' + items.length + ' nomor)';
-                                setTimeout(function () { status.textContent = ''; }, 3000);
+                                var fallback = document.getElementById('salin-fallback');
+                                var fallbackTextarea = document.getElementById('salin-fallback-textarea');
+                                var ok = false;
+
+                                if (navigator.clipboard && window.isSecureContext) {
+                                    try {
+                                        await navigator.clipboard.writeText(text);
+                                        ok = true;
+                                    } catch (e) {
+                                        ok = false;
+                                    }
+                                }
+
+                                if (!ok) {
+                                    fallback.hidden = false;
+                                    fallbackTextarea.value = text;
+                                    fallbackTextarea.focus();
+                                    fallbackTextarea.select();
+                                    try {
+                                        ok = document.execCommand('copy');
+                                    } catch (e) {
+                                        ok = false;
+                                    }
+                                    if (ok) {
+                                        fallback.hidden = true;
+                                    }
+                                }
+
+                                if (ok) {
+                                    status.className = 'text-sm font-medium text-green-200';
+                                    status.textContent = '✓ Tersalin (' + items.length + ' nomor)';
+                                    setTimeout(function () { status.textContent = ''; }, 4000);
+                                } else {
+                                    status.className = 'text-sm font-medium text-amber-200';
+                                    status.textContent = 'Gagal otomatis — salin manual dari kolom di bawah.';
+                                }
                             });
                         </script>
                     @endif
