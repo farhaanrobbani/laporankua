@@ -95,25 +95,21 @@
                         </div>
                     @endforeach
 
-                    {{-- Pendaftaran Nikah per bulan --}}
+                    {{-- Pendaftaran Nikah: per bulan + total triwulan --}}
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Pendaftaran Nikah') }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         @foreach ($bulanList as $m)
                             {!! $card(__('Pendaftaran Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran'], $namaBulan[$m] . ' ' . $tahun) !!}
                         @endforeach
+                        {!! $card(__('Pendaftaran Nikah') . ' ' . $twLabel, $stats['triwulan']['pendaftaran'], $periodeLabel) !!}
                     </div>
 
-                    {{-- Duplikat per bulan --}}
+                    {{-- Duplikat: per bulan + total triwulan --}}
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Duplikat') }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         @foreach ($bulanList as $m)
                             {!! $card(__('Duplikat') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['duplikat'], $namaBulan[$m] . ' ' . $tahun) !!}
                         @endforeach
-                    </div>
-
-                    {{-- Total triwulan: pendaftaran & duplikat --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {!! $card(__('Pendaftaran Nikah') . ' ' . $twLabel, $stats['triwulan']['pendaftaran'], $periodeLabel) !!}
                         {!! $card(__('Duplikat') . ' ' . $twLabel, $stats['triwulan']['duplikat'], $periodeLabel) !!}
                     </div>
                 </div>
