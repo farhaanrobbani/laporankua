@@ -20,8 +20,8 @@ class RusakDetectionService
     {
         $perforasiByPrefix = [];
         foreach ($rows as $row) {
-            $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($row['Nomor Perforasi'] ?? ''))));
-            if (! preg_match('/^\d+$/', $p)) {
+            $p = $this->normalizeNomor($row['Nomor Perforasi'] ?? '');
+            if ($p === '' || ! ctype_digit($p)) {
                 continue;
             }
             $pf = substr($p, 0, $prefixLength);
@@ -50,6 +50,88 @@ class RusakDetectionService
     }
 
     /**
+     * Deteksi celah nomor per prefix, dengan batas bawah (floor) dari
+     * bulan paling awal. Nomor di bawah maksimum bulan sebelumnya
+     * dianggap cetak ulang sehingga tidak menurunkan floor. Nomor yang
+     * ada di bulan lain tetap dianggap ada (mis. cetak ulang mengganti
+     * nomor yang hilang). Tanggal/bulan celah mengikuti nomor berikutnya.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array{prefix: string, number: int, month: string, date: ?string}>
+     */
+    public function detectMissingByMonth(array $rows, int $prefixLength = 6): array
+    {
+        $parsed = [];
+        foreach ($rows as $row) {
+            $nomor = $this->normalizeNomor($row['Nomor Perforasi'] ?? '');
+            if ($nomor === '' || ! ctype_digit($nomor)) {
+                continue;
+            }
+            $parsed[substr($nomor, 0, $prefixLength)][] = [
+                'number' => (int) $nomor,
+                'date' => $this->parseTanggalCetak($row['Tanggal Cetak'] ?? null),
+            ];
+        }
+
+        $gaps = [];
+        foreach ($parsed as $prefix => $list) {
+            $allNumbers = [];
+            $monthNumbers = [];
+            $dateByNumber = [];
+            foreach ($list as $item) {
+                $allNumbers[$item['number']] = true;
+                if ($item['date'] !== null) {
+                    $dateByNumber[$item['number']] = $item['date'];
+                    $monthNumbers[$item['date']->format('Y-m')][$item['number']] = true;
+                }
+            }
+            ksort($monthNumbers);
+
+            $nonLateNumbers = [];
+            $prevMax = null;
+            foreach ($monthNumbers as $set) {
+                foreach (array_keys($set) as $n) {
+                    if ($prevMax === null || $n >= $prevMax) {
+                        $nonLateNumbers[$n] = true;
+                    }
+                }
+                $prevMax = max($prevMax ?? 0, max(array_keys($set)));
+            }
+
+            if ($allNumbers === []) {
+                continue;
+            }
+
+            $floor = $nonLateNumbers !== []
+                ? min(array_keys($nonLateNumbers))
+                : min(array_keys($allNumbers));
+            $max = max(array_keys($allNumbers));
+
+            for ($n = $floor; $n <= $max; $n++) {
+                if (isset($allNumbers[$n])) {
+                    continue;
+                }
+                $next = $n + 1;
+                while ($next <= $max && ! isset($allNumbers[$next])) {
+                    $next++;
+                }
+                $date = $next <= $max ? ($dateByNumber[$next] ?? null) : null;
+
+                $gaps[] = [
+                    'prefix' => (string) $prefix,
+                    'number' => $n,
+                    'month' => $date?->format('Y-m') ?? '',
+                    'date' => $date?->format('Y-m-d'),
+                ];
+            }
+        }
+
+        usort($gaps, fn (array $a, array $b) => [$a['prefix'], $a['number']] <=> [$b['prefix'], $b['number']]);
+
+        return $gaps;
+    }
+
+    /**
      * Hitung buku rusak per bulan: baris berstatus RUSAK (Keterangan
      * "Rusak") ditambah celah nomor perforasi pada bulan tersebut.
      * Nomor yang sama dihitung sekali, baik eksplisit maupun celah.
@@ -68,8 +150,25 @@ class RusakDetectionService
             $result['bulan'][$bulan] = 0;
         }
 
-        $rowsByMonth = [];
+        foreach ($this->detectMissingByMonth($rows, $prefixLength) as $gap) {
+            if ($gap['date'] === null) {
+                continue;
+            }
+            $date = Carbon::parse($gap['date']);
+            if ($date->year !== $tahun) {
+                continue;
+            }
+            $bulan = (int) $date->month;
+            if (isset($result['bulan'][$bulan])) {
+                $result['bulan'][$bulan]++;
+            }
+        }
+
+        $seenEksplisit = [];
         foreach ($rows as $row) {
+            if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) !== 'rusak') {
+                continue;
+            }
             $date = $this->parseTanggalCetak($row['Tanggal Cetak'] ?? null);
             if ($date === null || $date->year !== $tahun) {
                 continue;
@@ -78,39 +177,14 @@ class RusakDetectionService
             if (! isset($result['bulan'][$bulan])) {
                 continue;
             }
-            $rowsByMonth[$bulan][] = $row;
-        }
-        ksort($rowsByMonth);
-
-        $seenEksplisit = [];
-        foreach ($rowsByMonth as $bulan => $bulanRows) {
-            foreach ($bulanRows as $row) {
-                if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) !== 'rusak') {
+            $nomor = $this->normalizeNomor($row['Nomor Perforasi'] ?? '');
+            if ($nomor !== '') {
+                if (isset($seenEksplisit[$nomor])) {
                     continue;
                 }
-                $nomor = $this->normalizeNomor($row['Nomor Perforasi'] ?? '');
-                if ($nomor !== '') {
-                    if (isset($seenEksplisit[$nomor])) {
-                        continue;
-                    }
-                    $seenEksplisit[$nomor] = true;
-                }
-                $result['bulan'][$bulan]++;
+                $seenEksplisit[$nomor] = true;
             }
-        }
-
-        $seenCelah = [];
-        foreach ($rowsByMonth as $bulan => $bulanRows) {
-            foreach ($this->detectMissing($bulanRows, $prefixLength) as $prefix => $numbers) {
-                foreach ($numbers as $number) {
-                    $key = $prefix.':'.$number;
-                    if (isset($seenCelah[$key])) {
-                        continue;
-                    }
-                    $seenCelah[$key] = true;
-                    $result['bulan'][$bulan]++;
-                }
-            }
+            $result['bulan'][$bulan]++;
         }
 
         $result['total'] = array_sum($result['bulan']);

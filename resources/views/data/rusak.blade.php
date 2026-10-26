@@ -59,6 +59,7 @@
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">No</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Prefix</th>
                                             <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Nomor JT</th>
+                                            <th class="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">Bulan</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
@@ -68,6 +69,7 @@
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $no++ }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['prefix'] }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">JT {{ $row['number'] }}</td>
+                                                <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['month'] !== '' ? $row['month'] : '-' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>

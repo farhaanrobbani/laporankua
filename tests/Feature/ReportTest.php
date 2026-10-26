@@ -885,6 +885,82 @@ class ReportTest extends TestCase
         $this->assertSame('2', $jumlah[5], 'Sisa = 6 - 4');
     }
 
+    public function test_laporan_na_abaikan_celah_palsu_reprint_lintas_bulan(): void
+    {
+        $user = User::factory()->create();
+
+        $import = Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => 'laporan model l3',
+        ]);
+
+        $rows = [
+            ['116741251', '2025-12-01'],
+            ['116741252', '2025-12-02'],
+            ['116741253', '2025-12-03'],
+            ['116741254', '2025-12-04'],
+            ['116741256', '2025-12-05'],
+            ['116741257', '2025-12-06'],
+            ['116741258', '2026-01-05'],
+            ['116741259', '2026-01-06'],
+            ['116741255', '2026-04-05'],
+            ['116741260', '2026-04-10'],
+            ['116741261', '2026-04-10'],
+            ['116741263', '2026-04-10'],
+        ];
+
+        foreach ($rows as $i => [$perforasi, $tanggal]) {
+            ImportData::factory()->for($import)->create([
+                'row_data' => [
+                    'Nomor Perforasi' => $perforasi,
+                    'Keterangan' => 'Bukan Duplikat',
+                    'Nama Catin' => 'Suami '.$perforasi.' - Istri '.$perforasi,
+                    'Tanggal Akad' => $tanggal,
+                    'Tanggal Nikah' => $tanggal,
+                    'Tanggal Cetak' => $tanggal,
+                ],
+                'row_number' => $i + 2,
+            ]);
+        }
+
+        $report = Report::factory()->for($user)->create([
+            'import_id' => $import->id,
+            'output_format' => 'print',
+            'config_json' => [
+                'fields' => ['Tanggal Akad', 'Keterangan', 'Nama Catin', 'Nomor Perforasi', 'Tanggal Nikah'],
+                'is_merged' => true,
+                'merged_import_ids' => [$import->id],
+                'filter_month' => '4',
+                'filter_year' => '2026',
+                'sort_column' => 'Tanggal Nikah',
+                'sort_direction' => 'asc',
+                'table_layout' => ['type' => 'laporan_na'],
+                'manual_data' => [
+                    'sisa_bulan_lalu' => [
+                        'uraian' => 'Sisa bulan lalu',
+                        'masuk' => '12',
+                        'keluar' => '',
+                        'seri_dari' => '116741251',
+                        'seri_sampai' => '116741263',
+                        'model' => 'NA',
+                    ],
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+
+        $dataset = $response->viewData('dataset');
+        $this->assertSame(['116741' => [116741262]], $dataset['config_json']['manual_data']['rusak_by_prefix']);
+
+        $rusak = collect($this->tableCellRows($response->getContent()))->first(fn ($r) => ($r[2] ?? '') === 'Rusak');
+        $this->assertNotNull($rusak, 'Baris Rusak harus tampil di laporan NA');
+        $this->assertSame('10/04/2026', $rusak[1]);
+        $this->assertSame('1', $rusak[4], 'Rusak dihitung sebagai Keluar');
+        $this->assertSame('JT 116741262', $rusak[7], 'Hanya celah nyata 262, bukan rentang palsu 256..263');
+    }
+
     public function test_laporan_na_baris_status_rusak_dihitung_sebagai_rusak(): void
     {
         $user = User::factory()->create();

@@ -321,7 +321,6 @@ new class extends Component
         $filterDateFrom = $this->filterDateFrom;
         $filterDateTo = $this->filterDateTo;
 
-        $filteredRows = [];
         foreach ($allRows as $row) {
             $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
             $nomor = preg_replace('/^JT\s*/i', '', $nomor);
@@ -364,12 +363,34 @@ new class extends Component
                 if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) === 'rusak') {
                     $groups[$prefix]['rusak_status']++;
                 }
-                $filteredRows[] = $row;
             }
         }
 
-        // Rusak = celah interior rentang baris terfilter (basis sama dengan Laporan NA).
-        $rusakByPrefix = app(\App\Services\RusakDetectionService::class)->detectMissing($filteredRows, $prefixLength);
+        // Rusak = celah interior, dihitung dari seluruh baris agar cetak ulang
+        // lintas bulan tidak dianggap sebagai awal seri baru, lalu difilter periode.
+        $gaps = app(\App\Services\RusakDetectionService::class)->detectMissingByMonth($allRows, $prefixLength);
+        $fromDate = $filterDateFrom !== '' ? \Carbon\Carbon::parse($filterDateFrom)->startOfDay() : null;
+        $toDate = $filterDateTo !== '' ? \Carbon\Carbon::parse($filterDateTo)->endOfDay() : null;
+        $rusakByPrefix = [];
+        foreach ($gaps as $gap) {
+            if ($gap['date'] === null) {
+                continue;
+            }
+            $gapDate = \Carbon\Carbon::parse($gap['date']);
+            if ($filterMonth !== null && (int) $gapDate->month !== $filterMonth) {
+                continue;
+            }
+            if ($filterYear !== null && (int) $gapDate->year !== $filterYear) {
+                continue;
+            }
+            if ($fromDate !== null && $gapDate->lt($fromDate)) {
+                continue;
+            }
+            if ($toDate !== null && $gapDate->gt($toDate)) {
+                continue;
+            }
+            $rusakByPrefix[$gap['prefix']][] = $gap['number'];
+        }
 
         ksort($groups);
 

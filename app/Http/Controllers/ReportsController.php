@@ -440,7 +440,9 @@ class ReportsController extends Controller
             $dataset['config_json']['manual_data'] = $this->buildL3ManualData($config);
         }
         if (($config['table_layout']['type'] ?? '') === 'laporan_na') {
-            $dataset['config_json']['manual_data'] = $this->buildLaporanNaData($config);
+            $manualData = $this->buildLaporanNaData($config);
+            $manualData['rusak_by_prefix'] = $this->rusakByPrefixForReport($config, $report);
+            $dataset['config_json']['manual_data'] = $manualData;
         }
 
         return view('reports.print', compact('dataset', 'report'));
@@ -482,6 +484,70 @@ class ReportsController extends Controller
         ]);
     }
 
+    /**
+     * Celah nomor per prefix, difilter sesuai periode laporan.
+     * Deteksi dilakukan dari seluruh baris agar cetak ulang lintas
+     * bulan tidak dianggap sebagai awal seri baru.
+     *
+     * @param  array<int, array<string, mixed>>  $allRows
+     * @return array<string, array<int>>
+     */
+    private function rusakByPrefix(array $allRows, array $config, ?int $prefixLength = null): array
+    {
+        $prefixLength = $prefixLength ?? ($config['table_layout']['na_version_prefix_length'] ?? 6);
+        $filterMonth = $config['filter_month'] ?? null;
+        $filterYear = $config['filter_year'] ?? null;
+        $filterDateFrom = $config['filter_date_from'] ?? null;
+        $filterDateTo = $config['filter_date_to'] ?? null;
+        $from = ($filterDateFrom !== null && $filterDateFrom !== '') ? Carbon::parse($filterDateFrom)->startOfDay() : null;
+        $to = ($filterDateTo !== null && $filterDateTo !== '') ? Carbon::parse($filterDateTo)->endOfDay() : null;
+
+        $result = [];
+        foreach (app(RusakDetectionService::class)->detectMissingByMonth($allRows, $prefixLength) as $gap) {
+            if ($gap['date'] === null) {
+                continue;
+            }
+            $date = Carbon::parse($gap['date']);
+            if ($filterMonth !== null && $filterMonth !== '' && (int) $date->month !== (int) $filterMonth) {
+                continue;
+            }
+            if ($filterYear !== null && $filterYear !== '' && (int) $date->year !== (int) $filterYear) {
+                continue;
+            }
+            if ($from !== null && $date->lt($from)) {
+                continue;
+            }
+            if ($to !== null && $date->gt($to)) {
+                continue;
+            }
+            $result[$gap['prefix']][] = $gap['number'];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array<string, array<int>>
+     */
+    private function rusakByPrefixForReport(array $config, ?Report $report): array
+    {
+        $importIds = $config['merged_import_ids'] ?? [];
+        if ($importIds === [] && $report?->import_id) {
+            $importIds = [$report->import_id];
+        }
+        if ($importIds === []) {
+            return [];
+        }
+
+        $allRows = ImportData::whereIn('import_id', $importIds)
+            ->select('row_data')
+            ->get()
+            ->pluck('row_data')
+            ->toArray();
+
+        return $this->rusakByPrefix($allRows, $config);
+    }
+
     private function buildL3ManualData(array $config): array
     {
         $importIds = $config['merged_import_ids'] ?? [];
@@ -519,7 +585,6 @@ class ReportsController extends Controller
             }
         }
 
-        $filteredRows = [];
         foreach ($allRows as $row) {
             $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
             $nomor = preg_replace('/^JT\s*/i', '', $nomor);
@@ -550,13 +615,13 @@ class ReportsController extends Controller
                 if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) === 'rusak') {
                     $groups[$prefix]['rusak_status']++;
                 }
-                $filteredRows[] = $row;
             }
         }
 
-        // Rusak = celah interior rentang baris bulan terfilter (basis sama dengan Laporan NA);
+        // Rusak = celah interior dari seluruh baris (agar cetak ulang lintas bulan
+        // tidak dianggap awal seri baru), lalu difilter periode laporan;
         // masuk ke keluar_jumlah tanpa baris/keterangan terpisah.
-        $rusakByPrefix = app(RusakDetectionService::class)->detectMissing($filteredRows, $prefixLength);
+        $rusakByPrefix = $this->rusakByPrefix($allRows, $config, $prefixLength);
 
         $naVersions = [];
         foreach ($groups as $prefix => $data) {

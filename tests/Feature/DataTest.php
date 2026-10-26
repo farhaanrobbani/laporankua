@@ -427,6 +427,34 @@ class DataTest extends TestCase
         $response->assertSee('116741');
     }
 
+    public function test_tab_rusak_abaikan_celah_palsu_dari_reprint_lintas_bulan(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [
+            ['Nomor Perforasi' => '116741251', 'Tanggal Cetak' => '01-12-2025'],
+            ['Nomor Perforasi' => '116741252', 'Tanggal Cetak' => '02-12-2025'],
+            ['Nomor Perforasi' => '116741253', 'Tanggal Cetak' => '03-12-2025'],
+            ['Nomor Perforasi' => '116741254', 'Tanggal Cetak' => '04-12-2025'],
+            ['Nomor Perforasi' => '116741256', 'Tanggal Cetak' => '05-12-2025'],
+            ['Nomor Perforasi' => '116741257', 'Tanggal Cetak' => '06-12-2025'],
+            ['Nomor Perforasi' => '116741258', 'Tanggal Cetak' => '05-01-2026'],
+            ['Nomor Perforasi' => '116741259', 'Tanggal Cetak' => '06-01-2026'],
+            ['Nomor Perforasi' => '116741255', 'Tanggal Cetak' => '05-04-2026'],
+            ['Nomor Perforasi' => '116741260', 'Tanggal Cetak' => '10-04-2026'],
+            ['Nomor Perforasi' => '116741261', 'Tanggal Cetak' => '10-04-2026'],
+            ['Nomor Perforasi' => '116741263', 'Tanggal Cetak' => '10-04-2026'],
+        ]);
+
+        $response = $this->actingAs($user)->get('/data/rusak');
+
+        $response->assertOk();
+        $response->assertViewHas('totalRusak', 1);
+        $response->assertViewHas('prefixCount', 1);
+        $response->assertSee('JT 116741262');
+        $response->assertSee('2026-04');
+        $response->assertDontSee('JT 116741256');
+    }
+
     public function test_tab_rusak_menampilkan_baris_status_rusak_dari_excel(): void
     {
         $user = User::factory()->create();

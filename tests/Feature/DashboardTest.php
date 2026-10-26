@@ -310,6 +310,34 @@ class DashboardTest extends TestCase
         $this->assertSame(3, $stats['rusak_tahun']);
     }
 
+    public function test_statistik_buku_rusak_abaikan_celah_palsu_reprint_lintas_bulan(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mkImport($user, 'laporan model l3', [
+            ['Nomor Perforasi' => '116741251', 'Tanggal Cetak' => '01-12-2025'],
+            ['Nomor Perforasi' => '116741252', 'Tanggal Cetak' => '02-12-2025'],
+            ['Nomor Perforasi' => '116741253', 'Tanggal Cetak' => '03-12-2025'],
+            ['Nomor Perforasi' => '116741254', 'Tanggal Cetak' => '04-12-2025'],
+            ['Nomor Perforasi' => '116741256', 'Tanggal Cetak' => '05-12-2025'],
+            ['Nomor Perforasi' => '116741257', 'Tanggal Cetak' => '06-12-2025'],
+            ['Nomor Perforasi' => '116741258', 'Tanggal Cetak' => '05-01-2026'],
+            ['Nomor Perforasi' => '116741259', 'Tanggal Cetak' => '06-01-2026'],
+            ['Nomor Perforasi' => '116741255', 'Tanggal Cetak' => '05-04-2026'],
+            ['Nomor Perforasi' => '116741260', 'Tanggal Cetak' => '10-04-2026'],
+            ['Nomor Perforasi' => '116741261', 'Tanggal Cetak' => '10-04-2026'],
+            ['Nomor Perforasi' => '116741263', 'Tanggal Cetak' => '10-04-2026'],
+        ]);
+
+        $april = $this->actingAs($user)->get('/dashboard?bulan=4&tahun=2026')->viewData('stats');
+        $this->assertSame(1, $april['rusak_bulan'], 'April: hanya celah 262');
+        $this->assertSame(1, $april['rusak_tahun']);
+
+        $desember = $this->actingAs($user)->get('/dashboard?bulan=12&tahun=2025')->viewData('stats');
+        $this->assertSame(0, $desember['rusak_bulan'], '255 ada sebagai cetak ulang April');
+        $this->assertSame(0, $desember['rusak_tahun']);
+    }
+
     public function test_statistik_buku_rusak_isolasi_user(): void
     {
         $userA = User::factory()->create();

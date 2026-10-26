@@ -910,7 +910,7 @@
                             // Deteksi nomor perforasi hilang (Rusak) per prefix.
                             // Sumber data rusak: celah interior pada rentang nomor
                             // yang benar-benar ada di baris laporan bulan ini.
-                            $rusakByPrefix = app(\App\Services\RusakDetectionService::class)->detectMissing($rows, $prefixLength);
+                            $rusakByPrefix = $dataset['config_json']['manual_data']['rusak_by_prefix'] ?? app(\App\Services\RusakDetectionService::class)->detectMissing($rows, $prefixLength);
                             // Tanggal terakhir tiap prefix (grouped sudah ksort naik).
                             $lastDateByPrefix = [];
                             foreach ($grouped as $dateKey => $dateRows) {

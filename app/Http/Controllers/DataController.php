@@ -103,16 +103,7 @@ class DataController extends Controller
             ->pluck('row_data')
             ->all();
 
-        $missingByPrefix = app(RusakDetectionService::class)->detectMissing($rows);
-
-        $detected = [];
-        foreach ($missingByPrefix as $prefix => $numbers) {
-            foreach ($numbers as $number) {
-                $detected[] = ['prefix' => $prefix, 'number' => $number];
-            }
-        }
-
-        usort($detected, fn (array $a, array $b) => [$a['prefix'], $a['number']] <=> [$b['prefix'], $b['number']]);
+        $detected = app(RusakDetectionService::class)->detectMissingByMonth($rows);
 
         $rusakStatusRows = collect($rows)
             ->filter(fn ($row) => mb_strtoupper(trim((string) ($row['Status'] ?? ''))) === 'RUSAK')
@@ -143,7 +134,7 @@ class DataController extends Controller
             'importIds' => $importIds,
             'missingRows' => $missingRows,
             'totalRusak' => count($detected),
-            'prefixCount' => count($missingByPrefix),
+            'prefixCount' => count(array_unique(array_column($detected, 'prefix'))),
             'rusakStatusRows' => $rusakStatusRows,
             'totalRusakStatus' => count($rusakStatusRows),
         ]);
