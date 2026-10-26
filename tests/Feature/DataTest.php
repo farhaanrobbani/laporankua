@@ -881,11 +881,12 @@ class DataTest extends TestCase
                     'pelaksanaan_luar' => 1,
                     'pendaftaran' => 2,
                     'duplikat' => 2, // perforasi 111 dihitung sekali
+                    'rusak' => 0,
                 ], $stats['triwulan']);
 
                 $this->assertSame($stats['triwulan'], $stats['bulan'][9]);
                 $this->assertSame(
-                    ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0],
+                    ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0, 'rusak' => 0],
                     $stats['bulan'][7]
                 );
                 $this->assertSame($stats['bulan'][7], $stats['bulan'][8]);
@@ -938,7 +939,39 @@ class DataTest extends TestCase
                     'pelaksanaan_luar' => 0,
                     'pendaftaran' => 1,
                     'duplikat' => 0,
+                    'rusak' => 0,
                 ], $stats['triwulan']);
+
+                return true;
+            });
+    }
+
+    public function test_skp_buku_rusak_status_dan_celah_per_bulan_triwulan(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [
+            // Juli: celah 002 (001 dan 003 ada).
+            ['Nomor Perforasi' => '116741001', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '05-07-2026'],
+            ['Nomor Perforasi' => '116741003', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '05-07-2026'],
+            // Agustus: Status RUSAK (baris kembar dihitung sekali).
+            ['Nomor Perforasi' => '116742001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '10-08-2026'],
+            ['Nomor Perforasi' => '116742001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '10-08-2026'],
+            // September: celah 005 + satu Status RUSAK.
+            ['Nomor Perforasi' => '116743004', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '02-09-2026'],
+            ['Nomor Perforasi' => '116743006', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '02-09-2026'],
+            ['Nomor Perforasi' => '116744001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '03-09-2026'],
+            // Oktober di luar TW3 tidak ikut dihitung.
+            ['Nomor Perforasi' => '116745001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '04-10-2026'],
+        ]);
+
+        $this->actingAs($user)->get('/data/skp?tw=3&tahun=2026')
+            ->assertOk()
+            ->assertSee('Buku Rusak')
+            ->assertViewHas('stats', function (array $stats) {
+                $this->assertSame(1, $stats['bulan'][7]['rusak'], 'Juli: celah 002');
+                $this->assertSame(1, $stats['bulan'][8]['rusak'], 'Agustus: Status RUSAK, dedup nomor kembar');
+                $this->assertSame(2, $stats['bulan'][9]['rusak'], 'September: celah 005 + Status RUSAK');
+                $this->assertSame(4, $stats['triwulan']['rusak'], 'TW3 = jumlah 3 bulan');
 
                 return true;
             });
@@ -963,6 +996,7 @@ class DataTest extends TestCase
                 'pelaksanaan_luar' => 0,
                 'pendaftaran' => 1,
                 'duplikat' => 0,
+                'rusak' => 0,
             ]);
     }
 }

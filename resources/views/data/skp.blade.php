@@ -70,7 +70,7 @@
                         </form>
                     </div>
 
-                    <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">Pendaftaran mengikuti Tanggal Daftar; pelaksanaan mengikuti Tanggal Nikah (peristiwa nikah) dengan pecahan kantor/luar dari kolom Nikah Di; duplikat unik per Nomor Perforasi dengan Tanggal Cetak — konsisten dengan Statistik Laporan di dashboard.</p>
+                    <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">Pendaftaran mengikuti Tanggal Daftar; pelaksanaan mengikuti Tanggal Nikah (peristiwa nikah) dengan pecahan kantor/luar dari kolom Nikah Di; duplikat unik per Nomor Perforasi dengan Tanggal Cetak; buku rusak = baris Status RUSAK + celah nomor perforasi — konsisten dengan Statistik Laporan di dashboard.</p>
 
                     @php
                         $twLabel = 'TW' . $tw . ' ' . $tahun;
@@ -106,11 +106,20 @@
 
                     {{-- Duplikat: per bulan + total triwulan --}}
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Duplikat') }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         @foreach ($bulanList as $m)
                             {!! $card(__('Duplikat') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['duplikat'], $namaBulan[$m] . ' ' . $tahun) !!}
                         @endforeach
                         {!! $card(__('Duplikat') . ' ' . $twLabel, $stats['triwulan']['duplikat'], $periodeLabel) !!}
+                    </div>
+
+                    {{-- Buku Rusak: per bulan + total triwulan --}}
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Buku Rusak') }}</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        @foreach ($bulanList as $m)
+                            {!! $card(__('Buku Rusak') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['rusak'], $namaBulan[$m] . ' ' . $tahun) !!}
+                        @endforeach
+                        {!! $card(__('Buku Rusak') . ' ' . $twLabel, $stats['triwulan']['rusak'], $periodeLabel) !!}
                     </div>
                 </div>
             </div>

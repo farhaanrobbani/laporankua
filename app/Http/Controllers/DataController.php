@@ -412,7 +412,7 @@ class DataController extends Controller
      */
     private function skpStats(int $userId, Carbon $start, Carbon $end, array $bulanList): array
     {
-        $kosong = fn () => ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0];
+        $kosong = fn () => ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0, 'rusak' => 0];
 
         $stats = [
             'bulan' => [],
@@ -511,6 +511,13 @@ class DataController extends Controller
             $stats['triwulan']['duplikat']++;
             $stats['bulan'][$date->month]['duplikat']++;
         }
+
+        // Buku rusak: baris Status RUSAK + celah nomor, per bulan; TW = jumlah 3 bulan.
+        $rusak = app(RusakDetectionService::class)->countsByMonth($l3Rows, (int) $start->year, $bulanList);
+        foreach ($bulanList as $bulan) {
+            $stats['bulan'][$bulan]['rusak'] = $rusak['bulan'][$bulan] ?? 0;
+        }
+        $stats['triwulan']['rusak'] = $rusak['total'];
 
         return $stats;
     }

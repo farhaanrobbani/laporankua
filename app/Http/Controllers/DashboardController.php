@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Models\Report;
+use App\Services\RusakDetectionService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -72,6 +73,8 @@ class DashboardController extends Controller
             'pdk_tahun' => 0,
             'dup_bulan' => 0,
             'dup_tahun' => 0,
+            'rusak_bulan' => 0,
+            'rusak_tahun' => 0,
             'pn_kantor' => 0,
             'pn_luar' => 0,
             'pdk_kantor' => 0,
@@ -225,6 +228,11 @@ class DashboardController extends Controller
                 $stats['dup_bulan']++;
             }
         }
+
+        // Buku rusak: baris Status RUSAK + celah nomor; tahun = jumlah 12 bulan.
+        $rusak = app(RusakDetectionService::class)->countsByMonth($l3Rows, $tahun, range(1, 12));
+        $stats['rusak_bulan'] = $rusak['bulan'][$bulan] ?? 0;
+        $stats['rusak_tahun'] = $rusak['total'];
 
         return $stats;
     }

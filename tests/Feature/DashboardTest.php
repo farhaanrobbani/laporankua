@@ -284,4 +284,46 @@ class DashboardTest extends TestCase
         $this->assertSame(1, $stats['pdk_kantor']);
         $this->assertSame(1, $stats['pdk_luar']);
     }
+
+    public function test_statistik_buku_rusak_status_dan_celah(): void
+    {
+        $user = User::factory()->create();
+
+        $this->mkImport($user, 'laporan model l3', [
+            // September: celah 002 (001 & 003 ada) + Status RUSAK (baris kembar dihitung sekali).
+            ['Nomor Perforasi' => '116741001', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '05-09-2026'],
+            ['Nomor Perforasi' => '116741003', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '05-09-2026'],
+            ['Nomor Perforasi' => '116742001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '06-09-2026'],
+            ['Nomor Perforasi' => '116742001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '06-09-2026'],
+            // Oktober: Status RUSAK.
+            ['Nomor Perforasi' => '116743001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '03-10-2026'],
+        ]);
+
+        $september = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026');
+        $september->assertOk()->assertSee('Buku Rusak');
+        $stats = $september->viewData('stats');
+        $this->assertSame(2, $stats['rusak_bulan'], 'September: celah 002 + Status RUSAK');
+        $this->assertSame(3, $stats['rusak_tahun'], 'Tahun = jumlah 12 bulan');
+
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026')->viewData('stats');
+        $this->assertSame(1, $stats['rusak_bulan']);
+        $this->assertSame(3, $stats['rusak_tahun']);
+    }
+
+    public function test_statistik_buku_rusak_isolasi_user(): void
+    {
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+
+        $this->mkImport($userB, 'laporan model l3', [
+            ['Nomor Perforasi' => '116741001', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '05-09-2026'],
+            ['Nomor Perforasi' => '116741003', 'Keterangan' => 'Bukan Duplikat', 'Tanggal Cetak' => '05-09-2026'],
+            ['Nomor Perforasi' => '116742001', 'Keterangan' => 'Rusak', 'Tanggal Cetak' => '06-09-2026'],
+        ]);
+
+        $stats = $this->actingAs($userA)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
+
+        $this->assertSame(0, $stats['rusak_bulan']);
+        $this->assertSame(0, $stats['rusak_tahun']);
+    }
 }
