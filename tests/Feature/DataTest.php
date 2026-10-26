@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -189,9 +188,10 @@ class DataTest extends TestCase
         $userB = User::factory()->create();
         $importB = $this->importWithRows($userB);
 
-        $this->expectException(ModelNotFoundException::class);
-
-        Livewire::actingAs($userA)->test('data-table', ['importId' => $importB->id]);
+        // Livewire 4.4.8 menangani ModelNotFoundException sebagai response 404.
+        Livewire::actingAs($userA)
+            ->test('data-table', ['importId' => $importB->id])
+            ->assertNotFound();
     }
 
     public function test_export_excel_berisi_data_benar(): void
@@ -397,9 +397,10 @@ class DataTest extends TestCase
         $userB = User::factory()->create();
         $importB = $this->l3Import($userB, [['Nomor Perforasi' => 'PF-DT-X', 'Keterangan' => 'Duplikat']]);
 
-        $this->expectException(ModelNotFoundException::class);
-
-        Livewire::actingAs($userA)->test('data-table', ['importIds' => [$importB->id]]);
+        // Livewire 4.4.8 menangani ModelNotFoundException sebagai response 404.
+        Livewire::actingAs($userA)
+            ->test('data-table', ['importIds' => [$importB->id]])
+            ->assertNotFound();
     }
 
     public function test_tab_rusak_mendeteksi_nomor_hilang_per_nomor(): void
