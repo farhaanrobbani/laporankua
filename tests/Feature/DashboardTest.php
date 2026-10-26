@@ -119,9 +119,7 @@ class DashboardTest extends TestCase
         $this->assertSame(2, $stats['pdk_bulan']);
         $this->assertSame(1, $stats['dup_bulan']);
 
-        // Tahun 2026 tetap menghitung seluruh bulan.
-        $this->assertSame(4, $stats['pn_tahun']);
-        $this->assertSame(3, $stats['pdk_tahun']);
+        // Tahun 2026 tetap menghitung seluruh bulan untuk duplikat.
         $this->assertSame(2, $stats['dup_tahun']);
 
         $oktober = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026');
@@ -130,8 +128,6 @@ class DashboardTest extends TestCase
         $this->assertSame(1, $stats['pn_bulan']);
         $this->assertSame(1, $stats['pdk_bulan']);
         $this->assertSame(1, $stats['dup_bulan']);
-        $this->assertSame(4, $stats['pn_tahun']);
-        $this->assertSame(3, $stats['pdk_tahun']);
         $this->assertSame(2, $stats['dup_tahun']);
 
         $tanpaFilter = $this->actingAs($user)->get('/dashboard');
@@ -184,28 +180,20 @@ class DashboardTest extends TestCase
         $this->assertSame(0, $stats['pdk_kantor']);
     }
 
-    public function test_statistik_kantor_tahun_dan_list_penghulu(): void
+    public function test_statistik_list_penghulu_bulanan(): void
     {
         $user = User::factory()->create();
         $this->seedStatsFixtures($user);
 
-        // Kartu tahun tidak dibatasi bulan: pn kantor (ND-1, ND-X) & luar (ND-2, ND-4); pdk kantor (ND-1) & luar (ND-2, ND-4).
-        $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
-        $this->assertSame(2, $stats['pn_kantor_tahun']);
-        $this->assertSame(2, $stats['pn_luar_tahun']);
-        $this->assertSame(1, $stats['pdk_kantor_tahun']);
-        $this->assertSame(2, $stats['pdk_luar_tahun']);
-
         // List penghulu periode bulan (jumlah desc, nama asc saat seri) + pecahan kantor/luar per nama.
+        $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
         $this->assertSame([
             ['nama' => 'MOHAMAD AMIN', 'kantor' => 1, 'luar' => 1, 'jumlah' => 2],
             ['nama' => 'BUDI SAPUTRA', 'kantor' => 1, 'luar' => 0, 'jumlah' => 1],
         ], $stats['penghulu_bulan']);
 
-        // Oktober: kartu tahun identik (ND-1 tetap terhitung tahun 2026); ND-2 tanpa Penghulu → list kosong.
+        // Oktober: ND-2 tanpa Penghulu → list kosong.
         $stats = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026')->viewData('stats');
-        $this->assertSame(2, $stats['pn_kantor_tahun']);
-        $this->assertSame(2, $stats['pn_luar_tahun']);
         $this->assertSame([], $stats['penghulu_bulan']);
     }
 
@@ -242,7 +230,6 @@ class DashboardTest extends TestCase
         $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
 
         $this->assertSame(2, $stats['pn_bulan']);
-        $this->assertSame(2, $stats['pn_tahun']);
     }
 
     public function test_statistik_pn_menggunakan_data_upload_terbaru(): void
@@ -258,11 +245,9 @@ class DashboardTest extends TestCase
 
         $september = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
         $this->assertSame(0, $september['pn_bulan']);
-        $this->assertSame(1, $september['pn_tahun']);
 
         $oktober = $this->actingAs($user)->get('/dashboard?bulan=10&tahun=2026')->viewData('stats');
         $this->assertSame(1, $oktober['pn_bulan']);
-        $this->assertSame(1, $oktober['pn_tahun']);
     }
 
     public function test_statistik_pdk_tidak_menghitung_nomor_daftar_kembar(): void
@@ -280,7 +265,6 @@ class DashboardTest extends TestCase
         $stats = $this->actingAs($user)->get('/dashboard?bulan=9&tahun=2026')->viewData('stats');
 
         $this->assertSame(2, $stats['pdk_bulan']);
-        $this->assertSame(2, $stats['pdk_tahun']);
         $this->assertSame(1, $stats['pdk_kantor']);
         $this->assertSame(1, $stats['pdk_luar']);
     }

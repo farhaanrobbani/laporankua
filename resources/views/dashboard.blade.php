@@ -94,24 +94,6 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                         <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah &middot; Tahun</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_tahun']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah Kantor &middot; Tahun</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_kantor_tahun']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah Luar Kantor &middot; Tahun</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_luar_tahun']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah &middot; Bulan</p>
                             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_bulan']) }}</p>
                             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
@@ -125,24 +107,6 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah Luar Kantor</p>
                             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_luar']) }}</p>
                             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah &middot; Tahun</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_tahun']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah Kantor &middot; Tahun</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_kantor_tahun']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah Luar Kantor &middot; Tahun</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_luar_tahun']) }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $tahun }}</p>
                         </div>
                     </div>
 

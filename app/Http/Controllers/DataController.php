@@ -399,15 +399,25 @@ class DataController extends Controller
 
     /**
      * @param  array<int, int>  $bulanList
-     * @return array{bulan: array<int, array<string, int>>, triwulan: array<string, int>}
+     * @return array{bulan: array<int, array<string, int>>, triwulan: array<string, int>, tahunan: array<string, int>}
      */
     private function skpStats(int $userId, Carbon $start, Carbon $end, array $bulanList): array
     {
-        $kosong = fn () => ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0, 'rusak' => 0];
+        $kosong = fn () => [
+            'pelaksanaan' => 0,
+            'pelaksanaan_kantor' => 0,
+            'pelaksanaan_luar' => 0,
+            'pendaftaran' => 0,
+            'pendaftaran_kantor' => 0,
+            'pendaftaran_luar' => 0,
+            'duplikat' => 0,
+            'rusak' => 0,
+        ];
 
         $stats = [
             'bulan' => [],
             'triwulan' => $kosong(),
+            'tahunan' => $kosong(),
         ];
         foreach ($bulanList as $bulan) {
             $stats['bulan'][$bulan] = $kosong();
@@ -454,61 +464,102 @@ class DataController extends Controller
             }
         }
 
+        $tahun = (int) $start->year;
         $inRange = fn (?Carbon $date) => $date !== null && $date->betweenIncluded($start, $end);
+        $inYear = fn (?Carbon $date) => $date !== null && $date->year === $tahun;
 
         foreach ($pnRows as $row) {
             $date = $this->skpParseDate($row['Tanggal Nikah'] ?? null);
-            if (! $inRange($date)) {
+            if ($date === null) {
                 continue;
             }
             $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
             $isLuar = $pdk !== null && $this->skpIsLuarKantor($pdk);
-            $stats['triwulan']['pelaksanaan']++;
-            $stats['bulan'][$date->month]['pelaksanaan']++;
-            if ($isLuar) {
-                $stats['triwulan']['pelaksanaan_luar']++;
-                $stats['bulan'][$date->month]['pelaksanaan_luar']++;
-            } else {
-                $stats['triwulan']['pelaksanaan_kantor']++;
-                $stats['bulan'][$date->month]['pelaksanaan_kantor']++;
+
+            if ($inYear($date)) {
+                $stats['tahunan']['pelaksanaan']++;
+                if ($isLuar) {
+                    $stats['tahunan']['pelaksanaan_luar']++;
+                } else {
+                    $stats['tahunan']['pelaksanaan_kantor']++;
+                }
+            }
+            if ($inRange($date)) {
+                $stats['triwulan']['pelaksanaan']++;
+                $stats['bulan'][$date->month]['pelaksanaan']++;
+                if ($isLuar) {
+                    $stats['triwulan']['pelaksanaan_luar']++;
+                    $stats['bulan'][$date->month]['pelaksanaan_luar']++;
+                } else {
+                    $stats['triwulan']['pelaksanaan_kantor']++;
+                    $stats['bulan'][$date->month]['pelaksanaan_kantor']++;
+                }
             }
         }
 
         foreach ($pdkRows as $row) {
             $date = $this->skpParseDate($row['Tanggal Daftar'] ?? null);
-            if (! $inRange($date)) {
+            if ($date === null) {
                 continue;
             }
-            $stats['triwulan']['pendaftaran']++;
-            $stats['bulan'][$date->month]['pendaftaran']++;
+            $isLuar = $this->skpIsLuarKantor($row);
+
+            if ($inYear($date)) {
+                $stats['tahunan']['pendaftaran']++;
+                if ($isLuar) {
+                    $stats['tahunan']['pendaftaran_luar']++;
+                } else {
+                    $stats['tahunan']['pendaftaran_kantor']++;
+                }
+            }
+            if ($inRange($date)) {
+                $stats['triwulan']['pendaftaran']++;
+                $stats['bulan'][$date->month]['pendaftaran']++;
+                if ($isLuar) {
+                    $stats['triwulan']['pendaftaran_luar']++;
+                    $stats['bulan'][$date->month]['pendaftaran_luar']++;
+                } else {
+                    $stats['triwulan']['pendaftaran_kantor']++;
+                    $stats['bulan'][$date->month]['pendaftaran_kantor']++;
+                }
+            }
         }
 
         $seenPerforasi = [];
+        $seenPerforasiTahunan = [];
         foreach ($l3Rows as $row) {
             if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) !== 'duplikat') {
                 continue;
             }
             $date = $this->skpParseDate($row['Tanggal Cetak'] ?? null);
-            if (! $inRange($date)) {
+            if (! $inYear($date)) {
                 continue;
             }
             $perforasi = trim((string) ($row['Nomor Perforasi'] ?? ''));
-            if ($perforasi !== '') {
-                if (isset($seenPerforasi[$perforasi])) {
-                    continue;
+
+            if ($perforasi === '' || ! isset($seenPerforasiTahunan[$perforasi])) {
+                if ($perforasi !== '') {
+                    $seenPerforasiTahunan[$perforasi] = true;
                 }
-                $seenPerforasi[$perforasi] = true;
+                $stats['tahunan']['duplikat']++;
             }
-            $stats['triwulan']['duplikat']++;
-            $stats['bulan'][$date->month]['duplikat']++;
+
+            if ($inRange($date) && ($perforasi === '' || ! isset($seenPerforasi[$perforasi]))) {
+                if ($perforasi !== '') {
+                    $seenPerforasi[$perforasi] = true;
+                }
+                $stats['triwulan']['duplikat']++;
+                $stats['bulan'][$date->month]['duplikat']++;
+            }
         }
 
         // Buku rusak: baris Status RUSAK + celah nomor, per bulan; TW = jumlah 3 bulan.
-        $rusak = app(RusakDetectionService::class)->countsByMonth($l3Rows, (int) $start->year, $bulanList);
+        $rusak = app(RusakDetectionService::class)->countsByMonth($l3Rows, $tahun, range(1, 12));
+        $stats['tahunan']['rusak'] = $rusak['total'];
         foreach ($bulanList as $bulan) {
             $stats['bulan'][$bulan]['rusak'] = $rusak['bulan'][$bulan] ?? 0;
+            $stats['triwulan']['rusak'] += $stats['bulan'][$bulan]['rusak'];
         }
-        $stats['triwulan']['rusak'] = $rusak['total'];
 
         return $stats;
     }

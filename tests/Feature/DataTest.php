@@ -908,19 +908,63 @@ class DataTest extends TestCase
                     'pelaksanaan_kantor' => 2, // ND-S2 + ND-ONLY (tanpa padanan = kantor)
                     'pelaksanaan_luar' => 1,
                     'pendaftaran' => 2,
+                    'pendaftaran_kantor' => 1,
+                    'pendaftaran_luar' => 1,
                     'duplikat' => 2, // perforasi 111 dihitung sekali
                     'rusak' => 0,
                 ], $stats['triwulan']);
 
                 $this->assertSame($stats['triwulan'], $stats['bulan'][9]);
                 $this->assertSame(
-                    ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'duplikat' => 0, 'rusak' => 0],
+                    ['pelaksanaan' => 0, 'pelaksanaan_kantor' => 0, 'pelaksanaan_luar' => 0, 'pendaftaran' => 0, 'pendaftaran_kantor' => 0, 'pendaftaran_luar' => 0, 'duplikat' => 0, 'rusak' => 0],
                     $stats['bulan'][7]
                 );
                 $this->assertSame($stats['bulan'][7], $stats['bulan'][8]);
 
+                // Tahunan: seluruh 2026, termasuk pendaftaran April.
+                $this->assertSame([
+                    'pelaksanaan' => 3,
+                    'pelaksanaan_kantor' => 2,
+                    'pelaksanaan_luar' => 1,
+                    'pendaftaran' => 3,
+                    'pendaftaran_kantor' => 2,
+                    'pendaftaran_luar' => 1,
+                    'duplikat' => 2,
+                    'rusak' => 0,
+                ], $stats['tahunan']);
+
                 return true;
             });
+    }
+
+    public function test_skp_pendaftaran_lengkap_dan_card_tahunan(): void
+    {
+        $user = User::factory()->create();
+        $this->seedSkpFixtures($user);
+
+        $response = $this->actingAs($user)->get('/data/skp?tw=3&tahun=2026');
+        $response->assertOk()
+            ->assertSee('Pendaftaran Nikah Kantor September')
+            ->assertSee('Pendaftaran Nikah Luar Kantor September')
+            ->assertSee('Pendaftaran Nikah Kantor TW3 2026')
+            ->assertSee('Total Tahunan 2026')
+            ->assertSee('Pendaftaran Nikah Kantor 2026')
+            ->assertSee('Buku Rusak 2026');
+
+        $response->assertViewHas('stats', function (array $stats) {
+            $this->assertSame(1, $stats['bulan'][9]['pendaftaran_kantor']);
+            $this->assertSame(1, $stats['bulan'][9]['pendaftaran_luar']);
+            $this->assertSame(1, $stats['triwulan']['pendaftaran_kantor']);
+            $this->assertSame(1, $stats['triwulan']['pendaftaran_luar']);
+            $this->assertSame(2, $stats['tahunan']['pendaftaran_kantor']);
+            $this->assertSame(1, $stats['tahunan']['pendaftaran_luar']);
+
+            return true;
+        });
+
+        $annual = $response->viewData('stats')['tahunan'];
+        $tw2 = $this->actingAs($user)->get('/data/skp?tw=2&tahun=2026')->viewData('stats');
+        $this->assertSame($annual, $tw2['tahunan'], 'Card tahunan tidak berubah saat ganti TW');
     }
 
     public function test_skp_triwulan_dua_di_luar_rentang_tiga(): void
@@ -938,6 +982,7 @@ class DataTest extends TestCase
                 $this->assertSame(0, $stats['triwulan']['pelaksanaan']);
                 $this->assertSame(0, $stats['triwulan']['duplikat']);
                 $this->assertSame(1, $stats['bulan'][4]['pendaftaran']);
+                $this->assertSame(3, $stats['tahunan']['pendaftaran'], 'Tahunan tetap 3, tidak terpengaruh TW');
 
                 return true;
             });
@@ -966,6 +1011,8 @@ class DataTest extends TestCase
                     'pelaksanaan_kantor' => 1,
                     'pelaksanaan_luar' => 0,
                     'pendaftaran' => 1,
+                    'pendaftaran_kantor' => 1,
+                    'pendaftaran_luar' => 0,
                     'duplikat' => 0,
                     'rusak' => 0,
                 ], $stats['triwulan']);
@@ -1000,6 +1047,7 @@ class DataTest extends TestCase
                 $this->assertSame(1, $stats['bulan'][8]['rusak'], 'Agustus: Status RUSAK, dedup nomor kembar');
                 $this->assertSame(2, $stats['bulan'][9]['rusak'], 'September: celah 005 + Status RUSAK');
                 $this->assertSame(4, $stats['triwulan']['rusak'], 'TW3 = jumlah 3 bulan');
+                $this->assertSame(5, $stats['tahunan']['rusak'], 'Tahunan termasuk Status RUSAK Oktober');
 
                 return true;
             });
@@ -1023,6 +1071,8 @@ class DataTest extends TestCase
                 'pelaksanaan_kantor' => 0,
                 'pelaksanaan_luar' => 0,
                 'pendaftaran' => 1,
+                'pendaftaran_kantor' => 0,
+                'pendaftaran_luar' => 1,
                 'duplikat' => 0,
                 'rusak' => 0,
             ]);

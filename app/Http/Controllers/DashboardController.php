@@ -68,9 +68,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'pn_bulan' => 0,
-            'pn_tahun' => 0,
             'pdk_bulan' => 0,
-            'pdk_tahun' => 0,
             'dup_bulan' => 0,
             'dup_tahun' => 0,
             'rusak_bulan' => 0,
@@ -79,10 +77,6 @@ class DashboardController extends Controller
             'pn_luar' => 0,
             'pdk_kantor' => 0,
             'pdk_luar' => 0,
-            'pn_kantor_tahun' => 0,
-            'pn_luar_tahun' => 0,
-            'pdk_kantor_tahun' => 0,
-            'pdk_luar_tahun' => 0,
             'penghulu_bulan' => [],
         ];
 
@@ -134,19 +128,10 @@ class DashboardController extends Controller
             if ($date === null) {
                 continue;
             }
-            $matchYear = $date->year === $tahun;
-            $matchMonth = $matchYear && $date->month === $bulan;
+            $matchMonth = $date->year === $tahun && $date->month === $bulan;
             $pdk = $pdkByNomorDaftar[trim((string) ($row['Nomor Daftar'] ?? ''))] ?? null;
             $isLuar = $pdk !== null && $this->isLuarKantor($pdk);
 
-            if ($matchYear) {
-                $stats['pn_tahun']++;
-                if ($isLuar) {
-                    $stats['pn_luar_tahun']++;
-                } else {
-                    $stats['pn_kantor_tahun']++;
-                }
-            }
             if ($matchMonth) {
                 $stats['pn_bulan']++;
                 if ($isLuar) {
@@ -182,17 +167,8 @@ class DashboardController extends Controller
             if ($date === null) {
                 continue;
             }
-            $matchYear = $date->year === $tahun;
-            $matchMonth = $matchYear && $date->month === $bulan;
+            $matchMonth = $date->year === $tahun && $date->month === $bulan;
             $isLuar = $this->isLuarKantor($row);
-            if ($matchYear) {
-                $stats['pdk_tahun']++;
-                if ($isLuar) {
-                    $stats['pdk_luar_tahun']++;
-                } else {
-                    $stats['pdk_kantor_tahun']++;
-                }
-            }
             if ($matchMonth) {
                 $stats['pdk_bulan']++;
 
