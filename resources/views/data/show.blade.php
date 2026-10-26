@@ -12,10 +12,10 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Baris {{ $record->row_number }}</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Dari file: {{ $record->import->table_name }}</p>
 

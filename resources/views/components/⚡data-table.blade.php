@@ -442,7 +442,7 @@ new class extends Component
             </div>
         @else
             <div class="overflow-x-auto border border-gray-200 rounded-md">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="table-sticky-first min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
                             @foreach ($this->columns as $column)
@@ -491,6 +491,7 @@ new class extends Component
                     </tbody>
                 </table>
             </div>
+            <p class="mt-2 text-xs text-gray-400 dark:text-gray-500 sm:hidden">Geser ke samping untuk melihat kolom lainnya.</p>
             @if ($mergeLastPage > 1)
                 <div class="mt-4 flex items-center justify-between">
                     <p class="text-sm text-gray-700">
@@ -536,7 +537,7 @@ new class extends Component
             </div>
         @else
             <div class="overflow-x-auto border border-gray-200 rounded-md">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="table-sticky-first min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-3 py-2">
@@ -582,6 +583,7 @@ new class extends Component
                     </tbody>
                 </table>
             </div>
+            <p class="mt-2 text-xs text-gray-400 dark:text-gray-500 sm:hidden">Geser ke samping untuk melihat kolom lainnya.</p>
             <div class="mt-4">{{ $records->links() }}</div>
         @endif
     @endif

@@ -7,12 +7,12 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- Quick upload CTA --}}
             <div class="bg-blue-600 dark:bg-blue-700 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="p-4 sm:p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h3 class="text-lg font-semibold">Olah Data Excel Menjadi Laporan</h3>
                         <p class="text-blue-100 dark:text-blue-200 text-sm">Upload file .xlsx atau .xls, data otomatis tersimpan sebagai database.</p>
@@ -24,39 +24,39 @@
             </div>
 
             {{-- Statistics cards --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total File Import</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalImports) }}</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalImports) }}</p>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Data Record</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalRecords) }}</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalRecords) }}</p>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
+                <div class="col-span-2 sm:col-span-1 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-4 sm:p-6">
                         <p class="text-sm text-gray-500 dark:text-gray-400">Laporan Dibuat</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalReports) }}</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{{ number_format($totalReports) }}</p>
                     </div>
                 </div>
             </div>
 
             {{-- Statistik laporan --}}
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Statistik Laporan</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Periode: {{ $monthName }} {{ $tahun }}</p>
                         </div>
-                        <form method="GET" action="{{ route('dashboard') }}" class="flex items-end gap-3">
+                        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-end gap-3">
                             <div>
                                 <label for="filter-bulan" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bulan</label>
-                                <select id="filter-bulan" name="bulan" class="border-gray-300 dark:border-gray-600 rounded-md text-sm">
+                                <select id="filter-bulan" name="bulan" class="w-full sm:w-auto border-gray-300 dark:border-gray-600 rounded-md text-sm">
                                     @for ($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}" @selected($bulan === $m)>{{ \App\Http\Controllers\DashboardController::MONTH_NAMES[$m - 1] }}</option>
                                     @endfor
@@ -64,18 +64,18 @@
                             </div>
                             <div>
                                 <label for="filter-tahun" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tahun</label>
-                                <select id="filter-tahun" name="tahun" class="border-gray-300 dark:border-gray-600 rounded-md text-sm">
+                                <select id="filter-tahun" name="tahun" class="w-full sm:w-auto border-gray-300 dark:border-gray-600 rounded-md text-sm">
                                     @for ($y = now()->year; $y >= now()->year - 5; $y--)
                                         <option value="{{ $y }}" @selected($tahun === $y)>{{ $y }}</option>
                                     @endfor
                                 </select>
                             </div>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded-md transition">Terapkan</button>
+                            <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded-md transition">Terapkan</button>
                         </form>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div class="col-span-2 sm:col-span-1 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <p class="text-xs text-gray-500 dark:text-gray-400">Peristiwa Nikah &middot; Bulan</p>
                             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pn_bulan']) }}</p>
                             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
@@ -92,8 +92,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-4">
+                        <div class="col-span-2 sm:col-span-1 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <p class="text-xs text-gray-500 dark:text-gray-400">Pendaftaran Nikah &middot; Bulan</p>
                             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['pdk_bulan']) }}</p>
                             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $monthName }} {{ $tahun }}</p>
@@ -110,7 +110,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4">
                         <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <p class="text-xs text-gray-500 dark:text-gray-400">Duplikat &middot; Bulan</p>
                             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ number_format($stats['dup_bulan']) }}</p>

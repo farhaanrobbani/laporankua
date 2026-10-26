@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="mb-4">
                 <a href="{{ route('imports.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-700 dark:hover:bg-blue-600">
@@ -13,12 +13,12 @@
                 </a>
             </div>
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     @if ($imports->isEmpty())
                         <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <table class="table-sticky-first min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
                                         <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">Tabel</th>
@@ -66,6 +66,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        <p class="mt-2 text-xs text-gray-400 dark:text-gray-500 sm:hidden">Geser ke samping untuk melihat kolom lainnya.</p>
                         <div class="mt-4">{{ $imports->links() }}</div>
                     @endif
                 </div>

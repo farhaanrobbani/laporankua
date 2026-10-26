@@ -12,10 +12,10 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Daftar File</h3>
                         <a href="{{ route('imports.create') }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
@@ -24,7 +24,7 @@
                         </a>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                        <table class="table-sticky-first min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th class="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">#</th>
@@ -85,6 +85,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <p class="mt-2 text-xs text-gray-400 dark:text-gray-500 sm:hidden">Geser ke samping untuk melihat kolom lainnya.</p>
 
                     @if ($imports->isNotEmpty())
                         <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">

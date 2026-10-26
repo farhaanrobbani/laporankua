@@ -18,10 +18,10 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ringkasan Laporan</h3>
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div><dt class="text-gray-500 dark:text-gray-400">Judul</dt><dd class="font-medium text-gray-900 dark:text-gray-100">{{ $report->title }}</dd></div>

@@ -7,39 +7,11 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-6 flex-wrap">
-                        <a href="{{ route('data.index') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.index') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Data Import') }}
-                        </a>
-                        <a href="{{ route('data.pelaksanaan-kantor') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.pelaksanaan-kantor') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Pelaksanaan Kantor') }}
-                        </a>
-                        <a href="{{ route('data.pelaksanaan-luar-kantor') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.pelaksanaan-luar-kantor') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Pelaksanaan Luar Kantor') }}
-                        </a>
-                        <a href="{{ route('data.duplikat') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.duplikat') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Duplikat') }}
-                        </a>
-                        <a href="{{ route('data.bukan-duplikat') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.bukan-duplikat') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Bukan Duplikat') }}
-                        </a>
-                        <a href="{{ route('data.rusak') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.rusak') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Rusak') }}
-                        </a>
-                        <a href="{{ route('data.bukti-bayar') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.bukti-bayar') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Bukti Bayar') }}
-                        </a>
-                        <a href="{{ route('data.surat-tugas') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.surat-tugas') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('Surat Tugas') }}
-                        </a>
-                        <a href="{{ route('data.skp') }}" class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition {{ request()->routeIs('data.skp') ? 'border-indigo-400 text-indigo-700 dark:text-indigo-300' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600' }}">
-                            {{ __('SKP') }}
-                        </a>
-                    </div>
+                <div class="p-4 sm:p-6">
+                    <x-data-tabs />
 
                     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                         <div>
@@ -78,74 +50,75 @@
                         $card = fn (string $label, int $nilai, string $periode) => '<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4"><p class="text-xs text-gray-500 dark:text-gray-400">' . e($label) . '</p><p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">' . number_format($nilai) . '</p><p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">' . e($periode) . '</p></div>';
                     @endphp
 
-                    {{-- Pelaksanaan Nikah: total triwulan --}}
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Pelaksanaan Nikah') }} · {{ $twLabel }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        {!! $card(__('Pelaksanaan Nikah') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan'], $periodeLabel) !!}
-                        {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan_kantor'], $periodeLabel) !!}
-                        {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan_luar'], $periodeLabel) !!}
-                    </div>
-
-                    {{-- Pelaksanaan Nikah: per bulan --}}
-                    @foreach ($bulanList as $m)
+                    {{-- Pelaksanaan Nikah --}}
+                    <x-skp-section :title="__('Pelaksanaan Nikah') . ' · ' . $twLabel" :summary="number_format($stats['triwulan']['pelaksanaan'])" :open="true">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                            {!! $card(__('Pelaksanaan Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan'], $namaBulan[$m] . ' ' . $tahun) !!}
-                            {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan_kantor'], $namaBulan[$m] . ' ' . $tahun) !!}
-                            {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan_luar'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            {!! $card(__('Pelaksanaan Nikah') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan'], $periodeLabel) !!}
+                            {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan_kantor'], $periodeLabel) !!}
+                            {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $twLabel, $stats['triwulan']['pelaksanaan_luar'], $periodeLabel) !!}
                         </div>
-                    @endforeach
+                        @foreach ($bulanList as $m)
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 last:mb-0">
+                                {!! $card(__('Pelaksanaan Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan'], $namaBulan[$m] . ' ' . $tahun) !!}
+                                {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan_kantor'], $namaBulan[$m] . ' ' . $tahun) !!}
+                                {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pelaksanaan_luar'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            </div>
+                        @endforeach
+                    </x-skp-section>
 
-                    {{-- Pendaftaran Nikah: total triwulan --}}
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Pendaftaran Nikah') }} · {{ $twLabel }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        {!! $card(__('Pendaftaran Nikah') . ' ' . $twLabel, $stats['triwulan']['pendaftaran'], $periodeLabel) !!}
-                        {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $twLabel, $stats['triwulan']['pendaftaran_kantor'], $periodeLabel) !!}
-                        {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $twLabel, $stats['triwulan']['pendaftaran_luar'], $periodeLabel) !!}
-                    </div>
-
-                    {{-- Pendaftaran Nikah: per bulan --}}
-                    @foreach ($bulanList as $m)
+                    {{-- Pendaftaran Nikah --}}
+                    <x-skp-section :title="__('Pendaftaran Nikah') . ' · ' . $twLabel" :summary="number_format($stats['triwulan']['pendaftaran'])">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                            {!! $card(__('Pendaftaran Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran'], $namaBulan[$m] . ' ' . $tahun) !!}
-                            {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran_kantor'], $namaBulan[$m] . ' ' . $tahun) !!}
-                            {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran_luar'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            {!! $card(__('Pendaftaran Nikah') . ' ' . $twLabel, $stats['triwulan']['pendaftaran'], $periodeLabel) !!}
+                            {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $twLabel, $stats['triwulan']['pendaftaran_kantor'], $periodeLabel) !!}
+                            {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $twLabel, $stats['triwulan']['pendaftaran_luar'], $periodeLabel) !!}
                         </div>
-                    @endforeach
-
-                    {{-- Duplikat: per bulan + total triwulan --}}
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Duplikat') }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         @foreach ($bulanList as $m)
-                            {!! $card(__('Duplikat') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['duplikat'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 last:mb-0">
+                                {!! $card(__('Pendaftaran Nikah') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran'], $namaBulan[$m] . ' ' . $tahun) !!}
+                                {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran_kantor'], $namaBulan[$m] . ' ' . $tahun) !!}
+                                {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['pendaftaran_luar'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            </div>
                         @endforeach
-                        {!! $card(__('Duplikat') . ' ' . $twLabel, $stats['triwulan']['duplikat'], $periodeLabel) !!}
-                    </div>
+                    </x-skp-section>
 
-                    {{-- Buku Rusak: per bulan + total triwulan --}}
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Buku Rusak') }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        @foreach ($bulanList as $m)
-                            {!! $card(__('Buku Rusak') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['rusak'], $namaBulan[$m] . ' ' . $tahun) !!}
-                        @endforeach
-                        {!! $card(__('Buku Rusak') . ' ' . $twLabel, $stats['triwulan']['rusak'], $periodeLabel) !!}
-                    </div>
+                    {{-- Duplikat --}}
+                    <x-skp-section :title="__('Duplikat')" :summary="number_format($stats['triwulan']['duplikat'])">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            @foreach ($bulanList as $m)
+                                {!! $card(__('Duplikat') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['duplikat'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            @endforeach
+                            {!! $card(__('Duplikat') . ' ' . $twLabel, $stats['triwulan']['duplikat'], $periodeLabel) !!}
+                        </div>
+                    </x-skp-section>
+
+                    {{-- Buku Rusak --}}
+                    <x-skp-section :title="__('Buku Rusak')" :summary="number_format($stats['triwulan']['rusak'])">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            @foreach ($bulanList as $m)
+                                {!! $card(__('Buku Rusak') . ' ' . $namaBulan[$m], $stats['bulan'][$m]['rusak'], $namaBulan[$m] . ' ' . $tahun) !!}
+                            @endforeach
+                            {!! $card(__('Buku Rusak') . ' ' . $twLabel, $stats['triwulan']['rusak'], $periodeLabel) !!}
+                        </div>
+                    </x-skp-section>
 
                     {{-- Total Tahunan: 3 3 2 --}}
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Total Tahunan') }} {{ $tahun }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                        {!! $card(__('Pelaksanaan Nikah') . ' ' . $tahun, $stats['tahunan']['pelaksanaan'], (string) $tahun) !!}
-                        {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $tahun, $stats['tahunan']['pelaksanaan_kantor'], (string) $tahun) !!}
-                        {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $tahun, $stats['tahunan']['pelaksanaan_luar'], (string) $tahun) !!}
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                        {!! $card(__('Pendaftaran Nikah') . ' ' . $tahun, $stats['tahunan']['pendaftaran'], (string) $tahun) !!}
-                        {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $tahun, $stats['tahunan']['pendaftaran_kantor'], (string) $tahun) !!}
-                        {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $tahun, $stats['tahunan']['pendaftaran_luar'], (string) $tahun) !!}
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {!! $card(__('Duplikat') . ' ' . $tahun, $stats['tahunan']['duplikat'], (string) $tahun) !!}
-                        {!! $card(__('Buku Rusak') . ' ' . $tahun, $stats['tahunan']['rusak'], (string) $tahun) !!}
-                    </div>
+                    <x-skp-section :title="__('Total Tahunan') . ' ' . $tahun">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            {!! $card(__('Pelaksanaan Nikah') . ' ' . $tahun, $stats['tahunan']['pelaksanaan'], (string) $tahun) !!}
+                            {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $tahun, $stats['tahunan']['pelaksanaan_kantor'], (string) $tahun) !!}
+                            {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $tahun, $stats['tahunan']['pelaksanaan_luar'], (string) $tahun) !!}
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            {!! $card(__('Pendaftaran Nikah') . ' ' . $tahun, $stats['tahunan']['pendaftaran'], (string) $tahun) !!}
+                            {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $tahun, $stats['tahunan']['pendaftaran_kantor'], (string) $tahun) !!}
+                            {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $tahun, $stats['tahunan']['pendaftaran_luar'], (string) $tahun) !!}
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {!! $card(__('Duplikat') . ' ' . $tahun, $stats['tahunan']['duplikat'], (string) $tahun) !!}
+                            {!! $card(__('Buku Rusak') . ' ' . $tahun, $stats['tahunan']['rusak'], (string) $tahun) !!}
+                        </div>
+                    </x-skp-section>
                 </div>
             </div>
         </div>

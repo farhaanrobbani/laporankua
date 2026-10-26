@@ -12,7 +12,7 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-6 sm:py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <livewire:report-builder />
         </div>
