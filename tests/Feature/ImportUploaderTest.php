@@ -456,4 +456,38 @@ class ImportUploaderTest extends TestCase
         $this->assertSame('Duplikat', $rows['PF-M-004']['Keterangan']);
         $this->assertSame('2026-09-05', $rows['PF-M-004']['Tanggal Cetak']);
     }
+
+    public function test_l3_status_rusak_tidak_menjadi_duplikat(): void
+    {
+        $user = User::factory()->create();
+
+        $file = $this->uploadedXlsx([
+            'Data' => [
+                ['No', 'Nomor Perforasi', 'Nama Catin', 'Tanggal Akad', 'Status'],
+                ['1', 'PF-R-001', 'A - B', '2026-09-05', 'SUDAH DIGUNAKAN'],
+                ['2', 'PF-R-002', '', '', 'RUSAK'],
+                ['3', 'PF-R-003', 'E - F', '', 'SUDAH DIGUNAKAN'],
+            ],
+        ], 'laporan-model-l3-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $import = Import::latest('id')->first();
+        $rows = $import->importData()->get()->mapWithKeys(
+            fn (ImportData $r) => [$r->row_data['Nomor Perforasi'] => $r->row_data]
+        );
+
+        // Buku rusak (Status RUSAK, Tanggal Akad kosong) → "Rusak", bukan "Duplikat".
+        $this->assertSame('Rusak', $rows['PF-R-002']['Keterangan']);
+        $this->assertSame('2026-09-05', $rows['PF-R-002']['Tanggal Cetak']);
+
+        // Baris RUSAK tidak menggeser rantai pewarisan Tanggal Cetak.
+        $this->assertSame('Duplikat', $rows['PF-R-003']['Keterangan']);
+        $this->assertSame('2026-09-05', $rows['PF-R-003']['Tanggal Cetak']);
+    }
 }

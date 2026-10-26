@@ -426,6 +426,26 @@ class DataTest extends TestCase
         $response->assertSee('116741');
     }
 
+    public function test_tab_rusak_menampilkan_baris_status_rusak_dari_excel(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [
+            ['Nomor Perforasi' => '116741001', 'Status' => 'SUDAH DIGUNAKAN', 'Tanggal Cetak' => '01-09-2026'],
+            ['Nomor Perforasi' => '116741002', 'Status' => 'RUSAK', 'Tanggal Cetak' => '01-09-2026'],
+            ['Nomor Perforasi' => '116741003', 'Status' => 'SUDAH DIGUNAKAN', 'Tanggal Cetak' => '01-09-2026'],
+        ]);
+
+        $response = $this->actingAs($user)->get('/data/rusak');
+
+        $response->assertOk();
+        $response->assertSee('buku berstatus');
+        $response->assertSee('JT 116741002');
+        $response->assertSee('01-09-2026');
+        // Baris berstatus RUSAK bukan celah, jadi tidak muncul sebagai nomor hilang.
+        $response->assertDontSee('nomor terdeteksi rusak');
+        $response->assertDontSee('Tidak ada nomor rusak terdeteksi');
+    }
+
     public function test_tab_rusak_tanpa_import_l3_tampil_empty_state(): void
     {
         $user = User::factory()->create();

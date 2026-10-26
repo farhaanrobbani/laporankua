@@ -311,7 +311,7 @@ new class extends Component
             }
             $prefix = substr($nomor, 0, $prefixLength);
             if (! isset($groups[$prefix])) {
-                $groups[$prefix] = ['porporasi' => [], 'filtered_porp' => [], 'count' => 0];
+                $groups[$prefix] = ['porporasi' => [], 'filtered_porp' => [], 'count' => 0, 'rusak_status' => 0];
             }
             $groups[$prefix]['porporasi'][] = (int) $nomor;
         }
@@ -361,6 +361,9 @@ new class extends Component
             if (isset($groups[$prefix])) {
                 $groups[$prefix]['count']++;
                 $groups[$prefix]['filtered_porp'][] = (int) $nomor;
+                if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) === 'rusak') {
+                    $groups[$prefix]['rusak_status']++;
+                }
                 $filteredRows[] = $row;
             }
         }
@@ -376,12 +379,13 @@ new class extends Component
                 continue;
             }
             $filteredPorp = $data['filtered_porp'];
-            $rusakCount = count($rusakByPrefix[$prefix] ?? []);
+            $gapCount = count($rusakByPrefix[$prefix] ?? []);
+            $rusakStatusCount = (int) ($data['rusak_status'] ?? 0);
             $versions[] = [
                 'prefix' => (string) $prefix,
                 'label' => 'Model NA ('.$prefix.')',
-                'keluar_jumlah' => $data['count'] + $rusakCount,
-                'rusak_jumlah' => $rusakCount,
+                'keluar_jumlah' => $data['count'] + $gapCount,
+                'rusak_jumlah' => $gapCount + $rusakStatusCount,
                 'min_porp' => (string) min($filteredPorp),
                 'max_porp' => (string) max($filteredPorp),
             ];

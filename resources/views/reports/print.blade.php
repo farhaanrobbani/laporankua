@@ -942,8 +942,10 @@
                                 $dateSisaD[$dateKey] = [];
                                 $dateSisaRusak[$dateKey] = [];
                                 foreach ($byPrefix as $pf => $pfRows) {
-                                    $bdCount = count(array_values(array_filter($pfRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') !== 'duplikat')));
-                                    $dCount = count(array_values(array_filter($pfRows, fn ($r) => mb_strtolower($r['Keterangan'] ?? '') === 'duplikat')));
+                                    $ketOf = fn (array $r): string => mb_strtolower(trim((string) ($r['Keterangan'] ?? '')));
+                                    $statusRusakCount = count(array_values(array_filter($pfRows, fn ($r) => $ketOf($r) === 'rusak')));
+                                    $dCount = count(array_values(array_filter($pfRows, fn ($r) => $ketOf($r) === 'duplikat')));
+                                    $bdCount = count($pfRows) - $dCount - $statusRusakCount;
                                     if (! isset($runningSisa[$pf])) {
                                         $runningSisa[$pf] = 0;
                                     }
@@ -951,8 +953,9 @@
                                     $dateSisaBD[$dateKey][$pf] = max(0, $runningSisa[$pf]);
                                     $runningSisa[$pf] -= $dCount;
                                     $dateSisaD[$dateKey][$pf] = max(0, $runningSisa[$pf]);
-                                    $dateSisaRusak[$dateKey][$pf] = $dateSisaD[$dateKey][$pf];
-                                    // Rusak mengurangi sisa tepat di tanggal terakhir data prefix.
+                                    $runningSisa[$pf] -= $statusRusakCount;
+                                    $dateSisaRusak[$dateKey][$pf] = max(0, $runningSisa[$pf]);
+                                    // Celah nomor rusak mengurangi sisa tepat di tanggal terakhir data prefix.
                                     if (isset($rusakByPrefix[$pf]) && ($lastDateByPrefix[$pf] ?? null) === $dateKey) {
                                         $runningSisa[$pf] -= count($rusakByPrefix[$pf]);
                                         $dateSisaRusak[$dateKey][$pf] = max(0, $runningSisa[$pf]);
@@ -971,10 +974,13 @@
                                     $p = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($r['Nomor Perforasi'] ?? ''))));
                                     $pf = substr((string) $p, 0, $prefixLength);
                                     if (! isset($byPrefix[$pf])) {
-                                        $byPrefix[$pf] = ['bd' => [], 'd' => []];
+                                        $byPrefix[$pf] = ['bd' => [], 'd' => [], 'rusak' => []];
                                     }
-                                    if (mb_strtolower($r['Keterangan'] ?? '') === 'duplikat') {
+                                    $ket = mb_strtolower(trim((string) ($r['Keterangan'] ?? '')));
+                                    if ($ket === 'duplikat') {
                                         $byPrefix[$pf]['d'][] = $r;
+                                    } elseif ($ket === 'rusak') {
+                                        $byPrefix[$pf]['rusak'][] = $r;
                                     } else {
                                         $byPrefix[$pf]['bd'][] = $r;
                                     }
@@ -984,6 +990,7 @@
                                 foreach ($byPrefix as $pf => $pfData) {
                                     $bukanDuplikat = $pfData['bd'];
                                     $duplikat = $pfData['d'];
+                                    $rusakStatus = $pfData['rusak'];
                                     $keluarBD = count($bukanDuplikat);
                                     $keluarD = count($duplikat);
                                     $sisaBD = $dateSisaBD[$dateKey][$pf] ?? 0;
@@ -994,14 +1001,23 @@
                                     if ($keluarD > 0) {
                                         $flatRows[] = ['type' => 'd', 'date' => $dateDisplay, 'pf' => $pf, 'duplikat' => $duplikat, 'keluarD' => $keluarD, 'sisaD' => $sisaD];
                                     }
-                                    if (isset($rusakByPrefix[$pf]) && ($lastDateByPrefix[$pf] ?? null) === $dateKey) {
-                                        $missing = $rusakByPrefix[$pf];
+                                    $isLastDate = isset($rusakByPrefix[$pf]) && ($lastDateByPrefix[$pf] ?? null) === $dateKey;
+                                    $rusakNumbers = $isLastDate ? $rusakByPrefix[$pf] : [];
+                                    foreach ($rusakStatus as $rusakRow) {
+                                        $rusakNomor = preg_replace('/\s*-\s*\d+$/', '', preg_replace('/^JT\s*/i', '', trim((string) ($rusakRow['Nomor Perforasi'] ?? ''))));
+                                        if ($rusakNomor !== '' && ctype_digit($rusakNomor)) {
+                                            $rusakNumbers[] = (int) $rusakNomor;
+                                        }
+                                    }
+                                    if ($rusakNumbers !== []) {
+                                        $rusakNumbers = array_values(array_unique($rusakNumbers));
+                                        sort($rusakNumbers);
                                         $flatRows[] = [
                                             'type' => 'rusak',
                                             'date' => $dateDisplay,
                                             'pf' => $pf,
-                                            'missing' => $missing,
-                                            'keluarRusak' => count($missing),
+                                            'missing' => $rusakNumbers,
+                                            'keluarRusak' => count($rusakNumbers),
                                             'sisaRusak' => $dateSisaRusak[$dateKey][$pf] ?? 0,
                                         ];
                                     }

@@ -515,7 +515,7 @@ class ReportsController extends Controller
             }
             $prefix = substr($nomor, 0, $prefixLength);
             if (! isset($groups[$prefix])) {
-                $groups[$prefix] = ['filtered_porp' => [], 'count' => 0];
+                $groups[$prefix] = ['filtered_porp' => [], 'count' => 0, 'rusak_status' => 0];
             }
         }
 
@@ -547,6 +547,9 @@ class ReportsController extends Controller
             if (isset($groups[$prefix])) {
                 $groups[$prefix]['count']++;
                 $groups[$prefix]['filtered_porp'][] = (int) $nomor;
+                if (mb_strtolower(trim((string) ($row['Keterangan'] ?? ''))) === 'rusak') {
+                    $groups[$prefix]['rusak_status']++;
+                }
                 $filteredRows[] = $row;
             }
         }
@@ -561,12 +564,13 @@ class ReportsController extends Controller
                 continue;
             }
             $filteredPorp = $data['filtered_porp'];
-            $rusakCount = count($rusakByPrefix[$prefix] ?? []);
+            $gapCount = count($rusakByPrefix[$prefix] ?? []);
+            $rusakStatusCount = (int) ($data['rusak_status'] ?? 0);
             $naVersions[] = [
                 'prefix' => (string) $prefix,
                 'label' => 'Model NA ('.$prefix.')',
-                'keluar_jumlah' => $data['count'] + $rusakCount,
-                'rusak_jumlah' => $rusakCount,
+                'keluar_jumlah' => $data['count'] + $gapCount,
+                'rusak_jumlah' => $gapCount + $rusakStatusCount,
                 'min_porp' => (string) min($filteredPorp),
                 'max_porp' => (string) max($filteredPorp),
             ];

@@ -385,6 +385,8 @@ class ExcelImportService
      * - Tanggal Akad setelah bulan acuan (cetak maju) → Tanggal Cetak = Tanggal Akad,
      *   Keterangan = "Bukan Duplikat", baris pindah ke bulan akad sehingga tidak terhitung
      *   pada bulan file; baris berikutnya tetap mewarisi Tanggal Cetak baris sebelumnya
+     * - Status = "RUSAK" (buku rusak, Tanggal Akad kosong) → Tanggal Cetak =
+     *   Tanggal Cetak baris sebelumnya, Keterangan = "Rusak" (bukan Duplikat)
      * - Tanggal Akad sebelum bulan acuan (cetak ulang/tanpa tanggal) → Tanggal Cetak =
      *   Tanggal Cetak baris sebelumnya (atau tanggal dari file), Keterangan = "Duplikat"
      */
@@ -434,6 +436,7 @@ class ExcelImportService
                 continue;
             }
 
+            $statusRusak = mb_strtoupper(trim((string) ($data['Status'] ?? ''))) === 'RUSAK';
             $tanggalAkad = $data['Tanggal Akad'];
             $akadState = 'lampau';
 
@@ -456,7 +459,10 @@ class ExcelImportService
                 $newData[$key] = $value;
 
                 if ($key === 'Tanggal Akad') {
-                    if ($akadState === 'lampau') {
+                    if ($statusRusak) {
+                        $newData['Tanggal Cetak'] = $prevTanggalCetak;
+                        $newData['Keterangan'] = 'Rusak';
+                    } elseif ($akadState === 'lampau') {
                         $newData['Tanggal Cetak'] = $prevTanggalCetak;
                         $newData['Keterangan'] = 'Duplikat';
                     } else {
@@ -472,7 +478,9 @@ class ExcelImportService
 
             if (! array_key_exists('Tanggal Cetak', $newData)) {
                 $newData['Tanggal Cetak'] = $prevTanggalCetak;
-                $newData['Keterangan'] = $akadState === 'lampau' ? 'Duplikat' : 'Bukan Duplikat';
+                $newData['Keterangan'] = $statusRusak
+                    ? 'Rusak'
+                    : ($akadState === 'lampau' ? 'Duplikat' : 'Bukan Duplikat');
             }
 
             $row->update([

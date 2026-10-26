@@ -114,6 +114,22 @@ class DataController extends Controller
 
         usort($detected, fn (array $a, array $b) => [$a['prefix'], $a['number']] <=> [$b['prefix'], $b['number']]);
 
+        $rusakStatusRows = collect($rows)
+            ->filter(fn ($row) => mb_strtoupper(trim((string) ($row['Status'] ?? ''))) === 'RUSAK')
+            ->map(function ($row) {
+                $nomor = trim((string) ($row['Nomor Perforasi'] ?? ''));
+                $nomor = preg_replace('/^JT\s*/i', '', $nomor);
+
+                return [
+                    'number' => (string) $nomor,
+                    'tanggal' => trim((string) ($row['Tanggal Cetak'] ?? '')),
+                    'status' => 'RUSAK',
+                ];
+            })
+            ->sortBy('number', SORT_NATURAL)
+            ->values()
+            ->all();
+
         $page = max(1, $request->integer('page'));
         $missingRows = new LengthAwarePaginator(
             array_slice($detected, ($page - 1) * 50, 50),
@@ -128,6 +144,8 @@ class DataController extends Controller
             'missingRows' => $missingRows,
             'totalRusak' => count($detected),
             'prefixCount' => count($missingByPrefix),
+            'rusakStatusRows' => $rusakStatusRows,
+            'totalRusakStatus' => count($rusakStatusRows),
         ]);
     }
 

@@ -705,7 +705,7 @@ class ReportTest extends TestCase
         $this->assertSame(1, $sonowangi['Duplikat']);
     }
 
-    private function laporanNaReportWithPerforasi(User $user, array $nums): Report
+    private function laporanNaReportWithPerforasi(User $user, array $nums, array $rusakStatusNums = []): Report
     {
         $import = Import::factory()->for($user)->create([
             'status' => 'success',
@@ -717,7 +717,7 @@ class ReportTest extends TestCase
             ImportData::factory()->for($import)->create([
                 'row_data' => [
                     'Nomor Perforasi' => $perforasi,
-                    'Keterangan' => 'Bukan Duplikat',
+                    'Keterangan' => in_array($num, $rusakStatusNums, true) ? 'Rusak' : 'Bukan Duplikat',
                     'Nama Catin' => 'Suami '.$num.' - Istri '.$num,
                     'Tanggal Akad' => '2026-09-10',
                     'Tanggal Nikah' => '2026-09-10',
@@ -883,6 +883,31 @@ class ReportTest extends TestCase
         $this->assertNotNull($jumlah);
         $this->assertSame('4', $jumlah[4], 'Keluar = 4 baris, tanpa rusak');
         $this->assertSame('2', $jumlah[5], 'Sisa = 6 - 4');
+    }
+
+    public function test_laporan_na_baris_status_rusak_dihitung_sebagai_rusak(): void
+    {
+        $user = User::factory()->create();
+        // Rentang 001..005 lengkap (tanpa celah); nomor 003 ditandai Status RUSAK di L3.
+        $report = $this->laporanNaReportWithPerforasi($user, [1, 2, 3, 4, 5], [3]);
+
+        $response = $this->actingAs($user)->get(route('reports.print', $report));
+        $response->assertOk();
+
+        $rows = $this->tableCellRows($response->getContent());
+
+        $rusak = collect($rows)->first(fn ($r) => ($r[2] ?? '') === 'Rusak');
+        $this->assertNotNull($rusak, 'Baris Rusak harus tampil untuk Status RUSAK');
+        $this->assertSame('10/09/2026', $rusak[1]);
+        $this->assertSame('1', $rusak[4], 'Status RUSAK dihitung sebagai Keluar');
+        $this->assertSame('1', $rusak[5], 'Sisa = 6 - 4 terpakai - 1 rusak');
+        $this->assertSame('JT 116741003', $rusak[7], 'Nomor Status RUSAK tampil di kolom seri');
+
+        $jumlah = collect($rows)->first(fn ($r) => ($r[2] ?? '') === 'Jumlah');
+        $this->assertNotNull($jumlah);
+        $this->assertSame('6', $jumlah[3], 'Masuk = sisa bulan lalu');
+        $this->assertSame('5', $jumlah[4], 'Keluar = 5 baris (termasuk yang rusak)');
+        $this->assertSame('1', $jumlah[5], 'Sisa = 6 - 5');
     }
 
     public function test_laporan_l3_rusak_masuk_hitungan_tanpa_label_baru(): void
