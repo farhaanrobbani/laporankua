@@ -130,15 +130,19 @@
                         {!! $card(__('Buku Rusak') . ' ' . $twLabel, $stats['triwulan']['rusak'], $periodeLabel) !!}
                     </div>
 
-                    {{-- Total Tahunan: 8 kartu --}}
+                    {{-- Total Tahunan: 3 3 2 --}}
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ __('Total Tahunan') }} {{ $tahun }}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                         {!! $card(__('Pelaksanaan Nikah') . ' ' . $tahun, $stats['tahunan']['pelaksanaan'], (string) $tahun) !!}
                         {!! $card(__('Pelaksanaan Nikah Kantor') . ' ' . $tahun, $stats['tahunan']['pelaksanaan_kantor'], (string) $tahun) !!}
                         {!! $card(__('Pelaksanaan Nikah Luar Kantor') . ' ' . $tahun, $stats['tahunan']['pelaksanaan_luar'], (string) $tahun) !!}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                         {!! $card(__('Pendaftaran Nikah') . ' ' . $tahun, $stats['tahunan']['pendaftaran'], (string) $tahun) !!}
                         {!! $card(__('Pendaftaran Nikah Kantor') . ' ' . $tahun, $stats['tahunan']['pendaftaran_kantor'], (string) $tahun) !!}
                         {!! $card(__('Pendaftaran Nikah Luar Kantor') . ' ' . $tahun, $stats['tahunan']['pendaftaran_luar'], (string) $tahun) !!}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {!! $card(__('Duplikat') . ' ' . $tahun, $stats['tahunan']['duplikat'], (string) $tahun) !!}
                         {!! $card(__('Buku Rusak') . ' ' . $tahun, $stats['tahunan']['rusak'], (string) $tahun) !!}
                     </div>
