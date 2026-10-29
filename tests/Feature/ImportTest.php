@@ -66,6 +66,25 @@ class ImportTest extends TestCase
         $response->assertDontSee('milik_orang.xlsx');
     }
 
+    public function test_daftar_file_ringkas_dan_semua_nama_tetap_tersedia(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (['januari.xlsx', 'februari.xlsx', 'maret.xlsx'] as $fileName) {
+            Import::factory()->for($user)->create([
+                'file_name' => $fileName,
+                'table_name' => 'laporan model l3',
+            ]);
+        }
+
+        $this->actingAs($user)->get('/imports')
+            ->assertOk()
+            ->assertSee('3 file')
+            ->assertSee('maret.xlsx')
+            ->assertSee('februari.xlsx')
+            ->assertSee('januari.xlsx');
+    }
+
     public function test_service_import_menyimpan_data_dan_status(): void
     {
         Storage::fake('local');

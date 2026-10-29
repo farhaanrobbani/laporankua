@@ -35,14 +35,24 @@
                                         <tr>
                                             <td class="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{{ $group->table_name ?? '-' }}</td>
                                             <td class="px-4 py-2 text-gray-600 dark:text-gray-400">
+                                                @php($latestFileName = $group->file_names_list[0] ?? '-')
                                                 @if ($group->file_count === 1)
-                                                    {{ $group->file_names_list[0] }}
+                                                    <span class="block max-w-56 truncate" title="{{ $latestFileName }}">{{ $latestFileName }}</span>
                                                 @else
-                                                    <ul class="list-disc list-inside space-y-0.5">
-                                                        @foreach ($group->file_names_list as $fname)
-                                                            <li>{{ $fname }}</li>
-                                                        @endforeach
-                                                    </ul>
+                                                    <details class="group min-w-48">
+                                                        <summary class="flex cursor-pointer list-none items-center gap-2 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-indigo-300 [&::-webkit-details-marker]:hidden" title="Klik untuk melihat semua file">
+                                                            <span class="max-w-40 truncate sm:max-w-56">{{ $latestFileName }}</span>
+                                                            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">{{ $group->file_count }} file</span>
+                                                            <svg class="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                            </svg>
+                                                        </summary>
+                                                        <ul class="mt-2 max-h-40 space-y-1 overflow-y-auto border-t border-gray-100 pt-2 pr-1 text-xs dark:border-gray-700">
+                                                            @foreach ($group->file_names_list as $fname)
+                                                                <li class="truncate" title="{{ $fname }}">{{ $fname }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </details>
                                                 @endif
                                             </td>
                                             <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ number_format($group->imported_rows) }}</td>
