@@ -153,6 +153,22 @@ class DataTest extends TestCase
             ->assertSeeInOrder(['Siti', 'Budi', 'Andi']);
     }
 
+    public function test_duplikat_default_urut_tanggal_cetak_terbaru(): void
+    {
+        $user = User::factory()->create();
+        $this->l3Import($user, [
+            ['Nomor Perforasi' => 'PF-DUP-001', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '05-10-2026'],
+            ['Nomor Perforasi' => 'PF-DUP-002', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '20-09-2026'],
+            ['Nomor Perforasi' => 'PF-DUP-003', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => '2026-01-15'],
+            ['Nomor Perforasi' => 'PF-DUP-004', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => ''],
+            ['Nomor Perforasi' => 'PF-DUP-005', 'Keterangan' => 'Duplikat', 'Tanggal Cetak' => 'bukan-tanggal'],
+        ]);
+
+        $this->actingAs($user)->get('/data/duplikat')
+            ->assertOk()
+            ->assertSeeInOrder(['2026-10-05', '2026-09-20', '2026-01-15']);
+    }
+
     public function test_hapus_satu_record(): void
     {
         $user = User::factory()->create();

@@ -22,6 +22,8 @@
                             :filter-value="'Duplikat'"
                             :filter-mode="'exact'"
                             :editable-columns="['Desa', 'Tanggal Cetak']"
+                            :sort-column="'Tanggal Cetak'"
+                            :sort-direction="'desc'"
                             :key="'duplikat'"
                         />
                     @endif

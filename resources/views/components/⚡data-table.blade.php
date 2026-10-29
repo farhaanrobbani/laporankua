@@ -49,7 +49,7 @@ new class extends Component
     /** @var string[] */
     public array $desaOptions = [];
 
-    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null, ?string $filterMode = null, ?array $editableColumns = null): void
+    public function mount(?int $importId = null, ?array $importIds = null, ?string $joinColumn = null, ?string $filterColumn = null, ?string $filterValue = null, ?string $filterMode = null, ?array $editableColumns = null, ?string $sortColumn = null, ?string $sortDirection = null): void
     {
         if ($importIds !== null && $importIds !== []) {
             $uniqueIds = array_values(array_unique($importIds));
@@ -95,6 +95,15 @@ new class extends Component
 
             if (in_array('Desa', $this->editableColumns, true)) {
                 $this->desaOptions = auth()->user()->daftar_desa ?? [];
+            }
+        }
+
+        if ($sortColumn !== null && $sortColumn !== '') {
+            $allowed = array_merge(['row_number'], $this->columns);
+
+            if (in_array($sortColumn, $allowed, true)) {
+                $this->sortColumn = $sortColumn;
+                $this->sortDirection = strtolower((string) $sortDirection) === 'desc' ? 'desc' : 'asc';
             }
         }
     }
@@ -344,15 +353,59 @@ new class extends Component
             $sortCol = $this->sortColumn;
             $dir = $this->sortDirection;
             usort($rows, function ($a, $b) use ($sortCol, $dir) {
-                $valA = $a[$sortCol] ?? '';
-                $valB = $b[$sortCol] ?? '';
-                $cmp = strcasecmp((string) $valA, (string) $valB);
-
-                return $dir === 'desc' ? -$cmp : $cmp;
+                return $this->compareMergeSortValues(
+                    $sortCol,
+                    $a[$sortCol] ?? '',
+                    $b[$sortCol] ?? '',
+                    $dir,
+                );
             });
         }
 
         return $rows;
+    }
+
+    private function compareMergeSortValues(string $column, mixed $a, mixed $b, string $direction): int
+    {
+        if (str_contains(mb_strtolower($column), 'tanggal')) {
+            $dateA = $this->parseSortDate($a);
+            $dateB = $this->parseSortDate($b);
+
+            if ($dateA === null && $dateB === null) {
+                return 0;
+            }
+
+            if ($dateA === null) {
+                return 1;
+            }
+
+            if ($dateB === null) {
+                return -1;
+            }
+
+            $cmp = $dateA <=> $dateB;
+
+            return $direction === 'desc' ? -$cmp : $cmp;
+        }
+
+        $cmp = strcasecmp((string) $a, (string) $b);
+
+        return $direction === 'desc' ? -$cmp : $cmp;
+    }
+
+    private function parseSortDate(mixed $value): ?int
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->getTimestamp();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function mergePaginatedRows(): array
