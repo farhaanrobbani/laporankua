@@ -22,6 +22,10 @@
                         <x-heroicon-o-table-cells class="w-4 h-4 me-1" />
                         {{ __('Data') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('bimwin.index')" :active="request()->routeIs('bimwin.*')">
+                        <x-heroicon-o-academic-cap class="w-4 h-4 me-1" />
+                        {{ __('BIMWIN') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
                         <x-heroicon-o-printer class="w-4 h-4 me-1" />
                         {{ __('Cetak NB') }}
@@ -93,6 +97,10 @@
             <x-responsive-nav-link :href="route('data.index')" :active="request()->routeIs('data.*')">
                 <x-heroicon-o-table-cells class="w-5 h-5 shrink-0" />
                 {{ __('Data') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('bimwin.index')" :active="request()->routeIs('bimwin.*')">
+                <x-heroicon-o-academic-cap class="w-5 h-5 shrink-0" />
+                {{ __('BIMWIN') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
                 <x-heroicon-o-printer class="w-5 h-5 shrink-0" />

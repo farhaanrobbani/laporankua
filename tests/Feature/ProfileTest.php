@@ -61,6 +61,31 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    public function test_profile_region_can_be_updated(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->patch(route('profile.update-desa'), [
+                'provinsi' => 'Jawa Timur',
+                'kecamatan' => 'Pasrepan',
+                'kota_kabupaten' => 'Kab. Pasuruan',
+                'daftar_desa' => "Desa A\nDesa B",
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.daftar-desa'));
+
+        $user->refresh();
+
+        $this->assertSame('Jawa Timur', $user->provinsi);
+        $this->assertSame('Pasrepan', $user->kecamatan);
+        $this->assertSame('Kab. Pasuruan', $user->kota_kabupaten);
+        $this->assertSame(['Desa A', 'Desa B'], $user->daftar_desa);
+    }
+
     public function test_user_can_delete_their_account(): void
     {
         $user = User::factory()->create();

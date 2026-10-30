@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BimwinController;
 use App\Http\Controllers\CetakNbController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataController;
@@ -34,6 +35,8 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/data/export', [DataController::class, 'export'])->name('data.export');
     Route::get('/data/cetak-nb', [DataController::class, 'cetakNb'])->name('data.cetak-nb');
     Route::get('/data/{record}', [DataController::class, 'show'])->name('data.show');
+
+    Route::get('/bimwin', [BimwinController::class, 'index'])->name('bimwin.index');
 
     Route::get('/cetak-nb', [CetakNbController::class, 'index'])->name('cetak-nb.index');
     Route::get('/cetak-nb/print', [CetakNbController::class, 'print'])->name('cetak-nb.print');

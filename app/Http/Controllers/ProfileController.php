@@ -102,16 +102,18 @@ class ProfileController extends Controller
     public function updateDesa(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'provinsi' => ['nullable', 'string', 'max:255'],
             'kecamatan' => ['nullable', 'string', 'max:255'],
             'kota_kabupaten' => ['nullable', 'string', 'max:255'],
             'daftar_desa' => ['nullable', 'string'],
         ]);
 
-        $desa = array_values(array_filter(array_map('trim', explode("\n", $validated['daftar_desa']))));
+        $desa = array_values(array_filter(array_map('trim', explode("\n", $validated['daftar_desa'] ?? ''))));
 
         $request->user()->fill([
-            'kecamatan' => $validated['kecamatan'] ?: null,
-            'kota_kabupaten' => $validated['kota_kabupaten'] ?: null,
+            'provinsi' => ($validated['provinsi'] ?? null) ?: null,
+            'kecamatan' => ($validated['kecamatan'] ?? null) ?: null,
+            'kota_kabupaten' => ($validated['kota_kabupaten'] ?? null) ?: null,
             'daftar_desa' => empty($desa) ? null : $desa,
         ])->save();
 
