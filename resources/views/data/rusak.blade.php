@@ -67,9 +67,10 @@
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
-                                        @foreach ($rusakStatusRows as $i => $row)
+                                        @php($no = $rusakStatusRows->firstItem() ?? 1)
+                                        @foreach ($rusakStatusRows as $row)
                                             <tr>
-                                                <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $i + 1 }}</td>
+                                                <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $no++ }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">JT {{ $row['number'] }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['tanggal'] }}</td>
                                                 <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ $row['status'] }}</td>
@@ -79,6 +80,7 @@
                                 </table>
                             </div>
                             <p class="mt-2 text-xs text-gray-400 dark:text-gray-500 sm:hidden">Geser ke samping untuk melihat kolom lainnya.</p>
+                            <div class="mt-4">{{ $rusakStatusRows->links() }}</div>
                         @endif
                     @endif
                 </div>

@@ -121,13 +121,26 @@ class DataController extends Controller
             ->values()
             ->all();
 
-        $page = max(1, $request->integer('page'));
+        $missingPage = max(1, $request->integer('page'));
         $missingRows = new LengthAwarePaginator(
-            array_slice($detected, ($page - 1) * 50, 50),
+            array_slice($detected, ($missingPage - 1) * 10, 10),
             count($detected),
-            50,
-            $page,
+            10,
+            $missingPage,
             ['path' => Paginator::resolveCurrentPath()]
+        );
+
+        $statusPage = max(1, $request->integer('status_page'));
+        $rusakStatusTotal = count($rusakStatusRows);
+        $rusakStatusPaginator = new LengthAwarePaginator(
+            array_slice($rusakStatusRows, ($statusPage - 1) * 10, 10),
+            $rusakStatusTotal,
+            10,
+            $statusPage,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'status_page',
+            ]
         );
 
         return view('data.rusak', [
@@ -135,8 +148,8 @@ class DataController extends Controller
             'missingRows' => $missingRows,
             'totalRusak' => count($detected),
             'prefixCount' => count(array_unique(array_column($detected, 'prefix'))),
-            'rusakStatusRows' => $rusakStatusRows,
-            'totalRusakStatus' => count($rusakStatusRows),
+            'rusakStatusRows' => $rusakStatusPaginator,
+            'totalRusakStatus' => $rusakStatusTotal,
         ]);
     }
 
@@ -221,9 +234,9 @@ class DataController extends Controller
 
         $page = max(1, $request->integer('page'));
         $rows = new LengthAwarePaginator(
-            array_slice($billings->all(), ($page - 1) * 50, 50),
+            array_slice($billings->all(), ($page - 1) * 10, 10),
             $billings->count(),
-            50,
+            10,
             $page,
             ['path' => Paginator::resolveCurrentPath()]
         );
@@ -349,9 +362,9 @@ class DataController extends Controller
 
         $page = max(1, $request->integer('page'));
         $paginator = new LengthAwarePaginator(
-            array_slice($rows->all(), ($page - 1) * 50, 50),
+            array_slice($rows->all(), ($page - 1) * 10, 10),
             $rows->count(),
-            50,
+            10,
             $page,
             ['path' => Paginator::resolveCurrentPath()]
         );

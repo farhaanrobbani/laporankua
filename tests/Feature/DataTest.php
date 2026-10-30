@@ -491,6 +491,36 @@ class DataTest extends TestCase
         $response->assertDontSee('Tidak ada nomor rusak terdeteksi');
     }
 
+    public function test_tab_rusak_memakai_10_baris_per_halaman_untuk_kedua_tabel(): void
+    {
+        $user = User::factory()->create();
+        $rows = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $rows[] = [
+                'Nomor Perforasi' => '1167410'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                'Status' => 'RUSAK',
+                'Tanggal Cetak' => '01-09-2026',
+            ];
+        }
+
+        $this->l3Import($user, $rows);
+
+        $this->actingAs($user)->get('/data/rusak')
+            ->assertOk()
+            ->assertViewHas('missingRows', fn ($paginator) => $paginator->perPage() === 10)
+            ->assertViewHas('rusakStatusRows', fn ($paginator) => $paginator->perPage() === 10)
+            ->assertSee('JT 116741001')
+            ->assertSee('JT 116741010')
+            ->assertDontSee('JT 116741011');
+
+        $this->actingAs($user)->get('/data/rusak?status_page=2')
+            ->assertOk()
+            ->assertSee('JT 116741011')
+            ->assertSee('JT 116741012')
+            ->assertDontSee('JT 116741001');
+    }
+
     public function test_tab_rusak_tanpa_import_l3_tampil_empty_state(): void
     {
         $user = User::factory()->create();
@@ -772,6 +802,25 @@ class DataTest extends TestCase
                 '820260801000001 - Warga Agustus',
                 '820260901000002 - Warga September',
             ]);
+    }
+
+    public function test_bukti_bayar_dan_surat_tugas_memakai_10_baris_per_halaman(): void
+    {
+        $user = User::factory()->create();
+        $this->pdkLuarImport($user, [
+            ['Nomor Daftar' => 'ND-1', 'Tanggal Nikah' => '01-09-2026'],
+        ]);
+        $this->simponiImport($user, [
+            ['No Billing' => '820260901000001', 'Tanggal Billing' => '2026-09-01', 'Nama Wajib Bayar' => 'Ahmad Fauzi', 'No Pendaftaran' => 'ND-1'],
+        ]);
+
+        $this->actingAs($user)->get('/data/bukti-bayar')
+            ->assertOk()
+            ->assertViewHas('billings', fn ($paginator) => $paginator->perPage() === 10);
+
+        $this->actingAs($user)->get('/data/surat-tugas')
+            ->assertOk()
+            ->assertViewHas('rows', fn ($paginator) => $paginator->perPage() === 10);
     }
 
     public function test_tab_surat_tugas_tanpa_pdk_tampil_empty_state(): void
