@@ -65,10 +65,17 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
+        $this->assertMatchesRegularExpression('/@version\s+1\.1\.1/', $content);
+        $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
+        $this->assertStringContainsString('recordingPageWindow.fetch', $content);
+        $this->assertStringContainsString('recordingPageWindow.XMLHttpRequest', $content);
+        $this->assertStringContainsString('pageWindow.location.href', $content);
         $this->assertStringContainsString('ENDPOINT_KEYS', $content);
         $this->assertStringContainsString('endpointsComplete', $content);
         $this->assertStringContainsString('Rekam endpoint', $content);
         $this->assertStringContainsString('SS_ALL', $content);
+        $this->assertStringNotContainsString('instanceof URLSearchParams', $content);
+        $this->assertStringNotContainsString('instanceof FormData', $content);
         $this->assertStringNotContainsString('e0c44a89-2a3a-461b-9430-143e761cca83', $content);
         $this->assertStringNotContainsString('e4cc7e4f-5670-4570-a6fc-0bbbeff00cee', $content);
         $this->assertStringNotContainsString('226a3ab8-ef4c-46e0-885d-5d93289eafec', $content);

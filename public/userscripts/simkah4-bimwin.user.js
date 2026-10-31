@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.0
+// @version      1.1.1
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        unsafeWindow
 // @run-at       document-idle
 // @noframes
 // ==/UserScript==
@@ -13,6 +14,7 @@
 (function () {
     'use strict';
 
+    var pageWindow = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
     var ENDPOINT_KEYS = ['cek', 'dialog', 'simpan', 'selesai'];
     var STORAGE_KEY = 'laporan-bimwin-config';
 
@@ -52,6 +54,7 @@
     var recording = false;
     var recordedEndpoints = emptyEndpoints();
     var recordedAppUrl = '';
+    var recordingPageWindow = null;
     var recordingFetch = null;
     var recordingXhrOpen = null;
     var recordingXhrSend = null;
@@ -189,7 +192,7 @@
 
     function cleanEndpoint(url) {
         try {
-            var parsed = new URL(url, window.location.href);
+            var parsed = new URL(url, pageWindow.location.href);
             if (parsed.protocol !== 'https:' || parsed.hostname !== 'simkah4.kemenag.go.id') return '';
             if (parsed.pathname === '' || parsed.pathname === '/') return '';
             parsed.search = '';
@@ -203,8 +206,8 @@
     function bodyToText(body) {
         if (!body) return '';
         if (typeof body === 'string') return body;
-        if (typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams) return body.toString();
-        if (typeof FormData !== 'undefined' && body instanceof FormData) {
+
+        if (typeof body.forEach === 'function' && typeof body.append === 'function') {
             var pairs = [];
             body.forEach(function (value, key) {
                 if (typeof value === 'string') {
@@ -213,6 +216,14 @@
             });
             return pairs.join('&');
         }
+
+        if (typeof body.toString === 'function') {
+            var text = body.toString();
+            if (text && text !== '[object Object]' && text !== '[object FormData]' && text !== '[object URLSearchParams]') {
+                return text;
+            }
+        }
+
         return '';
     }
 
@@ -229,7 +240,7 @@
 
         if (verb === 'GET') {
             try {
-                var parsed = new URL(url, window.location.href);
+                var parsed = new URL(url, pageWindow.location.href);
                 if (parsed.searchParams.has('no_daftar')) return 'dialog';
             } catch (e) {}
         }
@@ -258,38 +269,61 @@
     }
 
     function installRecorder() {
-        if (!recordingFetch) {
-            recordingFetch = window.fetch;
-            window.fetch = function (input, init) {
-                var originalFetch = recordingFetch;
-                try {
-                    var url = typeof input === 'string' ? input : (input && input.url);
-                    var method = (init && init.method) || (input && input.method) || 'GET';
-                    var body = init && init.body;
-                    recordRequest(method, url, body);
-                } catch (e) {}
-                return originalFetch.apply(this, arguments);
-            };
+        recordingPageWindow = pageWindow;
+        var installed = false;
+
+        try {
+            if (typeof recordingPageWindow.fetch === 'function') {
+                recordingFetch = recordingPageWindow.fetch;
+                recordingPageWindow.fetch = function (input, init) {
+                    var originalFetch = recordingFetch;
+                    try {
+                        var url = typeof input === 'string' ? input : (input && input.url);
+                        var method = (init && init.method) || (input && input.method) || 'GET';
+                        var body = init && init.body;
+                        recordRequest(method, url, body);
+                    } catch (e) {}
+                    return originalFetch.apply(this, arguments);
+                };
+                installed = true;
+            }
+        } catch (e) {
+            recordingFetch = null;
+            log('Gagal memasang perekam fetch halaman: ' + e.message, 'err');
         }
 
-        if (!recordingXhrOpen) {
-            recordingXhrOpen = XMLHttpRequest.prototype.open;
-            recordingXhrSend = XMLHttpRequest.prototype.send;
-            XMLHttpRequest.prototype.open = function (method, url) {
-                var originalOpen = recordingXhrOpen;
-                this.__bwRequest = { method: method, url: url };
-                return originalOpen.apply(this, arguments);
-            };
-            XMLHttpRequest.prototype.send = function (body) {
-                var originalSend = recordingXhrSend;
-                try {
-                    if (this.__bwRequest) {
-                        recordRequest(this.__bwRequest.method, this.__bwRequest.url, body);
-                    }
-                } catch (e) {}
-                return originalSend.apply(this, arguments);
-            };
+        try {
+            var Xhr = recordingPageWindow.XMLHttpRequest;
+            if (Xhr && Xhr.prototype) {
+                recordingXhrOpen = Xhr.prototype.open;
+                recordingXhrSend = Xhr.prototype.send;
+                Xhr.prototype.open = function (method, url) {
+                    var originalOpen = recordingXhrOpen;
+                    this.__bwRequest = { method: method, url: url };
+                    return originalOpen.apply(this, arguments);
+                };
+                Xhr.prototype.send = function (body) {
+                    var originalSend = recordingXhrSend;
+                    try {
+                        if (this.__bwRequest) {
+                            recordRequest(this.__bwRequest.method, this.__bwRequest.url, body);
+                        }
+                    } catch (e) {}
+                    return originalSend.apply(this, arguments);
+                };
+                installed = true;
+            }
+        } catch (e) {
+            recordingXhrOpen = null;
+            recordingXhrSend = null;
+            log('Gagal memasang perekam XHR halaman: ' + e.message, 'err');
         }
+
+        if (!installed) {
+            recordingPageWindow = null;
+        }
+
+        return installed;
     }
 
     function stopRecording(silent) {
@@ -299,18 +333,25 @@
         }
 
         recording = false;
-        if (recordingFetch) {
-            window.fetch = recordingFetch;
+        if (recordingPageWindow && recordingFetch) {
+            try {
+                recordingPageWindow.fetch = recordingFetch;
+            } catch (e) {}
             recordingFetch = null;
         }
-        if (recordingXhrOpen) {
-            XMLHttpRequest.prototype.open = recordingXhrOpen;
+        if (recordingPageWindow && recordingXhrOpen) {
+            try {
+                recordingPageWindow.XMLHttpRequest.prototype.open = recordingXhrOpen;
+            } catch (e) {}
             recordingXhrOpen = null;
         }
-        if (recordingXhrSend) {
-            XMLHttpRequest.prototype.send = recordingXhrSend;
+        if (recordingPageWindow && recordingXhrSend) {
+            try {
+                recordingPageWindow.XMLHttpRequest.prototype.send = recordingXhrSend;
+            } catch (e) {}
             recordingXhrSend = null;
         }
+        recordingPageWindow = null;
         renderEndpointStatus();
         if (!silent) log('Perekaman endpoint dihentikan.', 'info');
     }
@@ -332,12 +373,23 @@
             return;
         }
 
+        if (typeof unsafeWindow === 'undefined') {
+            log('unsafeWindow tidak tersedia; perekaman mungkin tidak menangkap request halaman.', 'warn');
+        }
+
         recordedEndpoints = emptyEndpoints();
         recording = true;
         storeConfig(readConfigFromPanel());
-        installRecorder();
+
+        if (!installRecorder()) {
+            recording = false;
+            renderEndpointStatus();
+            log('Perekam endpoint gagal dipasang. Isi endpoint manual di halaman Laporan.', 'err');
+            return;
+        }
+
         renderEndpointStatus();
-        log('Mulai merekam endpoint. Lakukan satu alur BIMWIN manual sampai 4/4.', 'info');
+        log('Perekam endpoint terpasang. Lakukan satu alur BIMWIN manual sampai 4/4.', 'info');
     }
 
     function copyText(text) {
@@ -377,12 +429,20 @@
         }
 
         var url = recordedAppUrl + '/bimwin#endpoints=' + encodeURIComponent(JSON.stringify(recordedEndpoints));
-        var opened = window.open(url, '_blank');
+        var opened = null;
+        try {
+            opened = pageWindow.open(url, '_blank');
+        } catch (e) {
+            log('Gagal membuka halaman Laporan: ' + e.message, 'err');
+            return;
+        }
         if (!opened) {
             log('Popup diblokir browser. Izinkan popup lalu coba lagi.', 'warn');
             return;
         }
-        opened.opener = null;
+        try {
+            opened.opener = null;
+        } catch (e) {}
         log('Membuka halaman Laporan untuk menyimpan endpoint.', 'ok');
     }
 
