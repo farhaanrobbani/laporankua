@@ -37,6 +37,7 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/data/{record}', [DataController::class, 'show'])->name('data.show');
 
     Route::get('/bimwin', [BimwinController::class, 'index'])->name('bimwin.index');
+    Route::patch('/bimwin/endpoints', [BimwinController::class, 'updateEndpoints'])->name('bimwin.update-endpoints');
 
     Route::get('/cetak-nb', [CetakNbController::class, 'index'])->name('cetak-nb.index');
     Route::get('/cetak-nb/print', [CetakNbController::class, 'print'])->name('cetak-nb.print');

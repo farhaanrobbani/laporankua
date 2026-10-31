@@ -65,7 +65,110 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertStringContainsString('ENDPOINTS', $content);
+        $this->assertStringContainsString('ENDPOINT_KEYS', $content);
+        $this->assertStringContainsString('endpointsComplete', $content);
+        $this->assertStringContainsString('Rekam endpoint', $content);
         $this->assertStringContainsString('SS_ALL', $content);
+        $this->assertStringNotContainsString('e0c44a89-2a3a-461b-9430-143e761cca83', $content);
+        $this->assertStringNotContainsString('e4cc7e4f-5670-4570-a6fc-0bbbeff00cee', $content);
+        $this->assertStringNotContainsString('226a3ab8-ef4c-46e0-885d-5d93289eafec', $content);
+        $this->assertStringNotContainsString('d3ee4e65-8f3e-4aee-af96-40594df03c8d', $content);
+    }
+
+    public function test_authenticated_user_can_save_complete_bimwin_endpoints(): void
+    {
+        $user = User::factory()->create();
+        $endpoints = $this->validEndpoints();
+
+        $this->actingAs($user)
+            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $endpoints])
+            ->assertRedirect(route('bimwin.index'))
+            ->assertSessionHas('status', 'Endpoint BIMWIN berhasil disimpan.');
+
+        $this->assertSame($endpoints, $user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_bimwin_endpoints_must_be_complete_or_empty(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patch(route('bimwin.update-endpoints'), [
+                'endpoints' => [
+                    'cek' => $this->validEndpoints()['cek'],
+                    'dialog' => '',
+                    'simpan' => '',
+                    'selesai' => '',
+                ],
+            ])
+            ->assertSessionHasErrors('endpoints');
+
+        $this->assertNull($user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_bimwin_endpoints_can_be_cleared(): void
+    {
+        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+
+        $this->actingAs($user)
+            ->patch(route('bimwin.update-endpoints'), [
+                'endpoints' => ['cek' => '', 'dialog' => '', 'simpan' => '', 'selesai' => ''],
+            ])
+            ->assertRedirect(route('bimwin.index'));
+
+        $this->assertNull($user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_bimwin_endpoint_must_use_simkah4_https_url(): void
+    {
+        $user = User::factory()->create();
+        $endpoints = $this->validEndpoints();
+        $endpoints['cek'] = 'https://example.com/endpoint';
+
+        $this->actingAs($user)
+            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $endpoints])
+            ->assertSessionHasErrors('endpoints.cek');
+
+        $this->assertNull($user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_bimwin_endpoint_rejects_query_and_fragment(): void
+    {
+        $user = User::factory()->create();
+        $endpoints = $this->validEndpoints();
+        $endpoints['dialog'] = 'https://simkah4.kemenag.go.id/endpoint?no_daftar=1';
+
+        $this->actingAs($user)
+            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $endpoints])
+            ->assertSessionHasErrors('endpoints.dialog');
+
+        $this->assertNull($user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_bimwin_page_outputs_endpoints_and_app_url_in_config(): void
+    {
+        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+
+        $response = $this->actingAs($user)
+            ->get(route('bimwin.index'))
+            ->assertOk()
+            ->assertSee('4/4 tersimpan')
+            ->assertSee($this->validEndpoints()['cek'], false)
+            ->assertSee('appUrl');
+
+        $this->assertStringContainsString(url('/'), $response->getContent());
+    }
+
+    /**
+     * @return array{cek: string, dialog: string, simpan: string, selesai: string}
+     */
+    private function validEndpoints(): array
+    {
+        return [
+            'cek' => 'https://simkah4.kemenag.go.id/endpoint-cek',
+            'dialog' => 'https://simkah4.kemenag.go.id/endpoint-dialog',
+            'simpan' => 'https://simkah4.kemenag.go.id/endpoint-simpan',
+            'selesai' => 'https://simkah4.kemenag.go.id/endpoint-selesai',
+        ];
     }
 }

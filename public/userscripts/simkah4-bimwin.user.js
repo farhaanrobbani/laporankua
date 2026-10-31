@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.0.0
-// @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Konfigurasi disalin dari aplikasi Laporan.
+// @version      1.1.0
+// @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -13,15 +13,31 @@
 (function () {
     'use strict';
 
-    var ENDPOINTS = {
-        cek: 'https://simkah4.kemenag.go.id/e0c44a89-2a3a-461b-9430-143e761cca83',
-        dialog: 'https://simkah4.kemenag.go.id/e4cc7e4f-5670-4570-a6fc-0bbbeff00cee',
-        simpan: 'https://simkah4.kemenag.go.id/226a3ab8-ef4c-46e0-885d-5d93289eafec',
-        selesai: 'https://simkah4.kemenag.go.id/d3ee4e65-8f3e-4aee-af96-40594df03c8d'
-    };
-
+    var ENDPOINT_KEYS = ['cek', 'dialog', 'simpan', 'selesai'];
     var STORAGE_KEY = 'laporan-bimwin-config';
+
+    function emptyEndpoints() {
+        return { cek: '', dialog: '', simpan: '', selesai: '' };
+    }
+
+    function normalizeEndpoints(value) {
+        var endpoints = emptyEndpoints();
+        if (!value || typeof value !== 'object' || Array.isArray(value)) return endpoints;
+        ENDPOINT_KEYS.forEach(function (key) {
+            endpoints[key] = typeof value[key] === 'string' ? value[key] : '';
+        });
+        return endpoints;
+    }
+
+    function endpointsComplete(endpoints) {
+        return ENDPOINT_KEYS.every(function (key) {
+            return typeof endpoints[key] === 'string' && endpoints[key] !== '';
+        });
+    }
+
     var DEFAULTS = {
+        appUrl: '',
+        endpoints: emptyEndpoints(),
         provinsi: '',
         kabkota: '',
         kecamatan: '',
@@ -33,6 +49,12 @@
 
     var running = false;
     var stopRequested = false;
+    var recording = false;
+    var recordedEndpoints = emptyEndpoints();
+    var recordedAppUrl = '';
+    var recordingFetch = null;
+    var recordingXhrOpen = null;
+    var recordingXhrSend = null;
 
     function sleep(ms) {
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
@@ -75,7 +97,9 @@
                 stored = null;
             }
         }
-        return Object.assign({}, DEFAULTS, stored || {});
+        var merged = Object.assign({}, DEFAULTS, stored || {});
+        merged.endpoints = normalizeEndpoints(merged.endpoints);
+        return merged;
     }
 
     function storeConfig(config) {
@@ -112,6 +136,8 @@
 
     function readConfigFromPanel() {
         return {
+            appUrl: recordedAppUrl,
+            endpoints: normalizeEndpoints(recordedEndpoints),
             provinsi: (panelElement('bw-provinsi')?.value || '').trim(),
             kabkota: (panelElement('bw-kabkota')?.value || '').trim(),
             kecamatan: (panelElement('bw-kecamatan')?.value || '').trim(),
@@ -124,6 +150,10 @@
 
     function writeConfigToPanel(config) {
         var merged = Object.assign({}, DEFAULTS, config || {});
+        merged.endpoints = normalizeEndpoints(merged.endpoints);
+        recordedAppUrl = typeof merged.appUrl === 'string' ? merged.appUrl.replace(/\/+$/, '') : '';
+        recordedEndpoints = merged.endpoints;
+        renderEndpointStatus();
         if (panelElement('bw-provinsi')) panelElement('bw-provinsi').value = merged.provinsi || '';
         if (panelElement('bw-kabkota')) panelElement('bw-kabkota').value = merged.kabkota || '';
         if (panelElement('bw-kecamatan')) panelElement('bw-kecamatan').value = merged.kecamatan || '';
@@ -131,6 +161,238 @@
         if (panelElement('bw-fas-istri')) panelElement('bw-fas-istri').value = merged.fasilitatorIstri || '';
         if (panelElement('bw-max-coba')) panelElement('bw-max-coba').value = clampInt(merged.maxCoba, 1, 30, 10);
         if (panelElement('bw-redam')) panelElement('bw-redam').checked = !!merged.redamNotif;
+    }
+
+    function renderEndpointStatus() {
+        var count = ENDPOINT_KEYS.filter(function (key) {
+            return recordedEndpoints[key] !== '';
+        }).length;
+        var status = panelElement('bw-endpoint-status');
+        if (status) {
+            status.textContent = count + '/4';
+            status.style.color = count === 4 ? '#047857' : '#b45309';
+        }
+        var list = panelElement('bw-endpoint-list');
+        if (list) {
+            list.textContent = ENDPOINT_KEYS.map(function (key) {
+                return key + ': ' + (recordedEndpoints[key] ? 'OK' : '—');
+            }).join(' · ');
+        }
+        var complete = endpointsComplete(recordedEndpoints);
+        ['bw-send-endpoints', 'bw-copy-endpoints'].forEach(function (id) {
+            var button = panelElement(id);
+            if (button) button.disabled = !complete;
+        });
+        var recordButton = panelElement('bw-record');
+        if (recordButton) recordButton.textContent = recording ? 'Stop rekam' : 'Rekam endpoint';
+    }
+
+    function cleanEndpoint(url) {
+        try {
+            var parsed = new URL(url, window.location.href);
+            if (parsed.protocol !== 'https:' || parsed.hostname !== 'simkah4.kemenag.go.id') return '';
+            if (parsed.pathname === '' || parsed.pathname === '/') return '';
+            parsed.search = '';
+            parsed.hash = '';
+            return parsed.href;
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function bodyToText(body) {
+        if (!body) return '';
+        if (typeof body === 'string') return body;
+        if (typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams) return body.toString();
+        if (typeof FormData !== 'undefined' && body instanceof FormData) {
+            var pairs = [];
+            body.forEach(function (value, key) {
+                if (typeof value === 'string') {
+                    pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+                }
+            });
+            return pairs.join('&');
+        }
+        return '';
+    }
+
+    function classifyRequest(method, url, body) {
+        var verb = String(method || 'GET').toUpperCase();
+        var text = bodyToText(body);
+
+        if (verb === 'POST') {
+            if (text.includes('value=SS_ALL')) return 'selesai';
+            if (text.includes('catin=') && text.includes('no_daftar=')) return 'cek';
+            if (/id_(provinsi|kabkota|kecamatan|jadwal)_(suami|istri)=/.test(text)) return 'simpan';
+            return null;
+        }
+
+        if (verb === 'GET') {
+            try {
+                var parsed = new URL(url, window.location.href);
+                if (parsed.searchParams.has('no_daftar')) return 'dialog';
+            } catch (e) {}
+        }
+
+        return null;
+    }
+
+    function recordRequest(method, url, body) {
+        if (!recording) return;
+
+        var key = classifyRequest(method, url, body);
+        if (!key) return;
+
+        var endpoint = cleanEndpoint(url);
+        if (!endpoint || recordedEndpoints[key] === endpoint) return;
+
+        recordedEndpoints[key] = endpoint;
+        renderEndpointStatus();
+        storeConfig(readConfigFromPanel());
+        log('Endpoint ' + key + ' terekam.', 'ok');
+
+        if (endpointsComplete(recordedEndpoints)) {
+            stopRecording(true);
+            log('4/4 endpoint lengkap. Klik Kirim ke Laporan.', 'ok');
+        }
+    }
+
+    function installRecorder() {
+        if (!recordingFetch) {
+            recordingFetch = window.fetch;
+            window.fetch = function (input, init) {
+                var originalFetch = recordingFetch;
+                try {
+                    var url = typeof input === 'string' ? input : (input && input.url);
+                    var method = (init && init.method) || (input && input.method) || 'GET';
+                    var body = init && init.body;
+                    recordRequest(method, url, body);
+                } catch (e) {}
+                return originalFetch.apply(this, arguments);
+            };
+        }
+
+        if (!recordingXhrOpen) {
+            recordingXhrOpen = XMLHttpRequest.prototype.open;
+            recordingXhrSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function (method, url) {
+                var originalOpen = recordingXhrOpen;
+                this.__bwRequest = { method: method, url: url };
+                return originalOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function (body) {
+                var originalSend = recordingXhrSend;
+                try {
+                    if (this.__bwRequest) {
+                        recordRequest(this.__bwRequest.method, this.__bwRequest.url, body);
+                    }
+                } catch (e) {}
+                return originalSend.apply(this, arguments);
+            };
+        }
+    }
+
+    function stopRecording(silent) {
+        if (!recording) {
+            renderEndpointStatus();
+            return;
+        }
+
+        recording = false;
+        if (recordingFetch) {
+            window.fetch = recordingFetch;
+            recordingFetch = null;
+        }
+        if (recordingXhrOpen) {
+            XMLHttpRequest.prototype.open = recordingXhrOpen;
+            recordingXhrOpen = null;
+        }
+        if (recordingXhrSend) {
+            XMLHttpRequest.prototype.send = recordingXhrSend;
+            recordingXhrSend = null;
+        }
+        renderEndpointStatus();
+        if (!silent) log('Perekaman endpoint dihentikan.', 'info');
+    }
+
+    function startRecording() {
+        if (recording) {
+            stopRecording(false);
+            return;
+        }
+        if (running) {
+            log('Hentikan proses BIMWIN dulu sebelum merekam endpoint.', 'err');
+            return;
+        }
+
+        var hasAny = ENDPOINT_KEYS.some(function (key) {
+            return recordedEndpoints[key] !== '';
+        });
+        if (hasAny && !window.confirm('Kosongkan endpoint terekam dan mulai rekam ulang?')) {
+            return;
+        }
+
+        recordedEndpoints = emptyEndpoints();
+        recording = true;
+        storeConfig(readConfigFromPanel());
+        installRecorder();
+        renderEndpointStatus();
+        log('Mulai merekam endpoint. Lakukan satu alur BIMWIN manual sampai 4/4.', 'info');
+    }
+
+    function copyText(text) {
+        return new Promise(function (resolve) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function () {
+                    resolve(true);
+                }, function () {
+                    resolve(false);
+                });
+                return;
+            }
+
+            var area = document.createElement('textarea');
+            area.value = text;
+            area.style.position = 'fixed';
+            area.style.left = '-9999px';
+            document.body.appendChild(area);
+            area.select();
+            var ok = false;
+            try {
+                ok = document.execCommand('copy');
+            } catch (e) {}
+            document.body.removeChild(area);
+            resolve(ok);
+        });
+    }
+
+    async function sendEndpointsToLaporan() {
+        if (!endpointsComplete(recordedEndpoints)) {
+            log('Endpoint belum lengkap. Rekam sampai 4/4.', 'err');
+            return;
+        }
+        if (!recordedAppUrl) {
+            log('appUrl belum ada. Muat kode konfigurasi dari Laporan.', 'err');
+            return;
+        }
+
+        var url = recordedAppUrl + '/bimwin#endpoints=' + encodeURIComponent(JSON.stringify(recordedEndpoints));
+        var opened = window.open(url, '_blank');
+        if (!opened) {
+            log('Popup diblokir browser. Izinkan popup lalu coba lagi.', 'warn');
+            return;
+        }
+        opened.opener = null;
+        log('Membuka halaman Laporan untuk menyimpan endpoint.', 'ok');
+    }
+
+    async function copyEndpoints() {
+        if (!endpointsComplete(recordedEndpoints)) {
+            log('Endpoint belum lengkap. Rekam sampai 4/4.', 'err');
+            return;
+        }
+        var ok = await copyText(JSON.stringify(recordedEndpoints, null, 2));
+        log(ok ? 'JSON endpoint tersalin.' : 'Gagal menyalin JSON endpoint.', ok ? 'ok' : 'err');
     }
 
     function panelHtml() {
@@ -167,6 +429,19 @@
             +     '<textarea id="bw-config-code" rows="4" placeholder=\'{"provinsi":"JAWA TIMUR","kabkota":"KAB. PASURUAN","kecamatan":"PASREPAN"}\' style="width:100%;box-sizing:border-box;margin-top:4px;font-size:11px;padding:4px;"></textarea>'
             +     '<button id="bw-load-code" style="margin-top:4px;padding:4px 8px;font-size:11px;cursor:pointer;">Muat</button>'
             +   '</details>'
+            +   '<div style="border:1px dashed #4f46e5;border-radius:4px;padding:6px;margin:6px 0;">'
+            +     '<div style="display:flex;justify-content:space-between;align-items:center;">'
+            +       '<strong style="font-size:11px;">Endpoint akun ini</strong>'
+            +       '<span id="bw-endpoint-status" style="font-size:11px;font-weight:bold;color:#b45309;">0/4</span>'
+            +     '</div>'
+            +     '<div id="bw-endpoint-list" style="font-size:10px;color:#555;margin-top:2px;">cek: — · dialog: — · simpan: — · selesai: —</div>'
+            +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'
+            +       '<button id="bw-record" style="padding:3px 6px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
+            +       '<button id="bw-send-endpoints" disabled style="padding:3px 6px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
+            +       '<button id="bw-copy-endpoints" disabled style="padding:3px 6px;font-size:10px;cursor:pointer;">Salin JSON</button>'
+            +     '</div>'
+            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Rekam dengan satu alur BIMWIN manual. Simpan/selesai menulis ke SIMKAH4.</p>'
+            +   '</div>'
             +   '<div style="display:flex;gap:6px;margin:6px 0;">'
             +     '<button id="bw-start" style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;background:#4f46e5;color:#fff;border:none;border-radius:4px;">Mulai</button>'
             +     '<button id="bw-stop" disabled style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
@@ -223,6 +498,9 @@
         panelElement('bw-clear-log').addEventListener('click', function () {
             panelElement('bw-log').textContent = '';
         });
+        panelElement('bw-record').addEventListener('click', startRecording);
+        panelElement('bw-send-endpoints').addEventListener('click', sendEndpointsToLaporan);
+        panelElement('bw-copy-endpoints').addEventListener('click', copyEndpoints);
 
         writeConfigToPanel(loadStoredConfig());
     }
@@ -260,15 +538,15 @@
         }
     }
 
-    async function cekSatuCatin(noDaftar, catin) {
+    async function cekSatuCatin(noDaftar, catin, endpoints) {
         var body = new URLSearchParams();
         body.append('no_daftar', noDaftar);
         body.append('catin', catin);
-        var result = await fetchJson(ENDPOINTS.cek, body);
+        var result = await fetchJson(endpoints.cek, body);
         return !!result.success;
     }
 
-    async function cekBelum() {
+    async function cekBelum(endpoints) {
         if (!csrfToken()) throw new Error('CSRF token SIMKAH4 tidak ditemukan. Muat ulang halaman.');
 
         var grid = document.querySelector('#grid, #gridPencatatan');
@@ -306,8 +584,8 @@
 
             try {
                 var status = {
-                    SUAMI: await cekSatuCatin(noDaftar, 'SUAMI'),
-                    ISTRI: await cekSatuCatin(noDaftar, 'ISTRI')
+                    SUAMI: await cekSatuCatin(noDaftar, 'SUAMI', endpoints),
+                    ISTRI: await cekSatuCatin(noDaftar, 'ISTRI', endpoints)
                 };
                 var belum = [];
                 if (!status.SUAMI) belum.push('suami');
@@ -352,12 +630,12 @@
         });
     }
 
-    function jqueryAjaxForm(formElement) {
+    function jqueryAjaxForm(formElement, endpoint) {
         var formData = new FormData(formElement);
         return new Promise(function (resolve, reject) {
             window.jQuery.ajax({
                 type: 'POST',
-                url: ENDPOINTS.simpan,
+                url: endpoint,
                 enctype: 'multipart/form-data',
                 cache: false,
                 contentType: false,
@@ -373,7 +651,7 @@
         });
     }
 
-    async function bukaDialog(noDaftar) {
+    async function bukaDialog(noDaftar, endpoint) {
         if (!window.jQuery) throw new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.');
 
         window.jQuery('#bimwin-auto-wrap').remove();
@@ -381,7 +659,7 @@
             throw new Error('Dialog BIMWIN lain masih terbuka. Tutup dulu lalu jalankan lagi.');
         }
 
-        var html = await jqueryGet(ENDPOINTS.dialog, { no_daftar: noDaftar });
+        var html = await jqueryGet(endpoint, { no_daftar: noDaftar });
         var wrap = window.jQuery('<div id="bimwin-auto-wrap" style="position:fixed;left:-99999px;top:0;width:1100px"></div>').appendTo('body');
         wrap.html(typeof html === 'string' ? html : (html.html || html.data || JSON.stringify(html)));
 
@@ -437,7 +715,7 @@
     }
 
     async function prosesBimwin(noDaftar, catinBelum, config, markComplete) {
-        if (!await bukaDialog(noDaftar)) {
+        if (!await bukaDialog(noDaftar, config.endpoints.dialog)) {
             throw new Error('Dialog BIMWIN gagal dibuka.');
         }
 
@@ -504,7 +782,7 @@
             for (var attempt = 0; attempt < config.maxCoba; attempt++) {
                 if (stopRequested) throw new Error('Dihentikan oleh pengguna sebelum menyimpan.');
 
-                var result = await jqueryAjaxForm(window.jQuery('#bimwin')[0]);
+                var result = await jqueryAjaxForm(window.jQuery('#bimwin')[0], config.endpoints.simpan);
                 log('  simpan percobaan ' + (attempt + 1) + ': ' + JSON.stringify(result), 'info');
 
                 if (result && Number(result.code) === 200) {
@@ -546,7 +824,7 @@
                         log('  id_jadwal kosong untuk ' + peranSelesai + ', lewati tandai selesai.', 'warn');
                         continue;
                     }
-                    var selesaiResult = await jqueryPost(ENDPOINTS.selesai, {
+                    var selesaiResult = await jqueryPost(config.endpoints.selesai, {
                         id_jadwal: idJadwal,
                         no_daftar: noDaftarForm,
                         catin: peranSelesai.toUpperCase(),
@@ -577,6 +855,14 @@
         if (running) return;
 
         var config = readConfigFromPanel();
+        if (recording) {
+            log('Hentikan perekaman endpoint dulu sebelum menjalankan BIMWIN.', 'err');
+            return;
+        }
+        if (!endpointsComplete(config.endpoints)) {
+            log('Endpoint BIMWIN belum lengkap. Rekam sampai 4/4 lalu simpan di Laporan.', 'err');
+            return;
+        }
         if (!config.provinsi || !config.kabkota || !config.kecamatan) {
             log('Provinsi, kabupaten/kota, dan kecamatan wajib diisi.', 'err');
             return;
@@ -606,7 +892,7 @@
         log('Mulai mode ' + mode + ' untuk ' + config.provinsi + ' / ' + config.kabkota + ' / ' + config.kecamatan, 'info');
 
         try {
-            var hasil = await cekBelum();
+            var hasil = await cekBelum(config.endpoints);
             if (stopRequested) {
                 log('Dihentikan setelah pengecekan.', 'warn');
                 return;
