@@ -66,6 +66,9 @@ new class extends Component
 
     public ?int $selectedTemplateId = null;
 
+    /** @var array{template_name: string, description: string|null, label: string, keyword: string, example: string, note: string}|null */
+    public ?array $importGuide = null;
+
     public ?array $tableLayout = null;
 
     /** @var array<int, array{prefix: string, label: string, keluar_jumlah: int, min_porp: string, max_porp: string}> */
@@ -156,6 +159,11 @@ new class extends Component
         $this->updatedMergeImportIds();
     }
 
+    public function updatedSelectedTemplateId(): void
+    {
+        $this->applySelectedTemplate();
+    }
+
     public function loadDefaultTemplate(): void
     {
         $template = ReportTemplate::where('is_global', true)
@@ -167,12 +175,15 @@ new class extends Component
             return;
         }
 
-        $this->applyTemplateConfig($template);
+        $this->selectedTemplateId = $template->id;
+        $this->applySelectedTemplate();
     }
 
     public function applySelectedTemplate(): void
     {
         if (! $this->selectedTemplateId) {
+            $this->importGuide = null;
+
             return;
         }
 
@@ -181,10 +192,84 @@ new class extends Component
             ->find($this->selectedTemplateId);
 
         if (! $template) {
+            $this->importGuide = null;
+
             return;
         }
 
+        $this->importGuide = $this->importGuideForTemplate($template);
         $this->applyTemplateConfig($template);
+    }
+
+    public function isImportRecommended(string $tableName): bool
+    {
+        if (! $this->importGuide) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower($tableName), $this->importGuide['keyword']);
+    }
+
+    private function importGuideForTemplate(ReportTemplate $template): array
+    {
+        $type = $template->layout_json['table_layout']['type'] ?? null;
+        $name = mb_strtolower($template->name);
+
+        $guide = match (true) {
+            $type === 'grouped_detail' || str_contains($name, 'l4') => [
+                'label' => 'Laporan Simponi',
+                'keyword' => 'simponi',
+                'example' => 'laporan-simponi-08-2026.xlsx',
+                'note' => 'File setoran simponi yang memuat data setoran per akad.',
+            ],
+            $type === 'formulir' || $type === 'laporan_na' || str_contains($name, 'l3') || str_contains($name, 'laporan na') => [
+                'label' => 'Laporan Model L3',
+                'keyword' => 'model l3',
+                'example' => 'laporan-model-l3-08-2026.xlsx',
+                'note' => 'File laporan model L3 yang memuat data formulir, perforasi, dan keterangan.',
+            ],
+            $type === 'laporan_nb' || str_contains($name, 'nb') => [
+                'label' => 'Laporan Pendaftaran Nikah',
+                'keyword' => 'pendaftaran nikah',
+                'example' => 'laporan-pendaftaran-nikah-08-2026.xlsx',
+                'note' => 'File pendaftaran nikah yang memuat data calon pengantin dan status wali.',
+            ],
+            $type === 'rekap_nr1' || str_contains($name, 'nr1') => [
+                'label' => 'Laporan Pendaftaran Nikah',
+                'keyword' => 'pendaftaran nikah',
+                'example' => 'laporan-pendaftaran-nikah-08-2026.xlsx',
+                'note' => 'Data peristiwa nikah dipakai otomatis untuk melengkapi kelurahan.',
+            ],
+            $type === 'laporan_l1' || str_contains($name, 'l1') => [
+                'label' => 'Laporan Peristiwa Nikah',
+                'keyword' => 'peristiwa nikah',
+                'example' => 'laporan-peristiwa-nikah-08-2026.xlsx',
+                'note' => 'File peristiwa nikah. Data pendaftaran nikah dan model L3 dipakai otomatis bila tersedia.',
+            ],
+            $type === 'rekap_ntcr' || str_contains($name, 'ntcr') => [
+                'label' => 'Laporan Peristiwa Nikah',
+                'keyword' => 'peristiwa nikah',
+                'example' => 'laporan-peristiwa-nikah-08-2026.xlsx',
+                'note' => 'File peristiwa nikah. Data pendaftaran nikah dan simponi dipakai otomatis bila tersedia.',
+            ],
+            $type === 'laporan_n' || $name === 'laporan n' => [
+                'label' => 'Laporan Peristiwa Nikah',
+                'keyword' => 'peristiwa nikah',
+                'example' => 'laporan-peristiwa-nikah-08-2026.xlsx',
+                'note' => 'File peristiwa nikah.',
+            ],
+            default => [
+                'label' => 'Laporan Peristiwa Nikah',
+                'keyword' => 'peristiwa nikah',
+                'example' => 'laporan-peristiwa-nikah-08-2026.xlsx',
+                'note' => 'Template ini memakai data peristiwa nikah.',
+            ],
+        };
+
+        $guide['template_name'] = $template->name;
+        $guide['description'] = $template->description;
+
+        return $guide;
     }
 
     private function applyTemplateConfig(ReportTemplate $template): void
@@ -1230,81 +1315,127 @@ new class extends Component
 ?>
 
 <div class="space-y-6">
-    {{-- 1. Sumber data --}}
+    {{-- 1. Template & sumber data --}}
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">1. Sumber Data</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Pilih file import yang akan dijadikan laporan.</p>
+        <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">1. Template &amp; Sumber Data</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Pilih template laporan terlebih dahulu, lalu pilih file import yang sesuai.</p>
 
-        {{-- Mode Toggle --}}
-        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit mb-4">
-            <button type="button" wire:click="$set('isMergeMode', false)"
-                class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                Single Import
-            </button>
-            <button type="button" wire:click="$set('isMergeMode', true)"
-                class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
-                Gabung Data
-            </button>
-        </div>
-
-        @if ($this->isMergeMode)
-            {{-- Merge Mode --}}
+        @if (! empty($this->globalTemplates))
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih file import (minimal 2)</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    @foreach ($this->imports as $import)
-                        @php $allChecked = count(array_intersect($import['import_ids'], $this->mergeImportIds)) === count($import['import_ids']); @endphp
-                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500">
-                            <input type="checkbox" wire:click="toggleImportGroup({{ json_encode($import['import_ids']) }})" @checked($allChecked) class="rounded text-blue-600 dark:text-blue-400" />
-                            {{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)
-                        </label>
-                    @endforeach
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template Laporan</label>
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <select wire:model.live="selectedTemplateId" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-auto">
+                        <option value="">-- Pilih Template --</option>
+                        @foreach ($this->globalTemplates as $tpl)
+                            <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }} ({{ strtoupper($tpl['output_format']) }})</option>
+                        @endforeach
+                    </select>
+                    @if ($this->hasDefaultTemplate)
+                        <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium">Muat template default</button>
+                    @endif
                 </div>
 
-                @if (count($this->mergeImportIds) >= 2)
-                    <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-md">
-                        <p class="text-sm text-blue-700 dark:text-blue-300">
-                            <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
-                            Bergabung otomatis berdasarkan kolom: <strong>{{ implode(' + ', $this->autoJoinColumns) }}</strong>
-                        </p>
-                        @if (empty($this->autoJoinColumns))
-                            <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Tidak ada kolom yang sama antara file yang dipilih.</p>
+                @if ($this->importGuide)
+                    <div class="mt-3 rounded-md border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/50">
+                        <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">{{ $this->importGuide['template_name'] }}</p>
+                        @if ($this->importGuide['description'])
+                            <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">{{ $this->importGuide['description'] }}</p>
                         @endif
+                        <p class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                            File yang disarankan: <strong>{{ $this->importGuide['label'] }}</strong>
+                        </p>
+                        <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                            Contoh nama file: <code class="rounded bg-blue-100 px-1 py-0.5 dark:bg-blue-900">{{ $this->importGuide['example'] }}</code>
+                        </p>
+                        <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">{{ $this->importGuide['note'] }}</p>
                     </div>
+                @else
+                    <p class="mt-3 text-sm text-amber-600 dark:text-amber-400">Pilih template di atas untuk melihat panduan file import.</p>
                 @endif
             </div>
         @else
-            {{-- Single Mode --}}
-            @if (empty($this->imports))
-                <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 dark:text-blue-400 font-medium">Upload Excel dulu</a>.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada template laporan aktif. Hubungi admin untuk mengaktifkan template.</p>
+        @endif
+
+        <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Sumber Data</h4>
+            @if (! $this->selectedTemplateId)
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pilih template terlebih dahulu. Setelah itu daftar file import akan muncul di sini.</p>
             @else
-                <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
-                    <select wire:model.live="importId" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-auto">
-                        <option value="">-- Pilih file import --</option>
-                        @foreach ($this->imports as $import)
-                            <option value="{{ $import['id'] }}">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)</option>
-                        @endforeach
-                    </select>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Pilih file import yang sesuai dengan panduan di atas.</p>
+
+                {{-- Mode Toggle --}}
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit mb-4">
+                    <button type="button" wire:click="$set('isMergeMode', false)"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition {{ ! $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
+                        Single Import
+                    </button>
+                    <button type="button" wire:click="$set('isMergeMode', true)"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition {{ $this->isMergeMode ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100' }}">
+                        Gabung Data
+                    </button>
                 </div>
-            @endif
-        @endif
-        @if (! empty($this->globalTemplates))
-            <div class="mt-3 flex items-center gap-3">
-                <select wire:model.live="selectedTemplateId" wire:change="applySelectedTemplate" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-auto">
-                    <option value="">-- Pilih Template --</option>
-                    @foreach ($this->globalTemplates as $tpl)
-                        <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }} ({{ strtoupper($tpl['output_format']) }})</option>
-                    @endforeach
-                </select>
-                @if ($this->hasDefaultTemplate)
-                    <button type="button" wire:click="loadDefaultTemplate" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium">Muat template default</button>
+
+                @if ($this->isMergeMode)
+                    {{-- Merge Mode --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih file import (minimal 2)</label>
+                        @if (empty($this->imports))
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 dark:text-blue-400 font-medium">Upload Excel dulu</a>.</p>
+                        @else
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach ($this->imports as $import)
+                                    @php $allChecked = count(array_intersect($import['import_ids'], $this->mergeImportIds)) === count($import['import_ids']); @endphp
+                                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500">
+                                        <input type="checkbox" wire:click="toggleImportGroup({{ json_encode($import['import_ids']) }})" @checked($allChecked) class="rounded text-blue-600 dark:text-blue-400" />
+                                        <span class="flex-1">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris)</span>
+                                        @if ($this->isImportRecommended($import['table_name']))
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">Disarankan</span>
+                                        @endif
+                                    </label>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if (count($this->mergeImportIds) >= 2)
+                            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-md">
+                                <p class="text-sm text-blue-700 dark:text-blue-300">
+                                    <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                                    Bergabung otomatis berdasarkan kolom: <strong>{{ implode(' + ', $this->autoJoinColumns) }}</strong>
+                                </p>
+                                @if (empty($this->autoJoinColumns))
+                                    <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Tidak ada kolom yang sama antara file yang dipilih.</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    {{-- Single Mode --}}
+                    @if (empty($this->imports))
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada data import yang berhasil. <a href="{{ route('imports.create') }}" class="text-blue-600 dark:text-blue-400 font-medium">Upload Excel dulu</a>.</p>
+                    @else
+                        <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <select wire:model.live="importId" class="border-gray-300 dark:border-gray-600 rounded-md text-sm w-full sm:w-auto">
+                                <option value="">-- Pilih file import --</option>
+                                @foreach ($this->imports as $import)
+                                    <option value="{{ $import['id'] }}">{{ $import['table_name'] }} ({{ number_format($import['total_rows']) }} baris){{ $this->isImportRecommended($import['table_name']) ? ' - Disarankan' : '' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
                 @endif
-            </div>
-        @endif
-        @error('importId') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+
+                @if ($this->importGuide && ! empty($this->imports) && ! collect($this->imports)->contains(fn ($import) => $this->isImportRecommended($import['table_name'])))
+                    <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                        File {{ $this->importGuide['label'] }} belum tersedia. <a href="{{ route('imports.create') }}" class="font-medium underline">Upload Excel dulu</a>.
+                    </p>
+                @endif
+                @error('importId') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+            @endif
+        </div>
     </div>
 
-    @if (($this->isMergeMode && count($this->mergeImportIds) >= 2 && ! empty($this->autoJoinColumns)) || (! $this->isMergeMode && $this->importId && ! empty($this->columns)))
+    @if ($this->selectedTemplateId && (($this->isMergeMode && count($this->mergeImportIds) >= 2 && ! empty($this->autoJoinColumns)) || (! $this->isMergeMode && $this->importId && ! empty($this->columns))))
         {{-- 2. Filter & Urutan --}}
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
             <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">2. Filter &amp; Urutan</h3>

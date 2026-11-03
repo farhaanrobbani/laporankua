@@ -85,7 +85,8 @@ class TemplateTest extends TestCase
         $user = User::factory()->create();
         $import = $this->importWithRows($user);
 
-        ReportTemplate::factory()->for($this->admin)->create([
+        $template = ReportTemplate::factory()->for($this->admin)->create([
+            'name' => 'Template Default',
             'output_format' => 'excel',
             'filters_json' => ['search' => 'Budi', 'filter_column' => null, 'filter_value' => null],
             'is_default' => true,
@@ -96,7 +97,81 @@ class TemplateTest extends TestCase
             ->test('report-builder')
             ->set('importId', $import->id)
             ->call('loadDefaultTemplate')
+            ->assertSet('selectedTemplateId', $template->id)
             ->assertSet('format', 'excel')
-            ->assertSet('search', 'Budi');
+            ->assertSet('search', 'Budi')
+            ->assertSee('Laporan Peristiwa Nikah');
+    }
+
+    public function test_builder_meminta_template_sebelum_memilih_import(): void
+    {
+        $user = User::factory()->create();
+        $this->importWithRows($user);
+
+        ReportTemplate::factory()->for($this->admin)->create([
+            'name' => 'Template Uji',
+            'is_global' => true,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('report-builder')
+            ->assertSee('Pilih template terlebih dahulu')
+            ->assertDontSee('-- Pilih file import --');
+    }
+
+    public function test_panduan_template_nr1_mengarah_ke_pendaftaran_nikah(): void
+    {
+        $user = User::factory()->create();
+        Import::factory()->for($user)->create([
+            'status' => 'success',
+            'table_name' => 'laporan pendaftaran nikah',
+        ]);
+        $template = ReportTemplate::factory()->for($this->admin)->create([
+            'name' => 'REKAP NR1',
+            'is_global' => true,
+            'layout_json' => ['orientation' => 'portrait', 'table_layout' => ['type' => 'rekap_nr1']],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('report-builder')
+            ->set('selectedTemplateId', $template->id)
+            ->call('applySelectedTemplate')
+            ->assertSee('Laporan Pendaftaran Nikah')
+            ->assertSee('laporan-pendaftaran-nikah-08-2026.xlsx')
+            ->assertSee('Disarankan');
+    }
+
+    public function test_panduan_template_l3_mengarah_ke_model_l3(): void
+    {
+        $user = User::factory()->create();
+        $template = ReportTemplate::factory()->for($this->admin)->create([
+            'name' => 'Laporan L3',
+            'is_global' => true,
+            'layout_json' => ['orientation' => 'landscape', 'table_layout' => ['type' => 'formulir']],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('report-builder')
+            ->set('selectedTemplateId', $template->id)
+            ->call('applySelectedTemplate')
+            ->assertSee('Laporan Model L3')
+            ->assertSee('laporan-model-l3-08-2026.xlsx');
+    }
+
+    public function test_panduan_template_l4_mengarah_ke_simponi(): void
+    {
+        $user = User::factory()->create();
+        $template = ReportTemplate::factory()->for($this->admin)->create([
+            'name' => 'Laporan L4 Simponi',
+            'is_global' => true,
+            'layout_json' => ['orientation' => 'portrait', 'table_layout' => ['type' => 'grouped_detail']],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('report-builder')
+            ->set('selectedTemplateId', $template->id)
+            ->call('applySelectedTemplate')
+            ->assertSee('Laporan Simponi')
+            ->assertSee('laporan-simponi-08-2026.xlsx');
     }
 }

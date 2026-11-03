@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Import;
 use App\Models\ImportData;
 use App\Models\Report;
+use App\Models\ReportTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -37,14 +38,25 @@ class ReportTest extends TestCase
         $this->get('/reports/create')->assertRedirect('/login');
     }
 
-    public function test_halaman_builder_menampilkan_import(): void
+    public function test_halaman_builder_menampilkan_import_setelah_template_dipilih(): void
     {
         Storage::fake('local');
         $user = User::factory()->create();
         $import = $this->importWithRows($user);
+        $template = ReportTemplate::factory()->for($user)->create([
+            'name' => 'Template Uji',
+            'is_global' => true,
+            'is_active' => true,
+        ]);
 
         $this->actingAs($user)->get('/reports/create')
             ->assertOk()
+            ->assertSee('Pilih template terlebih dahulu');
+
+        Livewire::actingAs($user)
+            ->test('report-builder')
+            ->set('selectedTemplateId', $template->id)
+            ->call('applySelectedTemplate')
             ->assertSee($import->table_name);
     }
 
