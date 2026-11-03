@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.1
+// @version      1.1.2
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
@@ -187,7 +187,10 @@
             if (button) button.disabled = !complete;
         });
         var recordButton = panelElement('bw-record');
-        if (recordButton) recordButton.textContent = recording ? 'Stop rekam' : 'Rekam endpoint';
+        if (recordButton) {
+            recordButton.textContent = recording ? 'Stop rekam' : 'Rekam endpoint';
+            recordButton.classList.toggle('is-recording', recording);
+        }
     }
 
     function cleanEndpoint(url) {
@@ -457,64 +460,91 @@
 
     function panelHtml() {
         return ''
-            + '<div id="bw-toggle" style="position:fixed;right:16px;bottom:16px;z-index:999999;background:#4f46e5;color:#fff;border:none;border-radius:9999px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:sans-serif;">BIMWIN</div>'
-            + '<div id="bw-panel" style="display:none;position:fixed;right:16px;bottom:56px;z-index:999999;width:380px;max-width:calc(100vw - 32px);max-height:calc(100vh - 80px);overflow:auto;background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:sans-serif;">'
+            + '<div id="bw-toggle" style="position:fixed;left:16px;right:auto;bottom:16px;z-index:999999;background:#4f46e5;color:#fff;border:none;border-radius:9999px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:sans-serif;">BIMWIN</div>'
+            + '<div id="bw-panel" style="display:none;position:fixed;left:16px;right:auto;bottom:56px;z-index:999999;width:380px;max-width:calc(100vw - 32px);max-height:calc(100vh - 80px);overflow:auto;background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:sans-serif;">'
             +   '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
             +     '<strong style="font-size:13px;">BIMWIN — SIMKAH4</strong>'
-            +     '<button id="bw-hide" title="Tutup panel" style="border:none;background:none;cursor:pointer;font-size:14px;line-height:1;">✕</button>'
+            +     '<button id="bw-hide" type="button" title="Tutup panel" style="border:none;background:none;cursor:pointer;font-size:14px;line-height:1;">✕</button>'
             +   '</div>'
             +   '<p style="font-size:10px;color:#555;margin:0 0 6px;">Memproses baris grid yang sedang tampil. Mode Cek saja tidak menulis data.</p>'
-            +   '<label for="bw-mode" style="font-size:11px;display:block;margin-bottom:2px;">Mode</label>'
-            +   '<select id="bw-mode" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;">'
-            +     '<option value="cek">Cek saja (tidak menulis)</option>'
-            +     '<option value="isi">Isi jadwal (tanpa tandai selesai)</option>'
-            +     '<option value="lengkap">Isi + tandai selesai</option>'
-            +   '</select>'
-            +   '<label for="bw-provinsi" style="font-size:11px;display:block;margin-bottom:2px;">Provinsi</label>'
-            +   '<input id="bw-provinsi" type="text" placeholder="JAWA TIMUR" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            +   '<label for="bw-kabkota" style="font-size:11px;display:block;margin-bottom:2px;">Kabupaten/Kota</label>'
-            +   '<input id="bw-kabkota" type="text" placeholder="KAB. PASURUAN" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            +   '<label for="bw-kecamatan" style="font-size:11px;display:block;margin-bottom:2px;">Kecamatan</label>'
-            +   '<input id="bw-kecamatan" type="text" placeholder="PASREPAN" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            +   '<div style="display:flex;gap:6px;">'
-            +     '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator suami<input id="bw-fas-suami" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
-            +     '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator istri<input id="bw-fas-istri" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
-            +   '</div>'
-            +   '<div style="display:flex;gap:6px;align-items:end;">'
-            +     '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Max percobaan<input id="bw-max-coba" type="number" min="1" max="30" value="10" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
-            +     '<label style="display:flex;align-items:center;gap:4px;font-size:11px;margin-bottom:6px;"><input id="bw-redam" type="checkbox" /> Redam notifikasi</label>'
-            +   '</div>'
-            +   '<details style="margin:6px 0;">'
-            +     '<summary style="font-size:11px;cursor:pointer;">Kode konfigurasi dari Laporan</summary>'
-            +     '<textarea id="bw-config-code" rows="4" placeholder=\'{"provinsi":"JAWA TIMUR","kabkota":"KAB. PASURUAN","kecamatan":"PASREPAN"}\' style="width:100%;box-sizing:border-box;margin-top:4px;font-size:11px;padding:4px;"></textarea>'
-            +     '<button id="bw-load-code" style="margin-top:4px;padding:4px 8px;font-size:11px;cursor:pointer;">Muat</button>'
-            +   '</details>'
-            +   '<div style="border:1px dashed #4f46e5;border-radius:4px;padding:6px;margin:6px 0;">'
+            +   '<div style="border:1px dashed #4f46e5;border-radius:4px;padding:6px;margin:6px 0;background:#eef2ff;">'
             +     '<div style="display:flex;justify-content:space-between;align-items:center;">'
             +       '<strong style="font-size:11px;">Endpoint akun ini</strong>'
             +       '<span id="bw-endpoint-status" style="font-size:11px;font-weight:bold;color:#b45309;">0/4</span>'
             +     '</div>'
             +     '<div id="bw-endpoint-list" style="font-size:10px;color:#555;margin-top:2px;">cek: — · dialog: — · simpan: — · selesai: —</div>'
             +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'
-            +       '<button id="bw-record" style="padding:3px 6px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
-            +       '<button id="bw-send-endpoints" disabled style="padding:3px 6px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
-            +       '<button id="bw-copy-endpoints" disabled style="padding:3px 6px;font-size:10px;cursor:pointer;">Salin JSON</button>'
+            +       '<button id="bw-record" type="button" style="padding:4px 8px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
+            +       '<button id="bw-send-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
+            +       '<button id="bw-copy-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Salin JSON</button>'
             +     '</div>'
-            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Rekam dengan satu alur BIMWIN manual. Simpan/selesai menulis ke SIMKAH4.</p>'
+            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Klik <strong>Rekam endpoint</strong>, lalu lakukan satu alur BIMWIN manual. Simpan/selesai menulis ke SIMKAH4.</p>'
             +   '</div>'
+            +   '<details style="margin:6px 0;">'
+            +     '<summary style="font-size:11px;cursor:pointer;">Pengaturan wilayah &amp; proses</summary>'
+            +     '<p style="font-size:10px;color:#555;margin:4px 0;">Terisi otomatis dari kode konfigurasi Laporan. Sesuaikan hanya jika perlu.</p>'
+            +     '<label for="bw-mode" style="font-size:11px;display:block;margin-bottom:2px;">Mode</label>'
+            +     '<select id="bw-mode" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;">'
+            +       '<option value="cek">Cek saja (tidak menulis)</option>'
+            +       '<option value="isi">Isi jadwal (tanpa tandai selesai)</option>'
+            +       '<option value="lengkap">Isi + tandai selesai</option>'
+            +     '</select>'
+            +     '<label for="bw-provinsi" style="font-size:11px;display:block;margin-bottom:2px;">Provinsi</label>'
+            +     '<input id="bw-provinsi" type="text" placeholder="Nama provinsi" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +     '<label for="bw-kabkota" style="font-size:11px;display:block;margin-bottom:2px;">Kabupaten/Kota</label>'
+            +     '<input id="bw-kabkota" type="text" placeholder="Nama kabupaten/kota" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +     '<label for="bw-kecamatan" style="font-size:11px;display:block;margin-bottom:2px;">Kecamatan</label>'
+            +     '<input id="bw-kecamatan" type="text" placeholder="Nama kecamatan" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +     '<div style="display:flex;gap:6px;">'
+            +       '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator suami<input id="bw-fas-suami" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
+            +       '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator istri<input id="bw-fas-istri" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
+            +     '</div>'
+            +     '<div style="display:flex;gap:6px;align-items:end;">'
+            +       '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Max percobaan<input id="bw-max-coba" type="number" min="1" max="30" value="10" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
+            +       '<label style="display:flex;align-items:center;gap:4px;font-size:11px;margin-bottom:6px;"><input id="bw-redam" type="checkbox" /> Redam notifikasi</label>'
+            +     '</div>'
+            +   '</details>'
+            +   '<details style="margin:6px 0;">'
+            +     '<summary style="font-size:11px;cursor:pointer;">Kode konfigurasi dari Laporan</summary>'
+            +     '<textarea id="bw-config-code" rows="4" placeholder=\'{"provinsi":"...","kabkota":"...","kecamatan":"..."}\' style="width:100%;box-sizing:border-box;margin-top:4px;font-size:11px;padding:4px;"></textarea>'
+            +     '<button id="bw-load-code" type="button" style="margin-top:4px;padding:4px 8px;font-size:11px;cursor:pointer;">Muat</button>'
+            +   '</details>'
             +   '<div style="display:flex;gap:6px;margin:6px 0;">'
-            +     '<button id="bw-start" style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;background:#4f46e5;color:#fff;border:none;border-radius:4px;">Mulai</button>'
-            +     '<button id="bw-stop" disabled style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
-            +     '<button id="bw-save" style="padding:6px 8px;font-size:12px;cursor:pointer;">Simpan</button>'
+            +     '<button id="bw-start" type="button" style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
+            +     '<button id="bw-stop" type="button" disabled style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
+            +     '<button id="bw-save" type="button" style="padding:6px 8px;font-size:12px;cursor:pointer;">Simpan</button>'
             +   '</div>'
             +   '<div id="bw-progress" style="font-size:11px;margin-bottom:4px;"></div>'
             +   '<pre id="bw-log" style="max-height:150px;overflow:auto;font-size:10px;margin:0;white-space:pre-wrap;background:#f7f7f7;padding:4px;border-radius:4px;"></pre>'
-            +   '<button id="bw-clear-log" style="margin-top:4px;padding:3px 6px;font-size:10px;cursor:pointer;">Bersihkan log</button>'
+            +   '<button id="bw-clear-log" type="button" style="margin-top:4px;padding:3px 6px;font-size:10px;cursor:pointer;">Bersihkan log</button>'
             + '</div>';
     }
 
     function initPanel() {
         if (panelElement('bw-toggle')) return;
+
+        var style = document.createElement('style');
+        style.textContent = [
+            '#bw-panel{color-scheme:light;}',
+            '#bw-panel,#bw-panel *{box-sizing:border-box;}',
+            '#bw-panel button{border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;color:#111;font-family:inherit;line-height:1.2;}',
+            '#bw-panel button:disabled{opacity:.5;cursor:default;}',
+            '#bw-panel input,#bw-panel select,#bw-panel textarea{background:#fff;color:#111;border:1px solid #cbd5e1;border-radius:4px;font-family:inherit;}',
+            '#bw-panel input::placeholder,#bw-panel textarea::placeholder{color:#94a3b8;}',
+            '#bw-panel details{margin:6px 0;}',
+            '#bw-panel summary{cursor:pointer;}',
+            '#bw-panel #bw-record{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:600;}',
+            '#bw-panel #bw-record.is-recording{background:#b91c1c;border-color:#b91c1c;}',
+            '#bw-panel #bw-start{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:600;}',
+            '#bw-panel #bw-send-endpoints{background:#047857;color:#fff;border-color:#047857;}',
+            '#bw-panel #bw-send-endpoints:disabled{background:#f8fafc;color:#111;border-color:#cbd5e1;}',
+            '#bw-panel #bw-copy-endpoints,#bw-panel #bw-load-code{background:#eef2ff;color:#312e81;border-color:#c7d2fe;}',
+            '#bw-panel #bw-hide{border:none;background:none;color:#111;font-size:14px;}',
+            '#bw-toggle{position:fixed!important;left:16px!important;right:auto!important;bottom:16px!important;}',
+            '#bw-panel{position:fixed!important;left:16px!important;right:auto!important;}'
+        ].join('');
+        document.head.appendChild(style);
+
         var host = document.createElement('div');
         host.innerHTML = panelHtml();
         document.body.appendChild(host);

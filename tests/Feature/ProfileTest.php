@@ -68,9 +68,9 @@ class ProfileTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch(route('profile.update-desa'), [
-                'provinsi' => 'Jawa Timur',
-                'kecamatan' => 'Pasrepan',
-                'kota_kabupaten' => 'Kab. Pasuruan',
+                'provinsi' => 'Provinsi Uji',
+                'kecamatan' => 'Kecamatan Uji',
+                'kota_kabupaten' => 'Kabupaten Uji',
                 'daftar_desa' => "Desa A\nDesa B",
             ]);
 
@@ -80,10 +80,24 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Jawa Timur', $user->provinsi);
-        $this->assertSame('Pasrepan', $user->kecamatan);
-        $this->assertSame('Kab. Pasuruan', $user->kota_kabupaten);
+        $this->assertSame('Provinsi Uji', $user->provinsi);
+        $this->assertSame('Kecamatan Uji', $user->kecamatan);
+        $this->assertSame('Kabupaten Uji', $user->kota_kabupaten);
         $this->assertSame(['Desa A', 'Desa B'], $user->daftar_desa);
+    }
+
+    public function test_profile_region_fields_use_neutral_placeholders(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('profile.daftar-desa'))
+            ->assertOk()
+            ->assertSee('Nama provinsi')
+            ->assertSee('Nama kabupaten/kota')
+            ->assertSee('Nama kecamatan')
+            ->assertDontSee('Contoh: Jawa Timur')
+            ->assertDontSee('Contoh: Kab. Malang');
     }
 
     public function test_user_can_delete_their_account(): void

@@ -18,20 +18,24 @@ class BimwinTest extends TestCase
     public function test_authenticated_user_can_see_bimwin_page_with_profile_config(): void
     {
         $user = User::factory()->create([
-            'provinsi' => 'Jawa Timur',
-            'kota_kabupaten' => 'Kab. Pasuruan',
-            'kecamatan' => 'Pasrepan',
+            'provinsi' => 'Provinsi Uji',
+            'kota_kabupaten' => 'Kabupaten Uji',
+            'kecamatan' => 'Kecamatan Uji',
         ]);
 
         $this->actingAs($user)
             ->get(route('bimwin.index'))
             ->assertOk()
             ->assertSee('Otomasi Pengisian BIMWIN')
-            ->assertSee('Jawa Timur')
-            ->assertSee('Kab. Pasuruan')
-            ->assertSee('Pasrepan')
+            ->assertSee('Provinsi Uji')
+            ->assertSee('Kabupaten Uji')
+            ->assertSee('Kecamatan Uji')
             ->assertSee('simkah4-bimwin.user.js')
-            ->assertSee('Cek saja');
+            ->assertSee('Cek saja')
+            ->assertSee('Cara merekam otomatis')
+            ->assertSee('Rekam endpoint')
+            ->assertSee('kiri bawah')
+            ->assertSee('Tidak ada wilayah bawaan di aplikasi.');
     }
 
     public function test_bimwin_page_warns_when_profile_region_is_incomplete(): void
@@ -65,7 +69,7 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertMatchesRegularExpression('/@version\s+1\.1\.1/', $content);
+        $this->assertMatchesRegularExpression('/@version\s+1\.1\.2/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
         $this->assertStringContainsString('recordingPageWindow.fetch', $content);
         $this->assertStringContainsString('recordingPageWindow.XMLHttpRequest', $content);
@@ -74,6 +78,16 @@ class BimwinTest extends TestCase
         $this->assertStringContainsString('endpointsComplete', $content);
         $this->assertStringContainsString('Rekam endpoint', $content);
         $this->assertStringContainsString('SS_ALL', $content);
+        $this->assertStringContainsString('left:16px', $content);
+        $this->assertStringContainsString('#bw-panel button', $content);
+        $this->assertStringContainsString('#bw-panel #bw-record{background:#4f46e5', $content);
+        $this->assertStringContainsString('Nama provinsi', $content);
+        $this->assertStringContainsString('Nama kabupaten/kota', $content);
+        $this->assertStringContainsString('Nama kecamatan', $content);
+        $this->assertStringNotContainsString('right:16px', $content);
+        $this->assertStringNotContainsString('JAWA TIMUR', $content);
+        $this->assertStringNotContainsString('PASURUAN', $content);
+        $this->assertStringNotContainsString('PASREPAN', $content);
         $this->assertStringNotContainsString('instanceof URLSearchParams', $content);
         $this->assertStringNotContainsString('instanceof FormData', $content);
         $this->assertStringNotContainsString('e0c44a89-2a3a-461b-9430-143e761cca83', $content);

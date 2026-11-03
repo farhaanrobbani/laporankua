@@ -51,6 +51,12 @@
                         </div>
                     </div>
 
+                    <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        Nilai provinsi, kabupaten/kota, dan kecamatan diambil dari
+                        <a href="{{ route('profile.daftar-desa') }}" class="font-medium underline">Profil → Daftar Desa</a>.
+                        Tidak ada wilayah bawaan di aplikasi.
+                    </p>
+
                     @unless ($wilayahLengkap)
                         <div class="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
                             Lengkapi provinsi, kabupaten/kota, dan kecamatan di
@@ -111,11 +117,15 @@
 
                     <div class="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200">
                         <p class="font-semibold">Cara merekam otomatis</p>
+                        <p class="mt-1 text-xs">
+                            Tombol <strong>Rekam endpoint</strong> ada di panel <strong>BIMWIN</strong> pada SIMKAH4
+                            (kiri bawah), bukan di halaman Laporan ini.
+                        </p>
                         <ol class="mt-2 list-decimal space-y-1 pl-5 text-xs sm:text-sm">
-                            <li>Buka SIMKAH4 dengan akun ini, lalu buka halaman daftar nikah.</li>
-                            <li>Di panel userscript BIMWIN, klik <strong>Rekam endpoint</strong>.</li>
+                            <li>Buka <a href="https://simkah4.kemenag.go.id/" target="_blank" rel="noopener" class="font-medium underline dark:text-indigo-300">SIMKAH4</a> dengan akun ini, lalu buka halaman daftar nikah.</li>
+                            <li>Klik tombol <strong>BIMWIN</strong> di kiri bawah, lalu pada bagian <strong>Endpoint akun ini</strong> klik <strong>Rekam endpoint</strong>.</li>
                             <li>Lakukan satu alur BIMWIN secara manual: cek catin, buka dialog, isi jadwal, lalu simpan/tandai selesai.</li>
-                            <li>Setelah 4/4 endpoint terekam, klik <strong>Kirim ke Laporan</strong>. Form di halaman ini akan terisi otomatis.</li>
+                            <li>Setelah 4/4 endpoint terekam, klik <strong>Kirim ke Laporan</strong>. Form endpoint di halaman ini terisi otomatis; periksa lalu klik <strong>Simpan Endpoint</strong>.</li>
                         </ol>
                         <p class="mt-2 text-xs">
                             Perekaman hanya mengamati permintaan dari alur manual. Proses simpan/selesai tetap menulis ke SIMKAH4, jadi gunakan data uji atau data yang memang akan diproses.
@@ -165,8 +175,8 @@
                             <li>Pasang ekstensi <strong>Tampermonkey</strong> di Chrome, Edge, atau Firefox.</li>
                             <li>Buka <a href="{{ url('/userscripts/simkah4-bimwin.user.js') }}" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400">link install userscript BIMWIN</a>, lalu setujui pemasangan.</li>
                             <li>Login ke SIMKAH4 dan buka halaman daftar nikah yang ingin diproses.</li>
-                            <li>Jika endpoint belum 4/4, klik <strong>Rekam endpoint</strong> di panel userscript dan ikuti satu alur BIMWIN manual. Klik <strong>Kirim ke Laporan</strong>, lalu simpan form endpoint di halaman ini.</li>
-                            <li>Klik tombol <strong>BIMWIN</strong> di kanan bawah, tempel kode konfigurasi, lalu klik <strong>Muat</strong>.</li>
+                            <li>Jika endpoint belum 4/4, buka panel <strong>BIMWIN</strong> di SIMKAH4, klik <strong>Rekam endpoint</strong> di bagian <strong>Endpoint akun ini</strong>, ikuti satu alur manual, lalu klik <strong>Kirim ke Laporan</strong>. Periksa dan simpan form endpoint di halaman ini.</li>
+                            <li>Klik tombol <strong>BIMWIN</strong> di kiri bawah, tempel kode konfigurasi, lalu klik <strong>Muat</strong>.</li>
                             <li>Jalankan <strong>Cek saja</strong> lebih dulu. Pastikan nomor daftar dan status calon sudah benar.</li>
                             <li>Setelah yakin, pilih <strong>Isi jadwal</strong> atau <strong>Isi + tandai selesai</strong>, lalu konfirmasi.</li>
                         </ol>
