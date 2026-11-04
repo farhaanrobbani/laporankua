@@ -243,7 +243,7 @@ class ExcelImportService
         });
 
         if ($import->status === 'appended' && (int) $import->imported_rows === 0) {
-            $this->discardEmptyAppend($import);
+            $this->deleteEmptyAppend($import);
 
             return;
         }
@@ -253,24 +253,20 @@ class ExcelImportService
         }
     }
 
-    private function discardEmptyAppend(Import $import): void
+    private function deleteEmptyAppend(Import $import): void
     {
         $filePath = $import->file_path;
         $fileName = $import->file_name;
-
-        $import->update([
-            'status' => 'empty',
-            'error_log' => [
-                ['row' => 0, 'reason' => 'Tidak ada data baru yang diambil; file Excel dihapus otomatis.'],
-            ],
-        ]);
+        $userId = $import->user_id;
 
         if ($filePath) {
             Storage::disk('local')->delete($filePath);
         }
 
+        $import->delete();
+
         Cache::put(
-            'import_notice:'.$import->user_id,
+            'import_notice:'.$userId,
             ['message' => 'File "'.$fileName.'" dihapus otomatis karena tidak ada data baru yang diambil.'],
             now()->addMinutes(10),
         );

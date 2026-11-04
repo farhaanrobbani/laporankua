@@ -140,8 +140,20 @@ new class extends Component
 
         if ($this->total < 1000) {
             app(ExcelImportService::class)->import($import->fresh());
+
+            if (! Import::whereKey($import->id)->exists()) {
+                $this->redirectRoute('imports.index');
+
+                return;
+            }
         } else {
             ProcessExcelImport::dispatch($import);
+
+            if ($this->isAppend) {
+                $this->redirectRoute('imports.index');
+
+                return;
+            }
         }
 
         $this->redirectRoute('imports.show', $import);

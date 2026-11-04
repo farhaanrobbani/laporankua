@@ -180,6 +180,8 @@ class ImportUploaderTest extends TestCase
             ->call('confirmImport')
             ->assertHasNoErrors();
 
+        $first = Import::latest('id')->first();
+
         $file2 = $this->uploadedXlsx($rows, 'laporan-pendaftaran-nikah-09-2026.xlsx');
 
         Livewire::actingAs($user)
@@ -188,21 +190,15 @@ class ImportUploaderTest extends TestCase
             ->set('sheet', 'Data')
             ->call('confirmImport')
             ->assertHasNoErrors()
-            ->assertRedirect(route('imports.show', Import::latest('id')->first()));
+            ->assertRedirect(route('imports.index'));
 
-        $empty = Import::latest('id')->first();
-
-        $this->assertTrue((bool) $empty->fresh()->is_append);
-        $this->assertSame('empty', $empty->fresh()->status);
-        $this->assertSame(0, $empty->fresh()->imported_rows);
-        $this->assertSame(0, $empty->importData()->count());
-        Storage::disk('local')->assertMissing($empty->fresh()->file_path);
+        $this->assertDatabaseCount('imports', 1);
+        $this->assertDatabaseHas('imports', ['id' => $first->id]);
+        $this->assertCount(1, Storage::disk('local')->files('imports/user_'.$user->id));
 
         $this->actingAs($user)
-            ->get(route('imports.show', $empty))
+            ->get(route('imports.index'))
             ->assertOk()
-            ->assertSee('Dihapus otomatis')
-            ->assertSee('File sudah dihapus otomatis.')
             ->assertSee('tidak ada data baru yang diambil');
     }
 

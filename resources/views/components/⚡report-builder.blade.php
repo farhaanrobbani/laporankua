@@ -91,6 +91,8 @@ new class extends Component
     public function mount(): void
     {
         $this->imports = Import::where('user_id', auth()->id())
+            ->whereIn('status', ['success', 'appended'])
+            ->whereHas('importData')
             ->latest()
             ->withCount('importData')
             ->get(['id', 'file_name', 'table_name'])

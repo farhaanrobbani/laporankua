@@ -60,6 +60,41 @@ class ReportTest extends TestCase
             ->assertSee($import->table_name);
     }
 
+    public function test_builder_mengecualikan_import_tanpa_data(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+        $import = $this->importWithRows($user);
+        $import->update(['table_name' => 'laporan peristiwa nikah']);
+
+        Import::factory()->for($user)->create([
+            'status' => 'empty',
+            'table_name' => 'laporan peristiwa nikah',
+            'file_name' => 'laporan-peristiwa-nikah-10-2026.xlsx',
+        ]);
+        Import::factory()->for($user)->create([
+            'status' => 'empty',
+            'table_name' => 'laporan kosong',
+            'file_name' => 'laporan-kosong-10-2026.xlsx',
+        ]);
+
+        $template = ReportTemplate::factory()->for($user)->create([
+            'name' => 'Template Uji',
+            'is_global' => true,
+            'is_active' => true,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test('report-builder')
+            ->set('selectedTemplateId', $template->id)
+            ->call('applySelectedTemplate')
+            ->assertSee('laporan peristiwa nikah')
+            ->assertDontSee('laporan kosong')
+            ->assertSet('imports.0.id', $import->id)
+            ->set('importId', $import->id)
+            ->assertSee('2. Filter & Urutan');
+    }
+
     public function test_generate_pdf_menyimpan_file(): void
     {
         Storage::fake('local');

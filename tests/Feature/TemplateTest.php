@@ -122,9 +122,13 @@ class TemplateTest extends TestCase
     public function test_panduan_template_nr1_mengarah_ke_pendaftaran_nikah(): void
     {
         $user = User::factory()->create();
-        Import::factory()->for($user)->create([
+        $import = Import::factory()->for($user)->create([
             'status' => 'success',
             'table_name' => 'laporan pendaftaran nikah',
+        ]);
+        ImportData::factory()->for($import)->create([
+            'row_data' => ['Nomor Daftar' => 'ND001'],
+            'row_number' => 2,
         ]);
         $template = ReportTemplate::factory()->for($this->admin)->create([
             'name' => 'REKAP NR1',
