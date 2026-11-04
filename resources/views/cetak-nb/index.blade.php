@@ -11,28 +11,17 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    @if ($grouped->isEmpty())
-                        <x-empty-state title="Belum ada data import" message="Upload file Excel untuk mulai mengolah data." :action-url="route('imports.create')" action-label="Upload Excel" />
+                    @if (! $selectedGroup)
+                        <x-empty-state title="Belum ada data peristiwa nikah" message="Upload file laporan peristiwa nikah untuk mulai mencetak NB." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
-                        <form method="GET" action="{{ route('cetak-nb.index') }}" class="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center">
-                            <label class="text-sm text-gray-700 dark:text-gray-300">
-                                Sumber data:
-                                <select name="import_id" onchange="this.form.submit()" class="ml-2 border-gray-300 dark:border-gray-600 rounded-md text-sm">
-                                    <option value="">-- Pilih file import --</option>
-                                    @foreach ($grouped as $group)
-                                        <option value="{{ $group['import_ids'][0] }}" @selected($selectedGroup && $selectedGroup['table_name'] === $group['table_name'])>
-                                            {{ $group['table_name'] }} ({{ number_format($group['total_rows']) }} baris)
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </label>
-                        </form>
+                        <div class="mb-6 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-700 dark:bg-blue-900/50">
+                            <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">Sumber data: Peristiwa Nikah</p>
+                            <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                                {{ number_format($selectedGroup['total_rows']) }} baris dari {{ count($selectedGroup['import_ids']) }} file peristiwa nikah.
+                            </p>
+                        </div>
 
-                        @if ($selectedGroup)
-                            <livewire:cetak-nb-table :import-ids="$selectedGroup['import_ids']" :key="'cetak-nb-table-'.$selectedGroup['table_name']" />
-                        @else
-                            <x-empty-state title="Pilih file import untuk melihat datanya" />
-                        @endif
+                        <livewire:cetak-nb-table :import-ids="$selectedGroup['import_ids']" :key="'cetak-nb-table'" />
                     @endif
                 </div>
             </div>

@@ -12,29 +12,23 @@ class CetakNbController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request): View
+    public function index(): View
     {
         $imports = Import::where('user_id', auth()->id())
+            ->where('table_name', 'laporan peristiwa nikah')
+            ->whereIn('status', ['success', 'appended'])
+            ->whereHas('importData')
             ->withCount('importData')
             ->latest()
             ->get();
 
-        $grouped = $imports->groupBy('table_name')->map(function ($rows, $tableName) {
-            return [
-                'table_name' => $tableName,
-                'total_rows' => $rows->sum('import_data_count'),
-                'import_ids' => $rows->pluck('id')->toArray(),
-            ];
-        })->values();
+        $selectedGroup = $imports->isEmpty() ? null : [
+            'table_name' => 'laporan peristiwa nikah',
+            'total_rows' => $imports->sum('import_data_count'),
+            'import_ids' => $imports->pluck('id')->toArray(),
+        ];
 
-        $selectedGroup = null;
-        if ($request->filled('import_id')) {
-            $import = Import::where('user_id', auth()->id())
-                ->findOrFail($request->integer('import_id'));
-            $selectedGroup = $grouped->firstWhere('table_name', $import->table_name);
-        }
-
-        return view('cetak-nb.index', compact('grouped', 'selectedGroup'));
+        return view('cetak-nb.index', compact('selectedGroup'));
     }
 
     public function print(Request $request): View
