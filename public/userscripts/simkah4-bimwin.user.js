@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.2
+// @version      1.1.3
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
@@ -61,6 +61,27 @@
 
     function sleep(ms) {
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    }
+
+    function getPageJQuery() {
+        var candidates = [pageWindow, window];
+        for (var i = 0; i < candidates.length; i++) {
+            try {
+                if (candidates[i] && candidates[i].jQuery) return candidates[i].jQuery;
+            } catch (e) {}
+        }
+        return null;
+    }
+
+    async function waitForJQuery(timeoutMs) {
+        var timeout = typeof timeoutMs === 'number' ? timeoutMs : 10000;
+        var started = Date.now();
+        var jq = getPageJQuery();
+        while (!jq && Date.now() - started < timeout) {
+            await sleep(200);
+            jq = getPageJQuery();
+        }
+        return jq;
     }
 
     function norm(value) {
@@ -697,16 +718,20 @@
     }
 
     function jqueryGet(url, data) {
+        var $ = getPageJQuery();
+        if (!$) return Promise.reject(new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.'));
         return new Promise(function (resolve, reject) {
-            window.jQuery.get(url, data).done(resolve).fail(function (xhr) {
+            $.get(url, data).done(resolve).fail(function (xhr) {
                 reject(new Error('Gagal memuat dialog (HTTP ' + (xhr && xhr.status) + ').'));
             });
         });
     }
 
     function jqueryPost(url, data) {
+        var $ = getPageJQuery();
+        if (!$) return Promise.reject(new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.'));
         return new Promise(function (resolve, reject) {
-            window.jQuery.ajax({
+            $.ajax({
                 type: 'POST',
                 url: url,
                 data: data,
@@ -721,9 +746,11 @@
     }
 
     function jqueryAjaxForm(formElement, endpoint) {
+        var $ = getPageJQuery();
+        if (!$) return Promise.reject(new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.'));
         var formData = new FormData(formElement);
         return new Promise(function (resolve, reject) {
-            window.jQuery.ajax({
+            $.ajax({
                 type: 'POST',
                 url: endpoint,
                 enctype: 'multipart/form-data',
@@ -742,19 +769,20 @@
     }
 
     async function bukaDialog(noDaftar, endpoint) {
-        if (!window.jQuery) throw new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.');
+        var $ = getPageJQuery();
+        if (!$) throw new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.');
 
-        window.jQuery('#bimwin-auto-wrap').remove();
-        if (window.jQuery('#bimwin').length) {
+        $('#bimwin-auto-wrap').remove();
+        if ($('#bimwin').length) {
             throw new Error('Dialog BIMWIN lain masih terbuka. Tutup dulu lalu jalankan lagi.');
         }
 
         var html = await jqueryGet(endpoint, { no_daftar: noDaftar });
-        var wrap = window.jQuery('<div id="bimwin-auto-wrap" style="position:fixed;left:-99999px;top:0;width:1100px"></div>').appendTo('body');
+        var wrap = $('<div id="bimwin-auto-wrap" style="position:fixed;left:-99999px;top:0;width:1100px"></div>').appendTo('body');
         wrap.html(typeof html === 'string' ? html : (html.html || html.data || JSON.stringify(html)));
 
         for (var i = 0; i < 40; i++) {
-            if (window.jQuery('#bimwin').length && window.jQuery('#bimwin').data('dxForm')) return true;
+            if ($('#bimwin').length && $('#bimwin').data('dxForm')) return true;
             await sleep(250);
         }
 
@@ -763,7 +791,8 @@
 
     function tutupDialog() {
         try {
-            window.jQuery('#bimwin-auto-wrap').remove();
+            var $ = getPageJQuery();
+            if ($) $('#bimwin-auto-wrap').remove();
         } catch (e) {}
     }
 
@@ -810,7 +839,9 @@
         }
 
         try {
-            var form = window.jQuery('#bimwin').dxForm('instance');
+            var $ = getPageJQuery();
+            if (!$) throw new Error('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.');
+            var form = $('#bimwin').dxForm('instance');
             if (!form) throw new Error('Form BIMWIN tidak siap.');
 
             var provinsi = norm(config.provinsi);
@@ -872,7 +903,7 @@
             for (var attempt = 0; attempt < config.maxCoba; attempt++) {
                 if (stopRequested) throw new Error('Dihentikan oleh pengguna sebelum menyimpan.');
 
-                var result = await jqueryAjaxForm(window.jQuery('#bimwin')[0], config.endpoints.simpan);
+                var result = await jqueryAjaxForm($('#bimwin')[0], config.endpoints.simpan);
                 log('  simpan percobaan ' + (attempt + 1) + ': ' + JSON.stringify(result), 'info');
 
                 if (result && Number(result.code) === 200) {
@@ -933,9 +964,10 @@
 
     function refreshGrids() {
         try {
-            if (!window.jQuery) return;
-            window.jQuery('#detail, #grid, #gridPencatatan').each(function () {
-                var grid = window.jQuery(this).data('dxDataGrid');
+            var $ = getPageJQuery();
+            if (!$) return;
+            $('#detail, #grid, #gridPencatatan').each(function () {
+                var grid = $(this).data('dxDataGrid');
                 if (grid) grid.refresh();
             });
         } catch (e) {}
@@ -957,8 +989,9 @@
             log('Provinsi, kabupaten/kota, dan kecamatan wajib diisi.', 'err');
             return;
         }
-        if (!window.jQuery) {
-            log('jQuery SIMKAH4 tidak tersedia. Muat ulang halaman.', 'err');
+        if (!await waitForJQuery(10000)) {
+            var grid = document.querySelector('#grid, #gridPencatatan');
+            log('jQuery SIMKAH4 tidak ditemukan. ' + (grid ? 'Grid terdeteksi; coba muat ulang halaman.' : 'Buka halaman daftar nikah SIMKAH4 lalu jalankan lagi.'), 'err');
             return;
         }
 
@@ -972,9 +1005,9 @@
         panelElement('bw-start').disabled = true;
         panelElement('bw-stop').disabled = false;
 
-        if (config.redamNotif && window.SimKah && typeof window.SimKah.WindowNotif === 'function') {
-            notifOriginal = window.SimKah.WindowNotif;
-            window.SimKah.WindowNotif = function (title, message, status) {
+        if (config.redamNotif && pageWindow.SimKah && typeof pageWindow.SimKah.WindowNotif === 'function') {
+            notifOriginal = pageWindow.SimKah.WindowNotif;
+            pageWindow.SimKah.WindowNotif = function (title, message, status) {
                 log('[notif] ' + title + ' — ' + message + ' — ' + status, 'warn');
             };
         }
@@ -1045,7 +1078,7 @@
         } catch (e) {
             log('ERROR: ' + e.message, 'err');
         } finally {
-            if (notifOriginal && window.SimKah) window.SimKah.WindowNotif = notifOriginal;
+            if (notifOriginal && pageWindow.SimKah) pageWindow.SimKah.WindowNotif = notifOriginal;
             running = false;
             stopRequested = false;
             panelElement('bw-start').disabled = false;
