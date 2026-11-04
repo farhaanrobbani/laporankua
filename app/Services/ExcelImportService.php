@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Import;
 use App\Models\ImportData;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -241,9 +242,38 @@ class ExcelImportService
             ]);
         });
 
+        if ($import->status === 'appended' && (int) $import->imported_rows === 0) {
+            $this->discardEmptyAppend($import);
+
+            return;
+        }
+
         if ($import->status === 'success' || $import->status === 'appended') {
             $this->postProcessModelL3($import);
         }
+    }
+
+    private function discardEmptyAppend(Import $import): void
+    {
+        $filePath = $import->file_path;
+        $fileName = $import->file_name;
+
+        $import->update([
+            'status' => 'empty',
+            'error_log' => [
+                ['row' => 0, 'reason' => 'Tidak ada data baru yang diambil; file Excel dihapus otomatis.'],
+            ],
+        ]);
+
+        if ($filePath) {
+            Storage::disk('local')->delete($filePath);
+        }
+
+        Cache::put(
+            'import_notice:'.$import->user_id,
+            ['message' => 'File "'.$fileName.'" dihapus otomatis karena tidak ada data baru yang diambil.'],
+            now()->addMinutes(10),
+        );
     }
 
     private function markFailed(Import $import, int $total, int $imported, array $errors): void

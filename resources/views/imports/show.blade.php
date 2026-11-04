@@ -41,7 +41,12 @@
                                 @forelse ($imports as $index => $import)
                                     <tr>
                                         <td class="px-4 py-2 text-gray-500 dark:text-gray-400">{{ $index + 1 }}</td>
-                                        <td class="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{{ $import->file_name }}</td>
+                                        <td class="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $import->file_name }}
+                                            @if ($import->status === 'empty')
+                                                <div class="mt-0.5 text-xs font-normal text-amber-600 dark:text-amber-400">File sudah dihapus otomatis.</div>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ $import->sheet_name ?? '-' }}</td>
                                         <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ number_format($import->total_rows) }}</td>
                                         <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">{{ number_format($import->imported_rows) }}</td>

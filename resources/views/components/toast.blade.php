@@ -1,7 +1,12 @@
 @php
     $toast = null;
+    $importNotice = auth()->check()
+        ? \Illuminate\Support\Facades\Cache::pull('import_notice:'.auth()->id())
+        : null;
 
-    if (session('status')) {
+    if ($importNotice) {
+        $toast = ['message' => $importNotice['message'], 'classes' => 'bg-amber-600'];
+    } elseif (session('status')) {
         $toast = ['message' => session('status'), 'classes' => 'bg-green-600'];
     } elseif (session('error')) {
         $toast = ['message' => session('error'), 'classes' => 'bg-red-600'];

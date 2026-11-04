@@ -7,6 +7,7 @@ use App\Models\ImportData;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -156,6 +157,53 @@ class ImportUploaderTest extends TestCase
             ->get(route('imports.show', $second))
             ->assertOk()
             ->assertSee(route('imports.data', $second));
+    }
+
+    public function test_append_tanpa_baris_baru_menghapus_file_dan_menampilkan_notifikasi(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+
+        $rows = [
+            'Data' => [
+                ['Nomor Daftar', 'Nama Suami', 'Nama Istri'],
+                ['ND001', 'Budi', 'Siti'],
+            ],
+        ];
+
+        $file1 = $this->uploadedXlsx($rows, 'laporan-pendaftaran-nikah-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file1])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $file2 = $this->uploadedXlsx($rows, 'laporan-pendaftaran-nikah-09-2026.xlsx');
+
+        Livewire::actingAs($user)
+            ->test('import-uploader')
+            ->upload('file', [$file2])
+            ->set('sheet', 'Data')
+            ->call('confirmImport')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('imports.show', Import::latest('id')->first()));
+
+        $empty = Import::latest('id')->first();
+
+        $this->assertTrue((bool) $empty->fresh()->is_append);
+        $this->assertSame('empty', $empty->fresh()->status);
+        $this->assertSame(0, $empty->fresh()->imported_rows);
+        $this->assertSame(0, $empty->importData()->count());
+        Storage::disk('local')->assertMissing($empty->fresh()->file_path);
+
+        $this->actingAs($user)
+            ->get(route('imports.show', $empty))
+            ->assertOk()
+            ->assertSee('Dihapus otomatis')
+            ->assertSee('File sudah dihapus otomatis.')
+            ->assertSee('tidak ada data baru yang diambil');
     }
 
     public function test_upload_ulang_normal_tidak_menggandakan_baris(): void
