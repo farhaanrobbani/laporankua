@@ -69,7 +69,7 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertMatchesRegularExpression('/@version\s+1\.1\.5/', $content);
+        $this->assertMatchesRegularExpression('/@version\s+1\.1\.6/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
         $this->assertStringContainsString('recordingPageWindow.fetch', $content);
         $this->assertStringContainsString('recordingPageWindow.XMLHttpRequest', $content);
@@ -83,9 +83,16 @@ class BimwinTest extends TestCase
         $this->assertStringContainsString('Array.isArray(result.items)', $content);
         $this->assertStringContainsString('result.items.length > 0', $content);
         $this->assertStringContainsString('normalizeAppUrl', $content);
+        $this->assertStringContainsString('bimwinPageUrl', $content);
+        $this->assertStringContainsString('bimwinUrlFromConfigCode', $content);
+        $this->assertStringContainsString('recordedBimwinUrl', $content);
         $this->assertStringContainsString('appUrlFromConfigCode', $content);
         $this->assertStringContainsString('ensureAppUrl', $content);
+        $this->assertStringContainsString('bw-reset', $content);
+        $this->assertStringContainsString('Reset semua konfigurasi BIMWIN', $content);
+        $this->assertStringContainsString('#bw-panel #bw-reset{background:#b91c1c', $content);
         $this->assertStringContainsString('Laporan: belum terhubung', $content);
+        $this->assertLessThan(strpos($content, 'Pengaturan wilayah'), strpos($content, 'id="bw-mode"'));
         $this->assertStringContainsString('left:16px', $content);
         $this->assertStringContainsString('#bw-panel button', $content);
         $this->assertStringContainsString('#bw-panel #bw-record{background:#4f46e5', $content);
@@ -219,9 +226,15 @@ class BimwinTest extends TestCase
             ->assertOk()
             ->assertSee('4/4 tersimpan')
             ->assertSee($this->validEndpoints()['cek'], false)
-            ->assertSee('appUrl');
+            ->assertSee('appUrl')
+            ->assertSee('bimwinUrl');
 
-        $this->assertStringContainsString(url('/'), $response->getContent());
+        $appUrl = rtrim(url('/'), '/');
+        $content = $response->getContent();
+
+        $this->assertStringContainsString($appUrl, $content);
+        $this->assertStringContainsString($appUrl.'/bimwin', $content);
+        $this->assertStringNotContainsString($appUrl.'/bimwin/bimwin', $content);
     }
 
     /**

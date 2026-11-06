@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.5
+// @version      1.1.6
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
@@ -39,6 +39,7 @@
 
     var DEFAULTS = {
         appUrl: '',
+        bimwinUrl: '',
         endpoints: emptyEndpoints(),
         provinsi: '',
         kabkota: '',
@@ -54,6 +55,7 @@
     var recording = false;
     var recordedEndpoints = emptyEndpoints();
     var recordedAppUrl = '';
+    var recordedBimwinUrl = '';
     var recordingPageWindow = null;
     var recordingFetch = null;
     var recordingXhrOpen = null;
@@ -106,15 +108,35 @@
         }
     }
 
-    function appUrlFromConfigCode() {
+    function bimwinPageUrl(value) {
+        var base = normalizeAppUrl(value);
+        if (!base) return '';
+        return /\/bimwin$/i.test(base) ? base : base + '/bimwin';
+    }
+
+    function configFromCode() {
         var raw = (panelElement('bw-config-code')?.value || '').trim();
-        if (!raw) return '';
+        if (!raw) return null;
         try {
             var parsed = JSON.parse(raw);
-            return normalizeAppUrl(parsed && parsed.appUrl);
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+            return parsed;
         } catch (e) {
-            return '';
+            return null;
         }
+    }
+
+    function appUrlFromConfigCode() {
+        var parsed = configFromCode();
+        return normalizeAppUrl(parsed && parsed.appUrl);
+    }
+
+    function bimwinUrlFromConfigCode() {
+        var parsed = configFromCode();
+        var direct = normalizeAppUrl(parsed && parsed.bimwinUrl);
+        if (direct) return direct;
+        var appUrl = normalizeAppUrl(parsed && parsed.appUrl);
+        return appUrl ? bimwinPageUrl(appUrl) : '';
     }
 
     function csrfToken() {
@@ -158,6 +180,29 @@
         } catch (e) {}
     }
 
+    function resetConfig() {
+        if (running) {
+            log('Hentikan proses BIMWIN dulu sebelum reset.', 'err');
+            return;
+        }
+        if (!window.confirm('Reset semua konfigurasi BIMWIN di browser? Endpoint, URL Laporan, wilayah, fasilitator, dan pengaturan akan dihapus.')) {
+            return;
+        }
+        if (recording) stopRecording(true);
+
+        recordedAppUrl = '';
+        recordedBimwinUrl = '';
+        recordedEndpoints = emptyEndpoints();
+        var defaults = Object.assign({}, DEFAULTS);
+        defaults.endpoints = emptyEndpoints();
+        writeConfigToPanel(defaults);
+        storeConfig(readConfigFromPanel());
+        if (panelElement('bw-config-code')) panelElement('bw-config-code').value = '';
+        if (panelElement('bw-mode')) panelElement('bw-mode').value = 'cek';
+        progress('');
+        log('Semua konfigurasi BIMWIN di browser direset.', 'ok');
+    }
+
     function panelElement(id) {
         return document.getElementById(id);
     }
@@ -184,6 +229,7 @@
     function readConfigFromPanel() {
         return {
             appUrl: recordedAppUrl,
+            bimwinUrl: recordedBimwinUrl,
             endpoints: normalizeEndpoints(recordedEndpoints),
             provinsi: (panelElement('bw-provinsi')?.value || '').trim(),
             kabkota: (panelElement('bw-kabkota')?.value || '').trim(),
@@ -199,7 +245,14 @@
         var merged = Object.assign({}, DEFAULTS, config || {});
         merged.endpoints = normalizeEndpoints(merged.endpoints);
         var nextAppUrl = normalizeAppUrl(merged.appUrl);
+        var nextBimwinUrl = normalizeAppUrl(merged.bimwinUrl);
         if (nextAppUrl) recordedAppUrl = nextAppUrl;
+        if (nextBimwinUrl) {
+            recordedBimwinUrl = nextBimwinUrl;
+            if (!nextAppUrl) recordedAppUrl = nextBimwinUrl.replace(/\/bimwin$/i, '');
+        } else if (nextAppUrl) {
+            recordedBimwinUrl = bimwinPageUrl(nextAppUrl);
+        }
         recordedEndpoints = merged.endpoints;
         renderEndpointStatus();
         if (panelElement('bw-provinsi')) panelElement('bw-provinsi').value = merged.provinsi || '';
@@ -472,18 +525,25 @@
     }
 
     function ensureAppUrl() {
-        if (recordedAppUrl) return recordedAppUrl;
+        if (recordedAppUrl || recordedBimwinUrl) {
+            if (!recordedAppUrl) recordedAppUrl = recordedBimwinUrl.replace(/\/bimwin$/i, '');
+            if (!recordedBimwinUrl) recordedBimwinUrl = bimwinPageUrl(recordedAppUrl);
+            return recordedAppUrl;
+        }
 
-        var fromCode = appUrlFromConfigCode();
-        if (fromCode) {
-            recordedAppUrl = fromCode;
+        var codeAppUrl = appUrlFromConfigCode();
+        var codeBimwinUrl = bimwinUrlFromConfigCode();
+        if (codeAppUrl || codeBimwinUrl) {
+            if (!codeAppUrl && codeBimwinUrl) codeAppUrl = codeBimwinUrl.replace(/\/bimwin$/i, '');
+            recordedAppUrl = codeAppUrl;
+            recordedBimwinUrl = codeBimwinUrl || bimwinPageUrl(codeAppUrl);
             renderEndpointStatus();
             storeConfig(readConfigFromPanel());
             log('URL Laporan diambil dari kode konfigurasi.', 'ok');
             return recordedAppUrl;
         }
 
-        var input = pageWindow.prompt('URL aplikasi Laporan (contoh: https://laporan.example.com):', '');
+        var input = pageWindow.prompt('URL aplikasi Laporan (root, contoh: https://laporan.example.com):', '');
         if (input === null) return '';
 
         var normalized = normalizeAppUrl(input);
@@ -493,6 +553,7 @@
         }
 
         recordedAppUrl = normalized;
+        recordedBimwinUrl = bimwinPageUrl(normalized);
         renderEndpointStatus();
         storeConfig(readConfigFromPanel());
         log('URL Laporan disimpan: ' + recordedAppUrl, 'ok');
@@ -506,12 +567,18 @@
         }
 
         var appUrl = ensureAppUrl();
-        if (!appUrl) {
+        if (!appUrl && !recordedBimwinUrl) {
             log('URL Laporan belum ada. Salin kode konfigurasi dari Laporan, tempel di panel, lalu klik Muat.', 'err');
             return;
         }
 
-        var url = appUrl + '/bimwin#endpoints=' + encodeURIComponent(JSON.stringify(recordedEndpoints));
+        var bimwinUrl = recordedBimwinUrl || bimwinPageUrl(appUrl);
+        if (!bimwinUrl) {
+            log('URL halaman BIMWIN tidak valid.', 'err');
+            return;
+        }
+
+        var url = bimwinUrl + '#endpoints=' + encodeURIComponent(JSON.stringify(recordedEndpoints));
         var opened = null;
         try {
             opened = pageWindow.open(url, '_blank');
@@ -558,18 +625,19 @@
             +       '<button id="bw-record" type="button" style="padding:4px 8px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
             +       '<button id="bw-send-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
             +       '<button id="bw-copy-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Salin JSON</button>'
+            +       '<button id="bw-reset" type="button" title="Hapus semua konfigurasi BIMWIN di browser" style="padding:4px 8px;font-size:10px;cursor:pointer;">Reset</button>'
             +     '</div>'
             +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Klik <strong>Rekam endpoint</strong>, lalu lakukan satu alur BIMWIN manual. Simpan/selesai menulis ke SIMKAH4.</p>'
             +   '</div>'
+            +   '<label for="bw-mode" style="font-size:11px;display:block;margin-bottom:2px;">Mode</label>'
+            +   '<select id="bw-mode" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;">'
+            +     '<option value="cek">Cek saja (tidak menulis)</option>'
+            +     '<option value="isi">Isi jadwal (tanpa tandai selesai)</option>'
+            +     '<option value="lengkap">Isi + tandai selesai</option>'
+            +   '</select>'
             +   '<details style="margin:6px 0;">'
             +     '<summary style="font-size:11px;cursor:pointer;">Pengaturan wilayah &amp; proses</summary>'
             +     '<p style="font-size:10px;color:#555;margin:4px 0;">Terisi otomatis dari kode konfigurasi Laporan. Sesuaikan hanya jika perlu.</p>'
-            +     '<label for="bw-mode" style="font-size:11px;display:block;margin-bottom:2px;">Mode</label>'
-            +     '<select id="bw-mode" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;">'
-            +       '<option value="cek">Cek saja (tidak menulis)</option>'
-            +       '<option value="isi">Isi jadwal (tanpa tandai selesai)</option>'
-            +       '<option value="lengkap">Isi + tandai selesai</option>'
-            +     '</select>'
             +     '<label for="bw-provinsi" style="font-size:11px;display:block;margin-bottom:2px;">Provinsi</label>'
             +     '<input id="bw-provinsi" type="text" placeholder="Nama provinsi" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
             +     '<label for="bw-kabkota" style="font-size:11px;display:block;margin-bottom:2px;">Kabupaten/Kota</label>'
@@ -620,6 +688,7 @@
             '#bw-panel #bw-send-endpoints{background:#047857;color:#fff;border-color:#047857;}',
             '#bw-panel #bw-send-endpoints:disabled{background:#f8fafc;color:#111;border-color:#cbd5e1;}',
             '#bw-panel #bw-copy-endpoints,#bw-panel #bw-load-code{background:#eef2ff;color:#312e81;border-color:#c7d2fe;}',
+            '#bw-panel #bw-reset{background:#b91c1c;color:#fff;border-color:#b91c1c;font-weight:600;}',
             '#bw-panel #bw-hide{border:none;background:none;color:#111;font-size:14px;}',
             '#bw-toggle{position:fixed!important;left:16px!important;right:auto!important;bottom:16px!important;}',
             '#bw-panel{position:fixed!important;left:16px!important;right:auto!important;}'
@@ -672,6 +741,7 @@
         panelElement('bw-record').addEventListener('click', startRecording);
         panelElement('bw-send-endpoints').addEventListener('click', sendEndpointsToLaporan);
         panelElement('bw-copy-endpoints').addEventListener('click', copyEndpoints);
+        panelElement('bw-reset').addEventListener('click', resetConfig);
 
         writeConfigToPanel(loadStoredConfig());
     }

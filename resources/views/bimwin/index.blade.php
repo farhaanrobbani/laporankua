@@ -184,7 +184,7 @@
                             <span id="bimwin-copy-status" class="text-sm font-medium text-gray-500 dark:text-gray-400"></span>
                         </div>
                         <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                            Kode ini memuat <span class="font-mono">appUrl</span> dan keempat endpoint akun Anda. Kosongkan fasilitator jika ingin memilih otomatis berdasarkan sisa kuota terbanyak. Nilai <span class="font-mono">maxCoba</span> adalah batas percobaan saat kuota penuh.
+                            Kode ini memuat alamat Laporan (<span class="font-mono">appUrl</span>/<span class="font-mono">bimwinUrl</span>) dan keempat endpoint akun Anda. Kosongkan fasilitator jika ingin memilih otomatis berdasarkan sisa kuota terbanyak. Nilai <span class="font-mono">maxCoba</span> adalah batas percobaan saat kuota penuh.
                         </p>
                     </div>
                 </div>

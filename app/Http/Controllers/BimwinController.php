@@ -17,9 +17,11 @@ class BimwinController extends Controller
     {
         $user = $request->user();
         $endpoints = $this->endpointsFor($user);
+        $appUrl = rtrim(url('/'), '/');
 
         $config = [
-            'appUrl' => rtrim(url('/'), '/'),
+            'appUrl' => $appUrl,
+            'bimwinUrl' => $appUrl.'/bimwin',
             'endpoints' => $endpoints,
             'provinsi' => $user->provinsi ?: '',
             'kabkota' => $user->kota_kabupaten ?: '',
