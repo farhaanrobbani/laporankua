@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.3
+// @version      1.1.4
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
@@ -654,7 +654,10 @@
         body.append('no_daftar', noDaftar);
         body.append('catin', catin);
         var result = await fetchJson(endpoints.cek, body);
-        return !!result.success;
+        if (!result || !Array.isArray(result.items)) {
+            throw new Error('Respons cek BIMWIN tidak dikenali.');
+        }
+        return result.items.length > 0;
     }
 
     async function cekBelum(endpoints) {

@@ -69,7 +69,7 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertMatchesRegularExpression('/@version\s+1\.1\.3/', $content);
+        $this->assertMatchesRegularExpression('/@version\s+1\.1\.4/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
         $this->assertStringContainsString('recordingPageWindow.fetch', $content);
         $this->assertStringContainsString('recordingPageWindow.XMLHttpRequest', $content);
@@ -80,6 +80,8 @@ class BimwinTest extends TestCase
         $this->assertStringContainsString('endpointsComplete', $content);
         $this->assertStringContainsString('Rekam endpoint', $content);
         $this->assertStringContainsString('SS_ALL', $content);
+        $this->assertStringContainsString('Array.isArray(result.items)', $content);
+        $this->assertStringContainsString('result.items.length > 0', $content);
         $this->assertStringContainsString('left:16px', $content);
         $this->assertStringContainsString('#bw-panel button', $content);
         $this->assertStringContainsString('#bw-panel #bw-record{background:#4f46e5', $content);
