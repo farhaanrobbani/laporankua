@@ -17,7 +17,7 @@ class BimwinTest extends TestCase
 
     public function test_authenticated_user_can_see_bimwin_page_with_profile_config(): void
     {
-        $user = User::factory()->create([
+        $user = $this->premiumUser([
             'provinsi' => 'Provinsi Uji',
             'kota_kabupaten' => 'Kabupaten Uji',
             'kecamatan' => 'Kecamatan Uji',
@@ -40,7 +40,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_page_warns_when_profile_region_is_incomplete(): void
     {
-        $user = User::factory()->create();
+        $user = $this->premiumUser();
 
         $this->actingAs($user)
             ->get(route('bimwin.index'))
@@ -50,7 +50,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_navigation_link_is_visible(): void
     {
-        $user = User::factory()->create();
+        $user = $this->premiumUser();
 
         $this->actingAs($user)
             ->get(route('dashboard'))
@@ -69,8 +69,16 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertMatchesRegularExpression('/@version\s+1\.1\.6/', $content);
+        $this->assertMatchesRegularExpression('/@version\s+1\.2\.0/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
+        $this->assertMatchesRegularExpression('/@grant\s+GM_xmlhttpRequest/', $content);
+        $this->assertStringContainsString('@connect      laporankua.mfr.my.id', $content);
+        $this->assertStringContainsString('licenseUrl', $content);
+        $this->assertStringContainsString('licenseToken', $content);
+        $this->assertStringContainsString('ensureLicense', $content);
+        $this->assertStringContainsString('GM_xmlhttpRequest', $content);
+        $this->assertStringContainsString('Lisensi: belum terhubung', $content);
+        $this->assertStringContainsString('Kode lisensi berlaku 30 hari', $content);
         $this->assertStringContainsString('recordingPageWindow.fetch', $content);
         $this->assertStringContainsString('recordingPageWindow.XMLHttpRequest', $content);
         $this->assertStringContainsString('pageWindow.location.href', $content);
@@ -113,7 +121,7 @@ class BimwinTest extends TestCase
 
     public function test_authenticated_user_can_save_complete_bimwin_endpoints(): void
     {
-        $user = User::factory()->create();
+        $user = $this->premiumUser();
         $endpoints = $this->validEndpoints();
 
         $this->actingAs($user)
@@ -126,7 +134,7 @@ class BimwinTest extends TestCase
 
     public function test_authenticated_user_can_reset_bimwin_endpoints(): void
     {
-        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+        $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $this->actingAs($user)
             ->delete(route('bimwin.reset-endpoints'))
@@ -143,7 +151,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_page_shows_reset_button_only_when_endpoints_exist(): void
     {
-        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+        $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $this->actingAs($user)
             ->get(route('bimwin.index'))
@@ -162,7 +170,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_endpoints_must_be_complete_or_empty(): void
     {
-        $user = User::factory()->create();
+        $user = $this->premiumUser();
 
         $this->actingAs($user)
             ->patch(route('bimwin.update-endpoints'), [
@@ -180,7 +188,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_endpoints_can_be_cleared(): void
     {
-        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+        $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $this->actingAs($user)
             ->patch(route('bimwin.update-endpoints'), [
@@ -193,7 +201,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_endpoint_must_use_simkah4_https_url(): void
     {
-        $user = User::factory()->create();
+        $user = $this->premiumUser();
         $endpoints = $this->validEndpoints();
         $endpoints['cek'] = 'https://example.com/endpoint';
 
@@ -206,7 +214,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_endpoint_rejects_query_and_fragment(): void
     {
-        $user = User::factory()->create();
+        $user = $this->premiumUser();
         $endpoints = $this->validEndpoints();
         $endpoints['dialog'] = 'https://simkah4.kemenag.go.id/endpoint?no_daftar=1';
 
@@ -219,7 +227,7 @@ class BimwinTest extends TestCase
 
     public function test_bimwin_page_outputs_endpoints_and_app_url_in_config(): void
     {
-        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+        $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $response = $this->actingAs($user)
             ->get(route('bimwin.index'))
@@ -227,14 +235,61 @@ class BimwinTest extends TestCase
             ->assertSee('4/4 tersimpan')
             ->assertSee($this->validEndpoints()['cek'], false)
             ->assertSee('appUrl')
-            ->assertSee('bimwinUrl');
+            ->assertSee('bimwinUrl')
+            ->assertSee('licenseUrl')
+            ->assertSee('licenseToken');
 
         $appUrl = rtrim(url('/'), '/');
         $content = $response->getContent();
 
         $this->assertStringContainsString($appUrl, $content);
         $this->assertStringContainsString($appUrl.'/bimwin', $content);
+        $this->assertStringContainsString($appUrl.'/api/bimwin/license', $content);
         $this->assertStringNotContainsString($appUrl.'/bimwin/bimwin', $content);
+    }
+
+    public function test_free_user_sees_premium_notice(): void
+    {
+        $user = User::factory()->create(['plan' => 'free']);
+
+        $this->actingAs($user)
+            ->get(route('bimwin.index'))
+            ->assertOk()
+            ->assertSee('BIMWIN hanya untuk pengguna Premium')
+            ->assertDontSee('licenseToken');
+    }
+
+    public function test_free_user_cannot_update_or_reset_bimwin_endpoints(): void
+    {
+        $user = User::factory()->create(['plan' => 'free']);
+
+        $this->actingAs($user)
+            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $this->validEndpoints()])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->delete(route('bimwin.reset-endpoints'))
+            ->assertForbidden();
+
+        $this->assertNull($user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_bimwin_navigation_link_is_hidden_for_free_user(): void
+    {
+        $user = User::factory()->create(['plan' => 'free']);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertDontSee(route('bimwin.index'), false);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function premiumUser(array $attributes = []): User
+    {
+        return User::factory()->create(array_merge(['plan' => 'premium'], $attributes));
     }
 
     /**

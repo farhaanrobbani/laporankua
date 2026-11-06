@@ -184,7 +184,10 @@
                             <span id="bimwin-copy-status" class="text-sm font-medium text-gray-500 dark:text-gray-400"></span>
                         </div>
                         <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                            Kode ini memuat alamat Laporan (<span class="font-mono">appUrl</span>/<span class="font-mono">bimwinUrl</span>) dan keempat endpoint akun Anda. Kosongkan fasilitator jika ingin memilih otomatis berdasarkan sisa kuota terbanyak. Nilai <span class="font-mono">maxCoba</span> adalah batas percobaan saat kuota penuh.
+                            Kode ini memuat alamat Laporan (<span class="font-mono">appUrl</span>/<span class="font-mono">bimwinUrl</span>), token lisensi 30 hari, dan keempat endpoint akun Anda. Kosongkan fasilitator jika ingin memilih otomatis berdasarkan sisa kuota terbanyak. Nilai <span class="font-mono">maxCoba</span> adalah batas percobaan saat kuota penuh.
+                        </p>
+                        <p class="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                            Token lisensi berlaku 30 hari. Setelah itu salin kode konfigurasi baru dari halaman ini. Script akan memeriksa lisensi ke Laporan setiap kali dijalankan; tanpa koneksi ke Laporan, BIMWIN tidak bisa dipakai.
                         </p>
                     </div>
                 </div>

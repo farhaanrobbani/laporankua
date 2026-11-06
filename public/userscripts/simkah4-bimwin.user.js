@@ -1,12 +1,16 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.6
+// @version      1.2.0
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
+// @connect      laporankua.mfr.my.id
+// @connect      localhost
+// @connect      127.0.0.1
 // @run-at       document-idle
 // @noframes
 // ==/UserScript==
@@ -40,6 +44,8 @@
     var DEFAULTS = {
         appUrl: '',
         bimwinUrl: '',
+        licenseUrl: '',
+        licenseToken: '',
         endpoints: emptyEndpoints(),
         provinsi: '',
         kabkota: '',
@@ -56,6 +62,8 @@
     var recordedEndpoints = emptyEndpoints();
     var recordedAppUrl = '';
     var recordedBimwinUrl = '';
+    var recordedLicenseUrl = '';
+    var recordedLicenseToken = '';
     var recordingPageWindow = null;
     var recordingFetch = null;
     var recordingXhrOpen = null;
@@ -192,6 +200,8 @@
 
         recordedAppUrl = '';
         recordedBimwinUrl = '';
+        recordedLicenseUrl = '';
+        recordedLicenseToken = '';
         recordedEndpoints = emptyEndpoints();
         var defaults = Object.assign({}, DEFAULTS);
         defaults.endpoints = emptyEndpoints();
@@ -230,6 +240,8 @@
         return {
             appUrl: recordedAppUrl,
             bimwinUrl: recordedBimwinUrl,
+            licenseUrl: recordedLicenseUrl,
+            licenseToken: recordedLicenseToken,
             endpoints: normalizeEndpoints(recordedEndpoints),
             provinsi: (panelElement('bw-provinsi')?.value || '').trim(),
             kabkota: (panelElement('bw-kabkota')?.value || '').trim(),
@@ -253,8 +265,11 @@
         } else if (nextAppUrl) {
             recordedBimwinUrl = bimwinPageUrl(nextAppUrl);
         }
+        recordedLicenseUrl = normalizeAppUrl(merged.licenseUrl);
+        recordedLicenseToken = typeof merged.licenseToken === 'string' ? merged.licenseToken.trim() : '';
         recordedEndpoints = merged.endpoints;
         renderEndpointStatus();
+        setLicenseStatus(recordedLicenseToken ? 'siap dicek' : 'belum terhubung', false);
         if (panelElement('bw-provinsi')) panelElement('bw-provinsi').value = merged.provinsi || '';
         if (panelElement('bw-kabkota')) panelElement('bw-kabkota').value = merged.kabkota || '';
         if (panelElement('bw-kecamatan')) panelElement('bw-kecamatan').value = merged.kecamatan || '';
@@ -293,6 +308,98 @@
         if (recordButton) {
             recordButton.textContent = recording ? 'Stop rekam' : 'Rekam endpoint';
             recordButton.classList.toggle('is-recording', recording);
+        }
+    }
+
+    function setLicenseStatus(text, ok) {
+        var el = panelElement('bw-license-status');
+        if (!el) return;
+        el.textContent = 'Lisensi: ' + text;
+        el.style.color = ok ? '#047857' : '#b45309';
+    }
+
+    function licenseReasonText(reason) {
+        var messages = {
+            not_premium: 'langganan Premium tidak aktif. Hubungi admin untuk perpanjangan.',
+            token_expired: 'kode konfigurasi sudah kedaluwarsa. Salin kode baru dari Laporan.',
+            invalid_token: 'token lisensi tidak valid. Salin kode konfigurasi baru dari Laporan.',
+            user_inactive: 'akun Anda dinonaktifkan.',
+            http_429: 'terlalu banyak permintaan cek lisensi. Coba lagi sebentar.'
+        };
+        return messages[reason] || ('cek lisensi gagal (' + reason + ').');
+    }
+
+    function requestLicense(token, url) {
+        return new Promise(function (resolve, reject) {
+            if (typeof GM_xmlhttpRequest !== 'function') {
+                reject(new Error('GM_xmlhttpRequest tidak tersedia. Update Tampermonkey.'));
+                return;
+            }
+
+            GM_xmlhttpRequest({
+                method: 'POST',
+                url: url,
+                headers: { 'Content-Type': 'application/json' },
+                data: JSON.stringify({ token: token }),
+                timeout: 15000,
+                onload: function (response) {
+                    var data = {};
+                    try {
+                        data = JSON.parse(response.responseText);
+                    } catch (e) {}
+                    resolve({ status: response.status, data: data });
+                },
+                onerror: function () {
+                    reject(new Error('Tidak dapat menghubungi Laporan.'));
+                },
+                ontimeout: function () {
+                    reject(new Error('Cek lisensi timeout.'));
+                }
+            });
+        });
+    }
+
+    async function ensureLicense() {
+        var token = recordedLicenseToken;
+        var url = recordedLicenseUrl;
+
+        if (!url && recordedAppUrl) {
+            try {
+                url = new URL('/api/bimwin/license', recordedAppUrl).href;
+            } catch (e) {
+                url = '';
+            }
+        }
+
+        if (!token) {
+            setLicenseStatus('belum terhubung', false);
+            log('Lisensi belum ada. Salin kode konfigurasi baru dari Laporan > BIMWIN.', 'err');
+            return false;
+        }
+
+        if (!url) {
+            setLicenseStatus('gagal dicek', false);
+            log('URL lisensi tidak ditemukan. Salin kode konfigurasi baru dari Laporan > BIMWIN.', 'err');
+            return false;
+        }
+
+        try {
+            var result = await requestLicense(token, url);
+            if (result.status >= 200 && result.status < 300 && result.data && result.data.allowed) {
+                setLicenseStatus('aktif', true);
+                return true;
+            }
+
+            var reason = result.data && result.data.reason
+                ? result.data.reason
+                : 'http_' + result.status;
+            setLicenseStatus('tidak aktif', false);
+            log('Lisensi ditolak: ' + licenseReasonText(reason), 'err');
+            return false;
+        } catch (e) {
+            setLicenseStatus('gagal dicek', false);
+            log('Cek lisensi gagal: ' + e.message, 'err');
+            return false;
         }
     }
 
@@ -621,6 +728,7 @@
             +     '</div>'
             +     '<div id="bw-endpoint-list" style="font-size:10px;color:#555;margin-top:2px;">cek: — · dialog: — · simpan: — · selesai: —</div>'
             +     '<div id="bw-app-status" style="font-size:10px;color:#b45309;margin-top:2px;">Laporan: belum terhubung</div>'
+            +     '<div id="bw-license-status" style="font-size:10px;color:#b45309;margin-top:2px;">Lisensi: belum terhubung</div>'
             +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'
             +       '<button id="bw-record" type="button" style="padding:4px 8px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
             +       '<button id="bw-send-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
@@ -657,6 +765,7 @@
             +     '<summary style="font-size:11px;cursor:pointer;">Kode konfigurasi dari Laporan</summary>'
             +     '<textarea id="bw-config-code" rows="4" placeholder=\'{"provinsi":"...","kabkota":"...","kecamatan":"..."}\' style="width:100%;box-sizing:border-box;margin-top:4px;font-size:11px;padding:4px;"></textarea>'
             +     '<button id="bw-load-code" type="button" style="margin-top:4px;padding:4px 8px;font-size:11px;cursor:pointer;">Muat</button>'
+            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Kode lisensi berlaku 30 hari. Setelah itu salin kode baru dari Laporan.</p>'
             +   '</details>'
             +   '<div style="display:flex;gap:6px;margin:6px 0;">'
             +     '<button id="bw-start" type="button" style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
@@ -1114,6 +1223,9 @@
             log('Hentikan perekaman endpoint dulu sebelum menjalankan BIMWIN.', 'err');
             return;
         }
+        if (!await ensureLicense()) {
+            return;
+        }
         if (!endpointsComplete(config.endpoints)) {
             log('Endpoint BIMWIN belum lengkap. Rekam sampai 4/4 lalu simpan di Laporan.', 'err');
             return;
@@ -1182,11 +1294,20 @@
 
             var berhasil = 0;
             var gagal = [];
+            var lastLicenseCheck = Date.now();
 
             for (var i = 0; i < hasil.belum.length; i++) {
                 if (stopRequested) {
                     log('Dihentikan. Sisa data tidak diproses.', 'warn');
                     break;
+                }
+
+                if (Date.now() - lastLicenseCheck > 10 * 60 * 1000) {
+                    if (!await ensureLicense()) {
+                        log('Lisensi tidak aktif. Proses dihentikan.', 'err');
+                        break;
+                    }
+                    lastLicenseCheck = Date.now();
                 }
 
                 var data = hasil.belum[i];

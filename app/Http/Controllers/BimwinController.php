@@ -7,6 +7,7 @@ use App\Rules\SimkahEndpoint;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 
 class BimwinController extends Controller
@@ -16,12 +17,27 @@ class BimwinController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+
+        if (! $user->isPremium()) {
+            return view('bimwin.premium-required', [
+                'user' => $user,
+            ]);
+        }
+
         $endpoints = $this->endpointsFor($user);
         $appUrl = rtrim(url('/'), '/');
+
+        $licenseToken = Crypt::encryptString(json_encode([
+            'purpose' => 'bimwin',
+            'user_id' => $user->id,
+            'exp' => now()->addDays(30)->timestamp,
+        ], JSON_THROW_ON_ERROR));
 
         $config = [
             'appUrl' => $appUrl,
             'bimwinUrl' => $appUrl.'/bimwin',
+            'licenseUrl' => $appUrl.'/api/bimwin/license',
+            'licenseToken' => $licenseToken,
             'endpoints' => $endpoints,
             'provinsi' => $user->provinsi ?: '',
             'kabkota' => $user->kota_kabupaten ?: '',
@@ -41,6 +57,8 @@ class BimwinController extends Controller
 
     public function updateEndpoints(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->isPremium(), 403, 'Fitur BIMWIN hanya untuk pengguna Premium.');
+
         $validated = $request->validate([
             'endpoints' => ['nullable', 'array'],
             'endpoints.cek' => ['nullable', 'string', 'max:2048', new SimkahEndpoint],
@@ -73,6 +91,8 @@ class BimwinController extends Controller
 
     public function resetEndpoints(Request $request): RedirectResponse
     {
+        abort_unless($request->user()->isPremium(), 403, 'Fitur BIMWIN hanya untuk pengguna Premium.');
+
         $request->user()->fill([
             'bimwin_endpoints' => null,
         ])->save();
