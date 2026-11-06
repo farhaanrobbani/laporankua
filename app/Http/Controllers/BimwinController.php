@@ -69,6 +69,17 @@ class BimwinController extends Controller
             ->with('status', 'Endpoint BIMWIN berhasil disimpan.');
     }
 
+    public function resetEndpoints(Request $request): RedirectResponse
+    {
+        $request->user()->fill([
+            'bimwin_endpoints' => null,
+        ])->save();
+
+        return redirect()
+            ->route('bimwin.index')
+            ->with('status', 'Endpoint BIMWIN berhasil direset.');
+    }
+
     /**
      * @return array{cek: string, dialog: string, simpan: string, selesai: string}
      */

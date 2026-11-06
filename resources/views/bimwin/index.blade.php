@@ -76,16 +76,35 @@
                                 Endpoint berbeda untuk setiap akun SIMKAH4. Rekam dari akun Anda sendiri; jangan memakai endpoint milik akun lain.
                             </p>
                         </div>
-                        @if ($endpointsLengkap)
-                            <span class="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200">
-                                {{ $endpointCount }}/4 tersimpan
-                            </span>
-                        @else
-                            <span class="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">
-                                {{ $endpointCount }}/4 — belum lengkap
-                            </span>
-                        @endif
+                        <div class="flex flex-wrap items-center gap-2">
+                            @if ($endpointCount > 0)
+                                <form method="POST" action="{{ route('bimwin.reset-endpoints') }}"
+                                      onsubmit="return confirm('Hapus semua endpoint BIMWIN yang tersimpan? Tindakan ini tidak bisa dibatalkan.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 dark:border-red-700 dark:bg-gray-900 dark:text-red-300 dark:hover:bg-red-950/40">
+                                        <x-heroicon-o-trash class="h-4 w-4" />
+                                        Reset Endpoint
+                                    </button>
+                                </form>
+                            @endif
+                            @if ($endpointsLengkap)
+                                <span class="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200">
+                                    {{ $endpointCount }}/4 tersimpan
+                                </span>
+                            @else
+                                <span class="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">
+                                    {{ $endpointCount }}/4 — belum lengkap
+                                </span>
+                            @endif
+                        </div>
                     </div>
+                    @if ($endpointCount > 0)
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Reset hanya menghapus endpoint di server. Muat ulang kode konfigurasi di panel SIMKAH4 untuk membersihkan endpoint di browser.
+                        </p>
+                    @endif
                 </div>
 
                 <form method="POST" action="{{ route('bimwin.update-endpoints') }}" class="p-4 sm:p-6">
@@ -122,11 +141,15 @@
                             (kiri bawah), bukan di halaman Laporan ini.
                         </p>
                         <ol class="mt-2 list-decimal space-y-1 pl-5 text-xs sm:text-sm">
-                            <li>Buka <a href="https://simkah4.kemenag.go.id/" target="_blank" rel="noopener" class="font-medium underline dark:text-indigo-300">SIMKAH4</a> dengan akun ini, lalu buka halaman daftar nikah.</li>
-                            <li>Klik tombol <strong>BIMWIN</strong> di kiri bawah, lalu pada bagian <strong>Endpoint akun ini</strong> klik <strong>Rekam endpoint</strong>.</li>
+                            <li>Di halaman Laporan ini, klik <strong>Salin Kode</strong> pada bagian <strong>Kode Konfigurasi</strong>.</li>
+                            <li>Buka <a href="https://simkah4.kemenag.go.id/" target="_blank" rel="noopener" class="font-medium underline dark:text-indigo-300">SIMKAH4</a> dengan akun ini, tempel kode ke panel <strong>BIMWIN</strong>, lalu klik <strong>Muat</strong>.</li>
+                            <li>Pada bagian <strong>Endpoint akun ini</strong>, klik <strong>Rekam endpoint</strong>.</li>
                             <li>Lakukan satu alur BIMWIN secara manual: cek catin, buka dialog, isi jadwal, lalu simpan/tandai selesai.</li>
                             <li>Setelah 4/4 endpoint terekam, klik <strong>Kirim ke Laporan</strong>. Form endpoint di halaman ini terisi otomatis; periksa lalu klik <strong>Simpan Endpoint</strong>.</li>
                         </ol>
+                        <p class="mt-2 text-xs">
+                            Jika endpoint sudah terekam tetapi URL Laporan belum ada, tempel kode konfigurasi lalu klik <strong>Muat</strong>; endpoint yang sudah terekam tidak hilang.
+                        </p>
                         <p class="mt-2 text-xs">
                             Perekaman hanya mengamati permintaan dari alur manual. Proses simpan/selesai tetap menulis ke SIMKAH4, jadi gunakan data uji atau data yang memang akan diproses.
                         </p>
@@ -175,8 +198,8 @@
                             <li>Pasang ekstensi <strong>Tampermonkey</strong> di Chrome, Edge, atau Firefox.</li>
                             <li>Buka <a href="{{ url('/userscripts/simkah4-bimwin.user.js') }}" target="_blank" rel="noopener" class="text-indigo-600 underline dark:text-indigo-400">link install userscript BIMWIN</a>, lalu setujui pemasangan.</li>
                             <li>Login ke SIMKAH4 dan buka halaman daftar nikah yang ingin diproses.</li>
-                            <li>Jika endpoint belum 4/4, buka panel <strong>BIMWIN</strong> di SIMKAH4, klik <strong>Rekam endpoint</strong> di bagian <strong>Endpoint akun ini</strong>, ikuti satu alur manual, lalu klik <strong>Kirim ke Laporan</strong>. Periksa dan simpan form endpoint di halaman ini.</li>
                             <li>Klik tombol <strong>BIMWIN</strong> di kiri bawah, tempel kode konfigurasi, lalu klik <strong>Muat</strong>.</li>
+                            <li>Jika endpoint belum 4/4, klik <strong>Rekam endpoint</strong> di bagian <strong>Endpoint akun ini</strong>, ikuti satu alur manual, lalu klik <strong>Kirim ke Laporan</strong>. Periksa dan simpan form endpoint di halaman ini.</li>
                             <li>Jalankan <strong>Cek saja</strong> lebih dulu. Pastikan nomor daftar dan status calon sudah benar.</li>
                             <li>Setelah yakin, pilih <strong>Isi jadwal</strong> atau <strong>Isi + tandai selesai</strong>, lalu konfirmasi.</li>
                         </ol>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SIMKAH4 — Isi BIMWIN Otomatis
 // @namespace    laporan-kua
-// @version      1.1.4
+// @version      1.1.5
 // @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
@@ -94,6 +94,29 @@
         return Math.min(max, Math.max(min, number));
     }
 
+    function normalizeAppUrl(value) {
+        try {
+            var parsed = new URL(String(value || '').trim());
+            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+            parsed.search = '';
+            parsed.hash = '';
+            return (parsed.origin + parsed.pathname).replace(/\/+$/, '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function appUrlFromConfigCode() {
+        var raw = (panelElement('bw-config-code')?.value || '').trim();
+        if (!raw) return '';
+        try {
+            var parsed = JSON.parse(raw);
+            return normalizeAppUrl(parsed && parsed.appUrl);
+        } catch (e) {
+            return '';
+        }
+    }
+
     function csrfToken() {
         var meta = document.querySelector('meta[name="csrf-token"]');
         return meta ? meta.getAttribute('content') : '';
@@ -175,7 +198,8 @@
     function writeConfigToPanel(config) {
         var merged = Object.assign({}, DEFAULTS, config || {});
         merged.endpoints = normalizeEndpoints(merged.endpoints);
-        recordedAppUrl = typeof merged.appUrl === 'string' ? merged.appUrl.replace(/\/+$/, '') : '';
+        var nextAppUrl = normalizeAppUrl(merged.appUrl);
+        if (nextAppUrl) recordedAppUrl = nextAppUrl;
         recordedEndpoints = merged.endpoints;
         renderEndpointStatus();
         if (panelElement('bw-provinsi')) panelElement('bw-provinsi').value = merged.provinsi || '';
@@ -201,6 +225,11 @@
             list.textContent = ENDPOINT_KEYS.map(function (key) {
                 return key + ': ' + (recordedEndpoints[key] ? 'OK' : '—');
             }).join(' · ');
+        }
+        var appStatus = panelElement('bw-app-status');
+        if (appStatus) {
+            appStatus.textContent = recordedAppUrl ? 'Laporan: ' + recordedAppUrl : 'Laporan: belum terhubung';
+            appStatus.style.color = recordedAppUrl ? '#047857' : '#b45309';
         }
         var complete = endpointsComplete(recordedEndpoints);
         ['bw-send-endpoints', 'bw-copy-endpoints'].forEach(function (id) {
@@ -442,17 +471,47 @@
         });
     }
 
+    function ensureAppUrl() {
+        if (recordedAppUrl) return recordedAppUrl;
+
+        var fromCode = appUrlFromConfigCode();
+        if (fromCode) {
+            recordedAppUrl = fromCode;
+            renderEndpointStatus();
+            storeConfig(readConfigFromPanel());
+            log('URL Laporan diambil dari kode konfigurasi.', 'ok');
+            return recordedAppUrl;
+        }
+
+        var input = pageWindow.prompt('URL aplikasi Laporan (contoh: https://laporan.example.com):', '');
+        if (input === null) return '';
+
+        var normalized = normalizeAppUrl(input);
+        if (!normalized) {
+            log('URL Laporan tidak valid. Gunakan alamat http/https.', 'err');
+            return '';
+        }
+
+        recordedAppUrl = normalized;
+        renderEndpointStatus();
+        storeConfig(readConfigFromPanel());
+        log('URL Laporan disimpan: ' + recordedAppUrl, 'ok');
+        return recordedAppUrl;
+    }
+
     async function sendEndpointsToLaporan() {
         if (!endpointsComplete(recordedEndpoints)) {
             log('Endpoint belum lengkap. Rekam sampai 4/4.', 'err');
             return;
         }
-        if (!recordedAppUrl) {
-            log('appUrl belum ada. Muat kode konfigurasi dari Laporan.', 'err');
+
+        var appUrl = ensureAppUrl();
+        if (!appUrl) {
+            log('URL Laporan belum ada. Salin kode konfigurasi dari Laporan, tempel di panel, lalu klik Muat.', 'err');
             return;
         }
 
-        var url = recordedAppUrl + '/bimwin#endpoints=' + encodeURIComponent(JSON.stringify(recordedEndpoints));
+        var url = appUrl + '/bimwin#endpoints=' + encodeURIComponent(JSON.stringify(recordedEndpoints));
         var opened = null;
         try {
             opened = pageWindow.open(url, '_blank');
@@ -494,6 +553,7 @@
             +       '<span id="bw-endpoint-status" style="font-size:11px;font-weight:bold;color:#b45309;">0/4</span>'
             +     '</div>'
             +     '<div id="bw-endpoint-list" style="font-size:10px;color:#555;margin-top:2px;">cek: — · dialog: — · simpan: — · selesai: —</div>'
+            +     '<div id="bw-app-status" style="font-size:10px;color:#b45309;margin-top:2px;">Laporan: belum terhubung</div>'
             +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'
             +       '<button id="bw-record" type="button" style="padding:4px 8px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
             +       '<button id="bw-send-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'

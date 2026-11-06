@@ -69,7 +69,7 @@ class BimwinTest extends TestCase
 
         $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertMatchesRegularExpression('/@version\s+1\.1\.4/', $content);
+        $this->assertMatchesRegularExpression('/@version\s+1\.1\.5/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
         $this->assertStringContainsString('recordingPageWindow.fetch', $content);
         $this->assertStringContainsString('recordingPageWindow.XMLHttpRequest', $content);
@@ -82,6 +82,10 @@ class BimwinTest extends TestCase
         $this->assertStringContainsString('SS_ALL', $content);
         $this->assertStringContainsString('Array.isArray(result.items)', $content);
         $this->assertStringContainsString('result.items.length > 0', $content);
+        $this->assertStringContainsString('normalizeAppUrl', $content);
+        $this->assertStringContainsString('appUrlFromConfigCode', $content);
+        $this->assertStringContainsString('ensureAppUrl', $content);
+        $this->assertStringContainsString('Laporan: belum terhubung', $content);
         $this->assertStringContainsString('left:16px', $content);
         $this->assertStringContainsString('#bw-panel button', $content);
         $this->assertStringContainsString('#bw-panel #bw-record{background:#4f46e5', $content);
@@ -111,6 +115,42 @@ class BimwinTest extends TestCase
             ->assertSessionHas('status', 'Endpoint BIMWIN berhasil disimpan.');
 
         $this->assertSame($endpoints, $user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_authenticated_user_can_reset_bimwin_endpoints(): void
+    {
+        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+
+        $this->actingAs($user)
+            ->delete(route('bimwin.reset-endpoints'))
+            ->assertRedirect(route('bimwin.index'))
+            ->assertSessionHas('status', 'Endpoint BIMWIN berhasil direset.');
+
+        $this->assertNull($user->fresh()->bimwin_endpoints);
+    }
+
+    public function test_guest_cannot_reset_bimwin_endpoints(): void
+    {
+        $this->delete(route('bimwin.reset-endpoints'))->assertRedirect(route('login'));
+    }
+
+    public function test_bimwin_page_shows_reset_button_only_when_endpoints_exist(): void
+    {
+        $user = User::factory()->create(['bimwin_endpoints' => $this->validEndpoints()]);
+
+        $this->actingAs($user)
+            ->get(route('bimwin.index'))
+            ->assertOk()
+            ->assertSee('Reset Endpoint')
+            ->assertSee(route('bimwin.reset-endpoints'), false)
+            ->assertSee('Hapus semua endpoint BIMWIN yang tersimpan');
+
+        $user->fill(['bimwin_endpoints' => null])->save();
+
+        $this->actingAs($user)
+            ->get(route('bimwin.index'))
+            ->assertOk()
+            ->assertDontSee('Reset Endpoint');
     }
 
     public function test_bimwin_endpoints_must_be_complete_or_empty(): void
