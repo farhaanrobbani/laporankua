@@ -15,7 +15,7 @@ class BimwinLicenseTest extends TestCase
     {
         $user = User::factory()->create(['plan' => 'premium']);
 
-        $this->postJson(route('api.bimwin.license'), [
+        $this->postJson(route('api.otomasi.license'), [
             'token' => $this->tokenFor($user),
         ])
             ->assertOk()
@@ -29,7 +29,7 @@ class BimwinLicenseTest extends TestCase
     {
         $user = User::factory()->create(['plan' => 'premium']);
 
-        $this->postJson(route('api.bimwin.license'), [
+        $this->postJson(route('api.otomasi.license'), [
             'token' => $this->tokenFor($user, now()->subMinute()->timestamp),
         ])
             ->assertUnauthorized()
@@ -43,7 +43,7 @@ class BimwinLicenseTest extends TestCase
     {
         $user = User::factory()->create(['plan' => 'free']);
 
-        $this->postJson(route('api.bimwin.license'), [
+        $this->postJson(route('api.otomasi.license'), [
             'token' => $this->tokenFor($user),
         ])
             ->assertForbidden()
@@ -60,7 +60,7 @@ class BimwinLicenseTest extends TestCase
             'status' => 'inactive',
         ]);
 
-        $this->postJson(route('api.bimwin.license'), [
+        $this->postJson(route('api.otomasi.license'), [
             'token' => $this->tokenFor($user),
         ])
             ->assertForbidden()
@@ -72,7 +72,7 @@ class BimwinLicenseTest extends TestCase
 
     public function test_invalid_token_is_rejected(): void
     {
-        $this->postJson(route('api.bimwin.license'), [
+        $this->postJson(route('api.otomasi.license'), [
             'token' => 'bukan-token-lisensi',
         ])
             ->assertUnauthorized()
@@ -84,15 +84,30 @@ class BimwinLicenseTest extends TestCase
 
     public function test_missing_token_is_rejected(): void
     {
-        $this->postJson(route('api.bimwin.license'), [])
+        $this->postJson(route('api.otomasi.license'), [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('token');
+    }
+
+    public function test_legacy_bimwin_purpose_token_is_allowed(): void
+    {
+        $user = User::factory()->create(['plan' => 'premium']);
+
+        $token = Crypt::encryptString(json_encode([
+            'purpose' => 'bimwin',
+            'user_id' => $user->id,
+            'exp' => now()->addDays(30)->timestamp,
+        ], JSON_THROW_ON_ERROR));
+
+        $this->postJson(route('api.otomasi.license'), ['token' => $token])
+            ->assertOk()
+            ->assertJson(['allowed' => true]);
     }
 
     private function tokenFor(User $user, ?int $expiresAt = null): string
     {
         return Crypt::encryptString(json_encode([
-            'purpose' => 'bimwin',
+            'purpose' => 'otomasi',
             'user_id' => $user->id,
             'exp' => $expiresAt ?? now()->addDays(30)->timestamp,
         ], JSON_THROW_ON_ERROR));

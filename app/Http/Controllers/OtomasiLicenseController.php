@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Throwable;
 
-class BimwinLicenseController extends Controller
+class OtomasiLicenseController extends Controller
 {
     public function check(Request $request): JsonResponse
     {
@@ -28,7 +28,7 @@ class BimwinLicenseController extends Controller
         }
 
         if (! is_array($payload)
-            || ($payload['purpose'] ?? null) !== 'bimwin'
+            || ! in_array($payload['purpose'] ?? null, ['otomasi', 'bimwin'], true)
             || ! is_int($payload['user_id'] ?? null)
             || ! is_int($payload['exp'] ?? null)) {
             return $this->deny('invalid_token', 401);

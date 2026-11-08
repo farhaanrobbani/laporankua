@@ -12,7 +12,7 @@ class BimwinTest extends TestCase
 
     public function test_guest_is_redirected_from_bimwin_page(): void
     {
-        $this->get(route('bimwin.index'))->assertRedirect(route('login'));
+        $this->get(route('otomasi.bimwin'))->assertRedirect(route('login'));
     }
 
     public function test_authenticated_user_can_see_bimwin_page_with_profile_config(): void
@@ -24,17 +24,17 @@ class BimwinTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get(route('bimwin.index'))
+            ->get(route('otomasi.bimwin'))
             ->assertOk()
             ->assertSee('Otomasi Pengisian BIMWIN')
             ->assertSee('Provinsi Uji')
             ->assertSee('Kabupaten Uji')
             ->assertSee('Kecamatan Uji')
-            ->assertSee('simkah4-bimwin.user.js')
+            ->assertSee('simkah4-otomasi.user.js')
             ->assertSee('Cek saja')
             ->assertSee('Cara merekam otomatis')
             ->assertSee('Rekam endpoint')
-            ->assertSee('kiri bawah')
+            ->assertSee('kanan bawah')
             ->assertSee('Tidak ada wilayah bawaan di aplikasi.');
     }
 
@@ -43,7 +43,7 @@ class BimwinTest extends TestCase
         $user = $this->premiumUser();
 
         $this->actingAs($user)
-            ->get(route('bimwin.index'))
+            ->get(route('otomasi.bimwin'))
             ->assertOk()
             ->assertSee('Lengkapi provinsi, kabupaten/kota, dan kecamatan');
     }
@@ -55,21 +55,21 @@ class BimwinTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee(route('bimwin.index'), false)
-            ->assertSee('BIMWIN');
+            ->assertSee(route('otomasi.bimwin'), false)
+            ->assertSee('Otomasi');
     }
 
-    public function test_bimwin_userscript_is_available(): void
+    public function test_otomasi_userscript_is_available(): void
     {
-        $path = public_path('userscripts/simkah4-bimwin.user.js');
+        $path = public_path('userscripts/simkah4-otomasi.user.js');
 
         $this->assertFileExists($path);
 
         $content = file_get_contents($path);
 
-        $this->assertStringContainsString('SIMKAH4 — Isi BIMWIN Otomatis', $content);
+        $this->assertStringContainsString('SIMKAH4 — Otomasi KUA', $content);
         $this->assertStringContainsString('https://simkah4.kemenag.go.id/*', $content);
-        $this->assertMatchesRegularExpression('/@version\s+1\.2\.0/', $content);
+        $this->assertMatchesRegularExpression('/@version\s+2\.0\.0/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+unsafeWindow/', $content);
         $this->assertMatchesRegularExpression('/@grant\s+GM_xmlhttpRequest/', $content);
         $this->assertStringContainsString('@connect      laporankua.mfr.my.id', $content);
@@ -97,17 +97,24 @@ class BimwinTest extends TestCase
         $this->assertStringContainsString('appUrlFromConfigCode', $content);
         $this->assertStringContainsString('ensureAppUrl', $content);
         $this->assertStringContainsString('bw-reset', $content);
-        $this->assertStringContainsString('Reset semua konfigurasi BIMWIN', $content);
+        $this->assertStringContainsString('Reset semua konfigurasi Otomasi', $content);
+        $this->assertStringContainsString('BULK_MODES', $content);
+        $this->assertStringContainsString('no_billing', $content);
+        $this->assertStringContainsString('no_daftar', $content);
+        $this->assertStringContainsString('ot-tab-bulk', $content);
+        $this->assertStringContainsString('ot-bulk-start', $content);
+        $this->assertStringContainsString('Bukti Bayar', $content);
+        $this->assertStringContainsString('Surat Tugas', $content);
         $this->assertStringContainsString('#bw-panel #bw-reset{background:#b91c1c', $content);
         $this->assertStringContainsString('Laporan: belum terhubung', $content);
         $this->assertLessThan(strpos($content, 'Pengaturan wilayah'), strpos($content, 'id="bw-mode"'));
-        $this->assertStringContainsString('left:16px', $content);
+        $this->assertStringContainsString('right:16px', $content);
         $this->assertStringContainsString('#bw-panel button', $content);
         $this->assertStringContainsString('#bw-panel #bw-record{background:#4f46e5', $content);
         $this->assertStringContainsString('Nama provinsi', $content);
         $this->assertStringContainsString('Nama kabupaten/kota', $content);
         $this->assertStringContainsString('Nama kecamatan', $content);
-        $this->assertStringNotContainsString('right:16px', $content);
+        $this->assertStringNotContainsString('left:16px', $content);
         $this->assertStringNotContainsString('JAWA TIMUR', $content);
         $this->assertStringNotContainsString('PASURUAN', $content);
         $this->assertStringNotContainsString('PASREPAN', $content);
@@ -125,8 +132,8 @@ class BimwinTest extends TestCase
         $endpoints = $this->validEndpoints();
 
         $this->actingAs($user)
-            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $endpoints])
-            ->assertRedirect(route('bimwin.index'))
+            ->patch(route('otomasi.update-endpoints'), ['endpoints' => $endpoints])
+            ->assertRedirect(route('otomasi.bimwin'))
             ->assertSessionHas('status', 'Endpoint BIMWIN berhasil disimpan.');
 
         $this->assertSame($endpoints, $user->fresh()->bimwin_endpoints);
@@ -137,8 +144,8 @@ class BimwinTest extends TestCase
         $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $this->actingAs($user)
-            ->delete(route('bimwin.reset-endpoints'))
-            ->assertRedirect(route('bimwin.index'))
+            ->delete(route('otomasi.reset-endpoints'))
+            ->assertRedirect(route('otomasi.bimwin'))
             ->assertSessionHas('status', 'Endpoint BIMWIN berhasil direset.');
 
         $this->assertNull($user->fresh()->bimwin_endpoints);
@@ -146,7 +153,7 @@ class BimwinTest extends TestCase
 
     public function test_guest_cannot_reset_bimwin_endpoints(): void
     {
-        $this->delete(route('bimwin.reset-endpoints'))->assertRedirect(route('login'));
+        $this->delete(route('otomasi.reset-endpoints'))->assertRedirect(route('login'));
     }
 
     public function test_bimwin_page_shows_reset_button_only_when_endpoints_exist(): void
@@ -154,16 +161,16 @@ class BimwinTest extends TestCase
         $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $this->actingAs($user)
-            ->get(route('bimwin.index'))
+            ->get(route('otomasi.bimwin'))
             ->assertOk()
             ->assertSee('Reset Endpoint')
-            ->assertSee(route('bimwin.reset-endpoints'), false)
+            ->assertSee(route('otomasi.reset-endpoints'), false)
             ->assertSee('Hapus semua endpoint BIMWIN yang tersimpan');
 
         $user->fill(['bimwin_endpoints' => null])->save();
 
         $this->actingAs($user)
-            ->get(route('bimwin.index'))
+            ->get(route('otomasi.bimwin'))
             ->assertOk()
             ->assertDontSee('Reset Endpoint');
     }
@@ -173,7 +180,7 @@ class BimwinTest extends TestCase
         $user = $this->premiumUser();
 
         $this->actingAs($user)
-            ->patch(route('bimwin.update-endpoints'), [
+            ->patch(route('otomasi.update-endpoints'), [
                 'endpoints' => [
                     'cek' => $this->validEndpoints()['cek'],
                     'dialog' => '',
@@ -191,10 +198,10 @@ class BimwinTest extends TestCase
         $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $this->actingAs($user)
-            ->patch(route('bimwin.update-endpoints'), [
+            ->patch(route('otomasi.update-endpoints'), [
                 'endpoints' => ['cek' => '', 'dialog' => '', 'simpan' => '', 'selesai' => ''],
             ])
-            ->assertRedirect(route('bimwin.index'));
+            ->assertRedirect(route('otomasi.bimwin'));
 
         $this->assertNull($user->fresh()->bimwin_endpoints);
     }
@@ -206,7 +213,7 @@ class BimwinTest extends TestCase
         $endpoints['cek'] = 'https://example.com/endpoint';
 
         $this->actingAs($user)
-            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $endpoints])
+            ->patch(route('otomasi.update-endpoints'), ['endpoints' => $endpoints])
             ->assertSessionHasErrors('endpoints.cek');
 
         $this->assertNull($user->fresh()->bimwin_endpoints);
@@ -219,7 +226,7 @@ class BimwinTest extends TestCase
         $endpoints['dialog'] = 'https://simkah4.kemenag.go.id/endpoint?no_daftar=1';
 
         $this->actingAs($user)
-            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $endpoints])
+            ->patch(route('otomasi.update-endpoints'), ['endpoints' => $endpoints])
             ->assertSessionHasErrors('endpoints.dialog');
 
         $this->assertNull($user->fresh()->bimwin_endpoints);
@@ -230,7 +237,7 @@ class BimwinTest extends TestCase
         $user = $this->premiumUser(['bimwin_endpoints' => $this->validEndpoints()]);
 
         $response = $this->actingAs($user)
-            ->get(route('bimwin.index'))
+            ->get(route('otomasi.bimwin'))
             ->assertOk()
             ->assertSee('4/4 tersimpan')
             ->assertSee($this->validEndpoints()['cek'], false)
@@ -243,9 +250,9 @@ class BimwinTest extends TestCase
         $content = $response->getContent();
 
         $this->assertStringContainsString($appUrl, $content);
-        $this->assertStringContainsString($appUrl.'/bimwin', $content);
-        $this->assertStringContainsString($appUrl.'/api/bimwin/license', $content);
-        $this->assertStringNotContainsString($appUrl.'/bimwin/bimwin', $content);
+        $this->assertStringContainsString($appUrl.'/otomasi/bimwin', $content);
+        $this->assertStringContainsString($appUrl.'/api/otomasi/license', $content);
+        $this->assertStringNotContainsString($appUrl.'/otomasi/bimwin/bimwin', $content);
     }
 
     public function test_free_user_sees_premium_notice(): void
@@ -253,7 +260,7 @@ class BimwinTest extends TestCase
         $user = User::factory()->create(['plan' => 'free']);
 
         $this->actingAs($user)
-            ->get(route('bimwin.index'))
+            ->get(route('otomasi.bimwin'))
             ->assertOk()
             ->assertSee('BIMWIN hanya untuk pengguna Premium')
             ->assertDontSee('licenseToken');
@@ -264,11 +271,11 @@ class BimwinTest extends TestCase
         $user = User::factory()->create(['plan' => 'free']);
 
         $this->actingAs($user)
-            ->patch(route('bimwin.update-endpoints'), ['endpoints' => $this->validEndpoints()])
+            ->patch(route('otomasi.update-endpoints'), ['endpoints' => $this->validEndpoints()])
             ->assertForbidden();
 
         $this->actingAs($user)
-            ->delete(route('bimwin.reset-endpoints'))
+            ->delete(route('otomasi.reset-endpoints'))
             ->assertForbidden();
 
         $this->assertNull($user->fresh()->bimwin_endpoints);
@@ -281,7 +288,7 @@ class BimwinTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertDontSee(route('bimwin.index'), false);
+            ->assertDontSee(route('otomasi.bimwin'), false);
     }
 
     /**

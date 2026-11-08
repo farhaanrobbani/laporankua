@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         SIMKAH4 — Isi BIMWIN Otomatis
+// @name         SIMKAH4 — Otomasi KUA
 // @namespace    laporan-kua
-// @version      1.2.0
-// @description  Membantu mengecek dan mengisi BIMWIN di SIMKAH4 memakai sesi login aktif. Endpoint direkam per akun dari aplikasi Laporan.
+// @version      2.0.0
+// @description  Satu panel untuk BIMWIN, unduh massal bukti bayar, dan surat tugas manten di SIMKAH4 memakai sesi login aktif. Konfigurasi dan lisensi diambil dari aplikasi Laporan.
 // @match        https://simkah4.kemenag.go.id/*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -20,7 +20,8 @@
 
     var pageWindow = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
     var ENDPOINT_KEYS = ['cek', 'dialog', 'simpan', 'selesai'];
-    var STORAGE_KEY = 'laporan-bimwin-config';
+    var STORAGE_KEY = 'laporan-otomasi-config';
+    var LEGACY_STORAGE_KEY = 'laporan-bimwin-config';
 
     function emptyEndpoints() {
         return { cek: '', dialog: '', simpan: '', selesai: '' };
@@ -58,6 +59,8 @@
 
     var running = false;
     var stopRequested = false;
+    var bulkRunning = false;
+    var bulkStopRequested = false;
     var recording = false;
     var recordedEndpoints = emptyEndpoints();
     var recordedAppUrl = '';
@@ -119,7 +122,15 @@
     function bimwinPageUrl(value) {
         var base = normalizeAppUrl(value);
         if (!base) return '';
-        return /\/bimwin$/i.test(base) ? base : base + '/bimwin';
+        if (/\/otomasi\/bimwin$/i.test(base) || /\/bimwin$/i.test(base)) return base;
+        if (/\/otomasi$/i.test(base)) return base + '/bimwin';
+        return base + '/otomasi/bimwin';
+    }
+
+    function appUrlFromBimwinUrl(value) {
+        return normalizeAppUrl(value)
+            .replace(/\/otomasi\/bimwin$/i, '')
+            .replace(/\/bimwin$/i, '');
     }
 
     function configFromCode() {
@@ -167,6 +178,21 @@
                 stored = null;
             }
         }
+        if (!stored) {
+            try {
+                if (typeof GM_getValue === 'function') stored = GM_getValue(LEGACY_STORAGE_KEY, null);
+            } catch (e) {
+                stored = null;
+            }
+        }
+        if (!stored) {
+            try {
+                var legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+                stored = legacyRaw ? JSON.parse(legacyRaw) : null;
+            } catch (e) {
+                stored = null;
+            }
+        }
         if (typeof stored === 'string') {
             try {
                 stored = JSON.parse(stored);
@@ -189,11 +215,11 @@
     }
 
     function resetConfig() {
-        if (running) {
-            log('Hentikan proses BIMWIN dulu sebelum reset.', 'err');
+        if (running || bulkRunning) {
+            log('Hentikan proses Otomasi dulu sebelum reset.', 'err');
             return;
         }
-        if (!window.confirm('Reset semua konfigurasi BIMWIN di browser? Endpoint, URL Laporan, wilayah, fasilitator, dan pengaturan akan dihapus.')) {
+        if (!window.confirm('Reset semua konfigurasi Otomasi di browser? Token lisensi, endpoint, URL Laporan, wilayah, fasilitator, dan pengaturan akan dihapus.')) {
             return;
         }
         if (recording) stopRecording(true);
@@ -210,7 +236,7 @@
         if (panelElement('bw-config-code')) panelElement('bw-config-code').value = '';
         if (panelElement('bw-mode')) panelElement('bw-mode').value = 'cek';
         progress('');
-        log('Semua konfigurasi BIMWIN di browser direset.', 'ok');
+        log('Semua konfigurasi Otomasi di browser direset.', 'ok');
     }
 
     function panelElement(id) {
@@ -261,7 +287,7 @@
         if (nextAppUrl) recordedAppUrl = nextAppUrl;
         if (nextBimwinUrl) {
             recordedBimwinUrl = nextBimwinUrl;
-            if (!nextAppUrl) recordedAppUrl = nextBimwinUrl.replace(/\/bimwin$/i, '');
+            if (!nextAppUrl) recordedAppUrl = appUrlFromBimwinUrl(nextBimwinUrl);
         } else if (nextAppUrl) {
             recordedBimwinUrl = bimwinPageUrl(nextAppUrl);
         }
@@ -365,7 +391,7 @@
 
         if (!url && recordedAppUrl) {
             try {
-                url = new URL('/api/bimwin/license', recordedAppUrl).href;
+                url = new URL('/api/otomasi/license', recordedAppUrl).href;
             } catch (e) {
                 url = '';
             }
@@ -373,13 +399,13 @@
 
         if (!token) {
             setLicenseStatus('belum terhubung', false);
-            log('Lisensi belum ada. Salin kode konfigurasi baru dari Laporan > BIMWIN.', 'err');
+            log('Lisensi belum ada. Salin kode konfigurasi baru dari Laporan > Otomasi.', 'err');
             return false;
         }
 
         if (!url) {
             setLicenseStatus('gagal dicek', false);
-            log('URL lisensi tidak ditemukan. Salin kode konfigurasi baru dari Laporan > BIMWIN.', 'err');
+            log('URL lisensi tidak ditemukan. Salin kode konfigurasi baru dari Laporan > Otomasi.', 'err');
             return false;
         }
 
@@ -633,7 +659,7 @@
 
     function ensureAppUrl() {
         if (recordedAppUrl || recordedBimwinUrl) {
-            if (!recordedAppUrl) recordedAppUrl = recordedBimwinUrl.replace(/\/bimwin$/i, '');
+            if (!recordedAppUrl) recordedAppUrl = appUrlFromBimwinUrl(recordedBimwinUrl);
             if (!recordedBimwinUrl) recordedBimwinUrl = bimwinPageUrl(recordedAppUrl);
             return recordedAppUrl;
         }
@@ -641,7 +667,7 @@
         var codeAppUrl = appUrlFromConfigCode();
         var codeBimwinUrl = bimwinUrlFromConfigCode();
         if (codeAppUrl || codeBimwinUrl) {
-            if (!codeAppUrl && codeBimwinUrl) codeAppUrl = codeBimwinUrl.replace(/\/bimwin$/i, '');
+            if (!codeAppUrl && codeBimwinUrl) codeAppUrl = appUrlFromBimwinUrl(codeBimwinUrl);
             recordedAppUrl = codeAppUrl;
             recordedBimwinUrl = codeBimwinUrl || bimwinPageUrl(codeAppUrl);
             renderEndpointStatus();
@@ -712,74 +738,338 @@
         log(ok ? 'JSON endpoint tersalin.' : 'Gagal menyalin JSON endpoint.', ok ? 'ok' : 'err');
     }
 
+    var BULK_BASE = 'https://simkah4.kemenag.go.id';
+    var BULK_DELAY_MS = 1200;
+    var BULK_UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    var BULK_MODES = {
+        bukti: {
+            param: 'no_billing',
+            uuidKey: 'sb-uuid-bukti',
+            legacyKey: 'sb-uuid',
+            listLabel: 'Daftar No Billing (satu per baris)',
+            placeholder: '820260908847263 - Ahmad Fauzi\n820260908847264 - Siti Aminah',
+            uuidPlaceholder: 'tempel URL bukti bayar / UUID',
+            fileName: function (item) { return item.key + (item.nama ? ' - ' + item.nama : '') + '.pdf'; },
+            countNoun: 'bukti bayar'
+        },
+        surat: {
+            param: 'no_daftar',
+            uuidKey: 'sb-uuid-surat',
+            legacyKey: '',
+            listLabel: 'Daftar Nomor Daftar (satu per baris)',
+            placeholder: 'ND01003507061092026 - Budi dan Siti\nND01003507061092027 - Ahmad dan Aminah',
+            uuidPlaceholder: 'tempel URL surat tugas / UUID',
+            fileName: function (item) {
+                var label = item.nama ? 'STM - ' + item.nama : 'STM - ' + item.key;
+                return label + '.pdf';
+            },
+            countNoun: 'surat tugas'
+        }
+    };
+
+    function bulkExtractUuid(value) {
+        value = (value || '').trim();
+        if (!value) return '';
+        var match = value.match(BULK_UUID_RE);
+        return match ? match[0] : '';
+    }
+
+    function bulkSanitizeNama(nama) {
+        return (nama || '')
+            .replace(/[\\/:*?"<>|]/g, ' ')
+            // eslint-disable-next-line no-control-regex
+            .replace(/[\x00-\x1f\x7f]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 80);
+    }
+
+    function bulkParseList(raw) {
+        var out = [];
+        var seen = {};
+        (raw || '').split(/\r?\n/).forEach(function (line) {
+            line = line.trim();
+            if (!line) return;
+
+            var dashIdx = line.indexOf(' - ');
+            if (dashIdx !== -1) {
+                var key = line.slice(0, dashIdx).trim();
+                if (key && !seen[key]) {
+                    seen[key] = true;
+                    out.push({ key: key, nama: bulkSanitizeNama(line.slice(dashIdx + 3)) });
+                }
+                return;
+            }
+
+            if (/^[A-Za-z0-9]{8,}$/.test(line)) {
+                if (!seen[line]) {
+                    seen[line] = true;
+                    out.push({ key: line, nama: '' });
+                }
+                return;
+            }
+
+            line.split(/[\s,;]+/).forEach(function (token) {
+                if (/^[A-Za-z0-9]{8,}$/.test(token) && !seen[token]) {
+                    seen[token] = true;
+                    out.push({ key: token, nama: '' });
+                }
+            });
+        });
+        return out;
+    }
+
+    function bulkLog(message, line) {
+        console.log('[Otomasi Bulk] ' + message);
+        var el = panelElement('ot-bulk-log');
+        if (!el) return;
+        if (line) el.textContent += line + '\n';
+        el.textContent += message + '\n';
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function bulkProgress(message) {
+        var el = panelElement('ot-bulk-progress');
+        if (el) el.textContent = message || '';
+    }
+
+    function bulkDownloadBlob(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    }
+
+    function bulkModeOf() {
+        var select = panelElement('ot-bulk-mode');
+        return BULK_MODES[select && select.value === 'surat' ? 'surat' : 'bukti'];
+    }
+
+    function bulkUuidStorage(mode) {
+        try {
+            if (mode.legacyKey && !GM_getValue(mode.uuidKey, '') && GM_getValue(mode.legacyKey, '')) {
+                GM_setValue(mode.uuidKey, GM_getValue(mode.legacyKey, ''));
+            }
+            return GM_getValue(mode.uuidKey, '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function refreshBulkPlaceholders() {
+        var mode = bulkModeOf();
+        var uuidEl = panelElement('ot-bulk-uuid');
+        var listEl = panelElement('ot-bulk-list');
+        var listLabel = panelElement('ot-bulk-list-label');
+        var title = panelElement('ot-bulk-title');
+        if (title) title.textContent = 'Unduh Massal ' + (mode === BULK_MODES.surat ? 'Surat Tugas Manten' : 'Bukti Bayar');
+        if (uuidEl) uuidEl.placeholder = mode.uuidPlaceholder;
+        if (listEl) listEl.placeholder = mode.placeholder;
+        if (listLabel) listLabel.textContent = mode.listLabel;
+        if (uuidEl) uuidEl.value = bulkUuidStorage(mode);
+    }
+
+    async function runBulk() {
+        if (bulkRunning) return;
+
+        if (!await ensureLicense()) {
+            bulkLog('Lisensi tidak aktif. Salin kode konfigurasi baru dari Laporan > Otomasi.', '');
+            bulkProgress('Lisensi tidak aktif.');
+            return;
+        }
+
+        var mode = bulkModeOf();
+        var uuid = bulkExtractUuid(panelElement('ot-bulk-uuid').value) || bulkUuidStorage(mode);
+        var list = bulkParseList(panelElement('ot-bulk-list').value);
+
+        if (!uuid) {
+            bulkProgress('UUID belum diisi — tempel URL dokumen dulu.');
+            return;
+        }
+        if (!list.length) {
+            bulkProgress('Daftar kosong — tempel daftar dulu.');
+            return;
+        }
+
+        try {
+            GM_setValue(mode.uuidKey, uuid);
+        } catch (e) {}
+
+        bulkRunning = true;
+        bulkStopRequested = false;
+        panelElement('ot-bulk-start').disabled = true;
+        panelElement('ot-bulk-stop').disabled = false;
+        bulkLog('Mulai unduh ' + list.length + ' ' + mode.countNoun + ' (UUID ' + uuid + ')', '=== ' + new Date().toLocaleTimeString() + ' ===');
+
+        var ok = 0;
+        var gagal = 0;
+        var lastLicenseCheck = Date.now();
+
+        for (var i = 0; i < list.length; i++) {
+            if (bulkStopRequested) {
+                bulkLog('Dihentikan pada ' + (i + 1) + '/' + list.length + '. Sisa bisa ditempel ulang.', '');
+                break;
+            }
+
+            if (Date.now() - lastLicenseCheck > 10 * 60 * 1000) {
+                if (!await ensureLicense()) {
+                    bulkLog('Lisensi tidak aktif. Proses dihentikan.', '');
+                    break;
+                }
+                lastLicenseCheck = Date.now();
+            }
+
+            var item = list[i];
+            var key = item.key;
+            var fileName = mode.fileName(item);
+            bulkProgress('[' + (i + 1) + '/' + list.length + '] ' + key);
+            var url = BULK_BASE + '/' + uuid + '?' + mode.param + '=' + encodeURIComponent(key);
+
+            try {
+                var res = await fetch(url, { credentials: 'include', redirect: 'follow' });
+                if (!res.ok) {
+                    gagal++;
+                    bulkLog('Gagal ' + key + ' — HTTP ' + res.status, '');
+                    continue;
+                }
+
+                var ct = (res.headers.get('content-type') || '').toLowerCase();
+                if (ct.indexOf('html') !== -1 || ct.indexOf('json') !== -1) {
+                    bulkLog('Berhenti: respons bukan PDF (' + ct + '). Sesi login berakhir? Login ulang SIMKAH4 lalu jalankan lagi.', '');
+                    break;
+                }
+
+                var blob = await res.blob();
+                bulkDownloadBlob(blob, fileName);
+                ok++;
+                bulkLog('OK ' + fileName, '');
+            } catch (err) {
+                gagal++;
+                bulkLog('Gagal ' + key + ' — ' + err, '');
+            }
+
+            await sleep(BULK_DELAY_MS);
+        }
+
+        bulkProgress('Selesai: ' + ok + ' berhasil, ' + gagal + ' gagal.');
+        bulkLog('Selesai: ' + ok + ' berhasil, ' + gagal + ' gagal.', '');
+        bulkRunning = false;
+        bulkStopRequested = false;
+        panelElement('ot-bulk-start').disabled = false;
+        panelElement('ot-bulk-stop').disabled = true;
+    }
+
     function panelHtml() {
         return ''
-            + '<div id="bw-toggle" style="position:fixed;left:16px;right:auto;bottom:16px;z-index:999999;background:#4f46e5;color:#fff;border:none;border-radius:9999px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:sans-serif;">BIMWIN</div>'
-            + '<div id="bw-panel" style="display:none;position:fixed;left:16px;right:auto;bottom:56px;z-index:999999;width:380px;max-width:calc(100vw - 32px);max-height:calc(100vh - 80px);overflow:auto;background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:sans-serif;">'
+            + '<div id="bw-toggle" style="position:fixed;right:16px;left:auto;bottom:16px;z-index:999999;background:#4f46e5;color:#fff;border:none;border-radius:9999px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:sans-serif;">Otomasi</div>'
+            + '<div id="bw-panel" style="display:none;position:fixed;right:16px;left:auto;bottom:56px;z-index:999999;width:420px;max-width:calc(100vw - 32px);max-height:calc(100vh - 80px);overflow:auto;background:#fff;color:#111;border:1px solid #bbb;border-radius:8px;padding:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-family:sans-serif;">'
             +   '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
-            +     '<strong style="font-size:13px;">BIMWIN — SIMKAH4</strong>'
+            +     '<strong style="font-size:13px;">Otomasi — SIMKAH4</strong>'
             +     '<button id="bw-hide" type="button" title="Tutup panel" style="border:none;background:none;cursor:pointer;font-size:14px;line-height:1;">✕</button>'
             +   '</div>'
-            +   '<p style="font-size:10px;color:#555;margin:0 0 6px;">Memproses baris grid yang sedang tampil. Mode Cek saja tidak menulis data.</p>'
-            +   '<div style="border:1px dashed #4f46e5;border-radius:4px;padding:6px;margin:6px 0;background:#eef2ff;">'
-            +     '<div style="display:flex;justify-content:space-between;align-items:center;">'
-            +       '<strong style="font-size:11px;">Endpoint akun ini</strong>'
-            +       '<span id="bw-endpoint-status" style="font-size:11px;font-weight:bold;color:#b45309;">0/4</span>'
-            +     '</div>'
-            +     '<div id="bw-endpoint-list" style="font-size:10px;color:#555;margin-top:2px;">cek: — · dialog: — · simpan: — · selesai: —</div>'
-            +     '<div id="bw-app-status" style="font-size:10px;color:#b45309;margin-top:2px;">Laporan: belum terhubung</div>'
-            +     '<div id="bw-license-status" style="font-size:10px;color:#b45309;margin-top:2px;">Lisensi: belum terhubung</div>'
-            +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'
-            +       '<button id="bw-record" type="button" style="padding:4px 8px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
-            +       '<button id="bw-send-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
-            +       '<button id="bw-copy-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Salin JSON</button>'
-            +       '<button id="bw-reset" type="button" title="Hapus semua konfigurasi BIMWIN di browser" style="padding:4px 8px;font-size:10px;cursor:pointer;">Reset</button>'
-            +     '</div>'
-            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Klik <strong>Rekam endpoint</strong>, lalu lakukan satu alur BIMWIN manual. Simpan/selesai menulis ke SIMKAH4.</p>'
+            +   '<div id="bw-license-status" style="font-size:10px;color:#b45309;margin:0 0 6px;">Lisensi: belum terhubung</div>'
+            +   '<div id="ot-tab-bar" style="display:flex;gap:4px;margin:6px 0;">'
+            +     '<button type="button" class="ot-tab is-active" data-ot-tab="bimwin" style="flex:1;padding:5px 6px;font-size:11px;cursor:pointer;">BIMWIN</button>'
+            +     '<button type="button" class="ot-tab" data-ot-tab="bukti" style="flex:1;padding:5px 6px;font-size:11px;cursor:pointer;">Bukti Bayar</button>'
+            +     '<button type="button" class="ot-tab" data-ot-tab="surat" style="flex:1;padding:5px 6px;font-size:11px;cursor:pointer;">Surat Tugas</button>'
             +   '</div>'
-            +   '<label for="bw-mode" style="font-size:11px;display:block;margin-bottom:2px;">Mode</label>'
-            +   '<select id="bw-mode" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;">'
-            +     '<option value="cek">Cek saja (tidak menulis)</option>'
-            +     '<option value="isi">Isi jadwal (tanpa tandai selesai)</option>'
-            +     '<option value="lengkap">Isi + tandai selesai</option>'
-            +   '</select>'
-            +   '<details style="margin:6px 0;">'
-            +     '<summary style="font-size:11px;cursor:pointer;">Pengaturan wilayah &amp; proses</summary>'
-            +     '<p style="font-size:10px;color:#555;margin:4px 0;">Terisi otomatis dari kode konfigurasi Laporan. Sesuaikan hanya jika perlu.</p>'
-            +     '<label for="bw-provinsi" style="font-size:11px;display:block;margin-bottom:2px;">Provinsi</label>'
-            +     '<input id="bw-provinsi" type="text" placeholder="Nama provinsi" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            +     '<label for="bw-kabkota" style="font-size:11px;display:block;margin-bottom:2px;">Kabupaten/Kota</label>'
-            +     '<input id="bw-kabkota" type="text" placeholder="Nama kabupaten/kota" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            +     '<label for="bw-kecamatan" style="font-size:11px;display:block;margin-bottom:2px;">Kecamatan</label>'
-            +     '<input id="bw-kecamatan" type="text" placeholder="Nama kecamatan" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
-            +     '<div style="display:flex;gap:6px;">'
-            +       '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator suami<input id="bw-fas-suami" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
-            +       '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator istri<input id="bw-fas-istri" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
-            +     '</div>'
-            +     '<div style="display:flex;gap:6px;align-items:end;">'
-            +       '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Max percobaan<input id="bw-max-coba" type="number" min="1" max="30" value="10" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
-            +       '<label style="display:flex;align-items:center;gap:4px;font-size:11px;margin-bottom:6px;"><input id="bw-redam" type="checkbox" /> Redam notifikasi</label>'
-            +     '</div>'
-            +   '</details>'
             +   '<details style="margin:6px 0;">'
             +     '<summary style="font-size:11px;cursor:pointer;">Kode konfigurasi dari Laporan</summary>'
-            +     '<textarea id="bw-config-code" rows="4" placeholder=\'{"provinsi":"...","kabkota":"...","kecamatan":"..."}\' style="width:100%;box-sizing:border-box;margin-top:4px;font-size:11px;padding:4px;"></textarea>'
+            +     '<textarea id="bw-config-code" rows="4" placeholder=\'{"appUrl":"...","licenseToken":"..."}\' style="width:100%;box-sizing:border-box;margin-top:4px;font-size:11px;padding:4px;"></textarea>'
             +     '<button id="bw-load-code" type="button" style="margin-top:4px;padding:4px 8px;font-size:11px;cursor:pointer;">Muat</button>'
-            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Kode lisensi berlaku 30 hari. Setelah itu salin kode baru dari Laporan.</p>'
+            +     '<p style="font-size:10px;color:#555;margin:4px 0 0;">Kode lisensi berlaku 30 hari. Setelah itu salin kode baru dari Laporan > Otomasi.</p>'
             +   '</details>'
-            +   '<div style="display:flex;gap:6px;margin:6px 0;">'
-            +     '<button id="bw-start" type="button" style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
-            +     '<button id="bw-stop" type="button" disabled style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
-            +     '<button id="bw-save" type="button" style="padding:6px 8px;font-size:12px;cursor:pointer;">Simpan</button>'
+            +   '<div id="ot-tab-bimwin">'
+            +     '<p style="font-size:10px;color:#555;margin:0 0 6px;">Memproses baris grid yang sedang tampil. Mode Cek saja tidak menulis data.</p>'
+            +     '<div style="border:1px dashed #4f46e5;border-radius:4px;padding:6px;margin:6px 0;background:#eef2ff;">'
+            +       '<div style="display:flex;justify-content:space-between;align-items:center;">'
+            +         '<strong style="font-size:11px;">Endpoint akun ini</strong>'
+            +         '<span id="bw-endpoint-status" style="font-size:11px;font-weight:bold;color:#b45309;">0/4</span>'
+            +       '</div>'
+            +       '<div id="bw-endpoint-list" style="font-size:10px;color:#555;margin-top:2px;">cek: — · dialog: — · simpan: — · selesai: —</div>'
+            +       '<div id="bw-app-status" style="font-size:10px;color:#b45309;margin-top:2px;">Laporan: belum terhubung</div>'
+            +       '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'
+            +         '<button id="bw-record" type="button" style="padding:4px 8px;font-size:10px;cursor:pointer;">Rekam endpoint</button>'
+            +         '<button id="bw-send-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Kirim ke Laporan</button>'
+            +         '<button id="bw-copy-endpoints" type="button" disabled style="padding:4px 8px;font-size:10px;cursor:pointer;">Salin JSON</button>'
+            +         '<button id="bw-reset" type="button" title="Hapus semua konfigurasi Otomasi di browser" style="padding:4px 8px;font-size:10px;cursor:pointer;">Reset</button>'
+            +       '</div>'
+            +       '<p style="font-size:10px;color:#555;margin:4px 0 0;">Klik <strong>Rekam endpoint</strong>, lalu lakukan satu alur BIMWIN manual. Simpan/selesai menulis ke SIMKAH4.</p>'
+            +     '</div>'
+            +     '<label for="bw-mode" style="font-size:11px;display:block;margin-bottom:2px;">Mode</label>'
+            +     '<select id="bw-mode" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;">'
+            +       '<option value="cek">Cek saja (tidak menulis)</option>'
+            +       '<option value="isi">Isi jadwal (tanpa tandai selesai)</option>'
+            +       '<option value="lengkap">Isi + tandai selesai</option>'
+            +     '</select>'
+            +     '<details style="margin:6px 0;">'
+            +       '<summary style="font-size:11px;cursor:pointer;">Pengaturan wilayah &amp; proses</summary>'
+            +       '<p style="font-size:10px;color:#555;margin:4px 0;">Terisi otomatis dari kode konfigurasi Laporan. Sesuaikan hanya jika perlu.</p>'
+            +       '<label for="bw-provinsi" style="font-size:11px;display:block;margin-bottom:2px;">Provinsi</label>'
+            +       '<input id="bw-provinsi" type="text" placeholder="Nama provinsi" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +       '<label for="bw-kabkota" style="font-size:11px;display:block;margin-bottom:2px;">Kabupaten/Kota</label>'
+            +       '<input id="bw-kabkota" type="text" placeholder="Nama kabupaten/kota" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +       '<label for="bw-kecamatan" style="font-size:11px;display:block;margin-bottom:2px;">Kecamatan</label>'
+            +       '<input id="bw-kecamatan" type="text" placeholder="Nama kecamatan" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +       '<div style="display:flex;gap:6px;">'
+            +         '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator suami<input id="bw-fas-suami" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
+            +         '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Fasilitator istri<input id="bw-fas-istri" type="text" placeholder="opsional" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
+            +       '</div>'
+            +       '<div style="display:flex;gap:6px;align-items:end;">'
+            +         '<label style="flex:1;font-size:11px;display:block;margin-bottom:2px;">Max percobaan<input id="bw-max-coba" type="number" min="1" max="30" value="10" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" /></label>'
+            +         '<label style="display:flex;align-items:center;gap:4px;font-size:11px;margin-bottom:6px;"><input id="bw-redam" type="checkbox" /> Redam notifikasi</label>'
+            +       '</div>'
+            +     '</details>'
+            +     '<div style="display:flex;gap:6px;margin:6px 0;">'
+            +       '<button id="bw-start" type="button" style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
+            +       '<button id="bw-stop" type="button" disabled style="flex:1;padding:6px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
+            +       '<button id="bw-save" type="button" style="padding:6px 8px;font-size:12px;cursor:pointer;">Simpan</button>'
+            +     '</div>'
+            +     '<div id="bw-progress" style="font-size:11px;margin-bottom:4px;"></div>'
+            +     '<pre id="bw-log" style="max-height:150px;overflow:auto;font-size:10px;margin:0;white-space:pre-wrap;background:#f7f7f7;padding:4px;border-radius:4px;"></pre>'
+            +     '<button id="bw-clear-log" type="button" style="margin-top:4px;padding:3px 6px;font-size:10px;cursor:pointer;">Bersihkan log</button>'
             +   '</div>'
-            +   '<div id="bw-progress" style="font-size:11px;margin-bottom:4px;"></div>'
-            +   '<pre id="bw-log" style="max-height:150px;overflow:auto;font-size:10px;margin:0;white-space:pre-wrap;background:#f7f7f7;padding:4px;border-radius:4px;"></pre>'
-            +   '<button id="bw-clear-log" type="button" style="margin-top:4px;padding:3px 6px;font-size:10px;cursor:pointer;">Bersihkan log</button>'
+            +   '<div id="ot-tab-bulk" style="display:none;">'
+            +     '<p style="font-size:10px;color:#555;margin:0 0 6px;">Tempel daftar dari halaman Otomasi, lalu unduh PDF secara massal memakai sesi login SIMKAH4.</p>'
+            +     '<strong id="ot-bulk-title" style="font-size:12px;display:block;margin-bottom:4px;">Unduh Massal Bukti Bayar</strong>'
+            +     '<select id="ot-bulk-mode" style="display:none;"><option value="bukti">Bukti Bayar</option><option value="surat">Surat Tugas Manten</option></select>'
+            +     '<label for="ot-bulk-uuid" style="font-size:11px;display:block;margin-bottom:2px;">UUID SIMKAH (sekali saja, tersimpan per jenis)</label>'
+            +     '<input id="ot-bulk-uuid" type="text" placeholder="tempel URL dokumen / UUID" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" />'
+            +     '<label id="ot-bulk-list-label" for="ot-bulk-list" style="font-size:11px;display:block;margin-bottom:2px;">Daftar No Billing (satu per baris)</label>'
+            +     '<textarea id="ot-bulk-list" rows="6" style="width:100%;box-sizing:border-box;margin-bottom:6px;font-size:12px;padding:4px;" placeholder="820260908847263 - Ahmad Fauzi\n820260908847264 - Siti Aminah"></textarea>'
+            +     '<div style="display:flex;gap:6px;margin-bottom:6px;">'
+            +       '<button id="ot-bulk-start" type="button" style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Mulai</button>'
+            +       '<button id="ot-bulk-stop" type="button" disabled style="flex:1;padding:5px 8px;font-size:12px;cursor:pointer;">Berhenti</button>'
+            +     '</div>'
+            +     '<div id="ot-bulk-progress" style="font-size:11px;margin-bottom:4px;"></div>'
+            +     '<pre id="ot-bulk-log" style="max-height:120px;overflow:auto;font-size:10px;margin:0;white-space:pre-wrap;background:#f7f7f7;padding:4px;border-radius:4px;"></pre>'
+            +   '</div>'
             + '</div>';
     }
 
     function initPanel() {
-        if (panelElement('bw-toggle')) return;
+        function removeById(id) {
+            var el = panelElement(id);
+            if (el) el.remove();
+        }
+
+        var existingToggle = panelElement('bw-toggle');
+        if (existingToggle) {
+            if (panelElement('ot-tab-bar')) return;
+            removeById('bw-panel');
+            removeById('bw-toggle');
+        }
+
+        removeById('sb-toggle');
+        removeById('sb-panel');
+        setTimeout(function () {
+            removeById('sb-toggle');
+            removeById('sb-panel');
+        }, 1000);
 
         var style = document.createElement('style');
         style.textContent = [
@@ -791,22 +1081,40 @@
             '#bw-panel input::placeholder,#bw-panel textarea::placeholder{color:#94a3b8;}',
             '#bw-panel details{margin:6px 0;}',
             '#bw-panel summary{cursor:pointer;}',
+            '#bw-panel .ot-tab{border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;color:#111;font-family:inherit;line-height:1.2;}',
+            '#bw-panel .ot-tab.is-active{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:600;}',
             '#bw-panel #bw-record{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:600;}',
             '#bw-panel #bw-record.is-recording{background:#b91c1c;border-color:#b91c1c;}',
-            '#bw-panel #bw-start{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:600;}',
+            '#bw-panel #bw-start,#bw-panel #ot-bulk-start{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:600;}',
             '#bw-panel #bw-send-endpoints{background:#047857;color:#fff;border-color:#047857;}',
             '#bw-panel #bw-send-endpoints:disabled{background:#f8fafc;color:#111;border-color:#cbd5e1;}',
             '#bw-panel #bw-copy-endpoints,#bw-panel #bw-load-code{background:#eef2ff;color:#312e81;border-color:#c7d2fe;}',
             '#bw-panel #bw-reset{background:#b91c1c;color:#fff;border-color:#b91c1c;font-weight:600;}',
             '#bw-panel #bw-hide{border:none;background:none;color:#111;font-size:14px;}',
-            '#bw-toggle{position:fixed!important;left:16px!important;right:auto!important;bottom:16px!important;}',
-            '#bw-panel{position:fixed!important;left:16px!important;right:auto!important;}'
+            '#bw-toggle{position:fixed!important;right:16px!important;left:auto!important;bottom:16px!important;}',
+            '#bw-panel{position:fixed!important;right:16px!important;left:auto!important;}'
         ].join('');
         document.head.appendChild(style);
 
         var host = document.createElement('div');
         host.innerHTML = panelHtml();
         document.body.appendChild(host);
+
+        function activateTab(name) {
+            var isBimwin = name === 'bimwin';
+            panelElement('ot-tab-bimwin').style.display = isBimwin ? 'block' : 'none';
+            panelElement('ot-tab-bulk').style.display = isBimwin ? 'none' : 'block';
+
+            if (!isBimwin) {
+                panelElement('ot-bulk-mode').value = name === 'surat' ? 'surat' : 'bukti';
+                refreshBulkPlaceholders();
+            }
+
+            var buttons = document.querySelectorAll('#ot-tab-bar [data-ot-tab]');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.toggle('is-active', buttons[i].getAttribute('data-ot-tab') === name);
+            }
+        }
 
         panelElement('bw-toggle').addEventListener('click', function () {
             var panel = panelElement('bw-panel');
@@ -816,6 +1124,13 @@
         panelElement('bw-hide').addEventListener('click', function () {
             panelElement('bw-panel').style.display = 'none';
         });
+
+        var tabButtons = document.querySelectorAll('#ot-tab-bar [data-ot-tab]');
+        for (var i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].addEventListener('click', function () {
+                activateTab(this.getAttribute('data-ot-tab'));
+            });
+        }
 
         panelElement('bw-start').addEventListener('click', run);
         panelElement('bw-stop').addEventListener('click', function () {
@@ -852,6 +1167,14 @@
         panelElement('bw-copy-endpoints').addEventListener('click', copyEndpoints);
         panelElement('bw-reset').addEventListener('click', resetConfig);
 
+        panelElement('ot-bulk-start').addEventListener('click', runBulk);
+        panelElement('ot-bulk-stop').addEventListener('click', function () {
+            bulkStopRequested = true;
+            bulkLog('Permintaan berhenti diterima. Proses berjalan akan diselesaikan lebih dulu.', '');
+        });
+
+        refreshBulkPlaceholders();
+        activateTab('bimwin');
         writeConfigToPanel(loadStoredConfig());
     }
 

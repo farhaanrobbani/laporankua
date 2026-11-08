@@ -23,9 +23,9 @@
                         {{ __('Data') }}
                     </x-nav-link>
                     @if (Auth::user()->isPremium())
-                        <x-nav-link :href="route('bimwin.index')" :active="request()->routeIs('bimwin.*')">
-                            <x-heroicon-o-academic-cap class="w-4 h-4 me-1" />
-                            {{ __('BIMWIN') }}
+                        <x-nav-link :href="route('otomasi.bimwin')" :active="request()->routeIs('otomasi.*')">
+                            <x-heroicon-o-bolt class="w-4 h-4 me-1" />
+                            {{ __('Otomasi') }}
                         </x-nav-link>
                     @endif
                     <x-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">
@@ -101,9 +101,9 @@
                 {{ __('Data') }}
             </x-responsive-nav-link>
             @if (Auth::user()->isPremium())
-                <x-responsive-nav-link :href="route('bimwin.index')" :active="request()->routeIs('bimwin.*')">
-                    <x-heroicon-o-academic-cap class="w-5 h-5 shrink-0" />
-                    {{ __('BIMWIN') }}
+                <x-responsive-nav-link :href="route('otomasi.bimwin')" :active="request()->routeIs('otomasi.*')">
+                    <x-heroicon-o-bolt class="w-5 h-5 shrink-0" />
+                    {{ __('Otomasi') }}
                 </x-responsive-nav-link>
             @endif
             <x-responsive-nav-link :href="route('cetak-nb.index')" :active="request()->routeIs('cetak-nb.*')">

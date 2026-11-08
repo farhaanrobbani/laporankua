@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('BIMWIN') }}
+            {{ __('Otomasi') }}
         </h2>
     </x-slot>
 
@@ -13,10 +13,10 @@
                         Premium
                     </span>
                     <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        BIMWIN hanya untuk pengguna Premium
+                        {{ $feature }} hanya untuk pengguna Premium
                     </h3>
                     <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Akun Anda saat ini menggunakan plan Free. Hubungi admin untuk mengaktifkan plan Premium agar dapat memakai otomasi BIMWIN dan userscript SIMKAH4.
+                        Akun Anda saat ini menggunakan plan Free. Hubungi admin untuk mengaktifkan plan Premium agar dapat memakai Otomasi SIMKAH4: BIMWIN, Bukti Bayar, dan Surat Tugas.
                     </p>
                     <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         Status plan: <strong>{{ $user->isPremium() ? 'Premium' : 'Free' }}</strong>

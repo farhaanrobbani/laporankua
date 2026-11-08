@@ -6,8 +6,6 @@
         ['route' => 'data.duplikat', 'label' => 'Duplikat', 'active' => request()->routeIs('data.duplikat')],
         ['route' => 'data.bukan-duplikat', 'label' => 'Bukan Duplikat', 'active' => request()->routeIs('data.bukan-duplikat')],
         ['route' => 'data.rusak', 'label' => 'Rusak', 'active' => request()->routeIs('data.rusak')],
-        ['route' => 'data.bukti-bayar', 'label' => 'Bukti Bayar', 'active' => request()->routeIs('data.bukti-bayar')],
-        ['route' => 'data.surat-tugas', 'label' => 'Surat Tugas', 'active' => request()->routeIs('data.surat-tugas')],
         ['route' => 'data.skp', 'label' => 'SKP', 'active' => request()->routeIs('data.skp')],
     ];
 @endphp

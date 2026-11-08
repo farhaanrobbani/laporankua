@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Data') }}
+                {{ __('Otomasi') }}
             </h2>
         </div>
     </x-slot>
@@ -13,14 +13,17 @@
 
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <x-otomasi-tabs />
+            <div class="mb-6">
+                <x-otomasi-setup :config-json="$configJson" />
+            </div>
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-4 sm:p-6">
-                    <x-data-tabs />
 
                     @if (empty($importIds))
                         <x-empty-state title="Belum ada data" message="Upload laporan peristiwa nikah dan pendaftaran nikah terlebih dahulu." :action-url="route('imports.create')" action-label="Upload Excel" />
                     @else
-                        <form method="GET" action="{{ route('data.surat-tugas') }}" class="mb-6 flex flex-wrap items-end gap-3">
+                        <form method="GET" action="{{ route('otomasi.surat-tugas') }}" class="mb-6 flex flex-wrap items-end gap-3">
                             <div>
                                 <label for="bulan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Bulan Pelaksanaan') }}</label>
                                 <select id="bulan" name="bulan" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
@@ -46,7 +49,7 @@
                             <div class="flex gap-2">
                                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition">{{ __('Filter') }}</button>
                                 @if ($bulan !== null || $tahun !== null || $q !== '')
-                                    <a href="{{ route('data.surat-tugas') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">{{ __('Reset') }}</a>
+                                    <a href="{{ route('otomasi.surat-tugas') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">{{ __('Reset') }}</a>
                                 @endif
                             </div>
                         </form>
@@ -61,7 +64,7 @@
                                     <p class="text-base font-semibold">
                                         <strong>{{ $totalRows }}</strong> nomor daftar pelaksanaan luar kantor
                                     </p>
-                                    <p class="mt-0.5 text-xs text-blue-100">Klik tombol untuk menyalin daftar (nomor daftar - nama suami dan istri), lalu tempel ke panel unduh massal di SIMKAH4 (jenis: Surat Tugas Manten).</p>
+                                    <p class="mt-0.5 text-xs text-blue-100">Klik tombol untuk menyalin daftar (nomor daftar - nama suami dan istri), lalu tempel ke panel Otomasi tab Surat Tugas di SIMKAH4.</p>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <span id="salin-status" class="text-sm font-medium"></span>
@@ -110,9 +113,9 @@
                             <summary class="cursor-pointer font-medium">{{ __('Cara pakai unduh massal surat tugas manten (SIMKAH4)') }}</summary>
                             <ol class="list-decimal ml-5 mt-2 space-y-1">
                                 <li>Di laptop/PC, pasang ekstensi <strong>Tampermonkey</strong> di browser (Chrome/Edge/Firefox).</li>
-                                <li>Buka <a href="{{ url('/userscripts/simkah4-bukti-bayar.user.js') }}" target="_blank" rel="noopener" class="text-blue-600 underline">link pemasangan script unduh massal</a> — Tampermonkey akan menawarkan pemasangan.</li>
+                                <li>Klik <strong>Install Userscript</strong> pada bagian <strong>Otomasi SIMKAH4</strong> di atas, lalu setujui pemasangan. Hapus userscript BIMWIN/Unduh Massal lama jika masih ada.</li>
                                 <li>Login ke SIMKAH4 (<span class="font-mono">https://simkah4.kemenag.go.id</span>).</li>
-                                <li>Klik tombol <strong>"Unduh Massal"</strong> (panel Tampermonkey), pilih jenis dokumen <strong>"Surat Tugas Manten"</strong>.</li>
+                                <li>Klik tombol <strong>Otomasi</strong> di kanan bawah, lalu buka tab <strong>Surat Tugas</strong>.</li>
                                 <li>Sekali saja: tempel URL surat tugas apa pun (mis. dari hasil klik manual, param <span class="font-mono">no_daftar</span>) ke kolom <strong>UUID</strong> — otomatis tersimpan per jenis dokumen.</li>
                                 <li>Tempel daftar nomor daftar (hasil tombol <strong>"Salin Daftar Nomor Daftar"</strong>) ke kolom daftar, lalu klik <strong>Mulai</strong>.</li>
                                 <li>Browser mungkin meminta izin "unduh multiple files" — izinkan sekali. Hasil: <span class="font-mono">STM - nama suami dan istri.pdf</span>.</li>

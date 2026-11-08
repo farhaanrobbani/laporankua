@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\BimwinController;
 use App\Http\Controllers\CetakNbController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\OtomasiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportsController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +15,9 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'throttle:120,1'])->name('dashboard');
+
+Route::redirect('/userscripts/simkah4-bimwin.user.js', '/userscripts/simkah4-otomasi.user.js');
+Route::redirect('/userscripts/simkah4-bukti-bayar.user.js', '/userscripts/simkah4-otomasi.user.js');
 
 Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
@@ -29,16 +32,21 @@ Route::middleware(['auth', 'throttle:120,1'])->group(function () {
     Route::get('/data/duplikat', [DataController::class, 'duplikat'])->name('data.duplikat');
     Route::get('/data/bukan-duplikat', [DataController::class, 'bukanDuplikat'])->name('data.bukan-duplikat');
     Route::get('/data/rusak', [DataController::class, 'rusak'])->name('data.rusak');
-    Route::get('/data/bukti-bayar', [DataController::class, 'buktiBayar'])->name('data.bukti-bayar');
-    Route::get('/data/surat-tugas', [DataController::class, 'suratTugas'])->name('data.surat-tugas');
+    Route::redirect('/data/bukti-bayar', '/otomasi/bukti-bayar');
+    Route::redirect('/data/surat-tugas', '/otomasi/surat-tugas');
     Route::get('/data/skp', [DataController::class, 'skp'])->name('data.skp');
     Route::get('/data/export', [DataController::class, 'export'])->name('data.export');
     Route::get('/data/cetak-nb', [DataController::class, 'cetakNb'])->name('data.cetak-nb');
     Route::get('/data/{record}', [DataController::class, 'show'])->name('data.show');
 
-    Route::get('/bimwin', [BimwinController::class, 'index'])->name('bimwin.index');
-    Route::patch('/bimwin/endpoints', [BimwinController::class, 'updateEndpoints'])->name('bimwin.update-endpoints');
-    Route::delete('/bimwin/endpoints', [BimwinController::class, 'resetEndpoints'])->name('bimwin.reset-endpoints');
+    Route::redirect('/bimwin', '/otomasi/bimwin');
+
+    Route::get('/otomasi', [OtomasiController::class, 'index'])->name('otomasi.index');
+    Route::get('/otomasi/bimwin', [OtomasiController::class, 'bimwin'])->name('otomasi.bimwin');
+    Route::patch('/otomasi/bimwin/endpoints', [OtomasiController::class, 'updateEndpoints'])->name('otomasi.update-endpoints');
+    Route::delete('/otomasi/bimwin/endpoints', [OtomasiController::class, 'resetEndpoints'])->name('otomasi.reset-endpoints');
+    Route::get('/otomasi/bukti-bayar', [OtomasiController::class, 'buktiBayar'])->name('otomasi.bukti-bayar');
+    Route::get('/otomasi/surat-tugas', [OtomasiController::class, 'suratTugas'])->name('otomasi.surat-tugas');
 
     Route::get('/cetak-nb', [CetakNbController::class, 'index'])->name('cetak-nb.index');
     Route::get('/cetak-nb/print', [CetakNbController::class, 'print'])->name('cetak-nb.print');
